@@ -1,0 +1,17 @@
+# Internal material: keep out of the public repository
+Documents/Meetings Transcript/
+Documents/Team Ideas/
+Documents/HackatonDocuments/*.pptx
+
+# Local tool settings
+.claude/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+~$*
