@@ -135,8 +135,9 @@ A backup demo video will be added before the final submission.
 ```
 .
 ├── Documents/
-│   ├── CheckPoint/14October/    Checkpoint deliverable (md, pdf, docx, pptx, images)
+│   ├── CheckPoint/14October/    Checkpoint deliverable (md, pptx, images)
 │   ├── HackatonDocuments/       Hackathon requirements and evaluation criteria
+│   ├── Velocity/                Velocity stage documents (01. Understanding: Source of Truth) and alignment notes
 │   └── Employee Onboarding Digital Coworker - Solution Intake.(md|docx)
 ├── tools/                       Helper scripts (docx_to_md.py)
 └── CLAUDE.md                    Guidance for AI-assisted development in this repo
