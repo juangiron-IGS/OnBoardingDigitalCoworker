@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Hackathon project building the **Onboarding Digital Coworker** for INSPYR on **Velocity 2.0**. The design and scope were delivered at the 2026-10-14 checkpoint. Final submission is due **2026-10-22**. No application code exists yet: the repo holds requirement and design documents plus one utility script. There are no build, lint or test commands until source code lands.
+Hackathon project building the **Onboarding Digital Coworker** for INSPYR on **Velocity 2.0**. The design and scope were delivered at the 2026-10-14 checkpoint. Final submission is due **2026-10-28** (moved from 2026-10-22). No application code exists yet: the repo holds requirement and design documents plus one utility script. There are no build, lint or test commands until source code lands.
 
 ## Documents and which one wins
 
