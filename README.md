@@ -11,8 +11,8 @@ Built for the INSPYR *Movers n’ Shakers* hackathon (October 2026) on **Velocit
 | Checkpoint: design and scope | October 14, 2026 | Delivered: [checkpoint deliverable](Documents/CheckPoint/14October/checkpoint-deliverable.md) |
 | Foundations: Velocity 2.0, data, mocks | October 15–16 | In progress |
 | Journeys J1 and J2 (Must) | October 17–20 | Planned |
-| Tests, README, presentation, video | October 21–22 | Planned |
-| Final submission | October 22, 2026 | Planned |
+| Tests, README, presentation, video | By October 28 | Planned |
+| Final submission | October 28, 2026 | Planned |
 
 ## Business problem and expected outcome
 
