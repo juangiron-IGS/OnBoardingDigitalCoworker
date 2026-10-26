@@ -1,7 +1,8 @@
 from datetime import date
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 
+@runtime_checkable
 class DuplicateSearch(Protocol):
     """The JobDiva READ server's duplicate search: {"found": bool, "start_id": str}."""
 
