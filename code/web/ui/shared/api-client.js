@@ -40,6 +40,7 @@ export const api = {
   answer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/answers`, { field, value }),
   decide: (id, packageVersion, decision, comment) =>
     call("POST", `/api/cases/${encodeURIComponent(id)}/decision`, { package_version: packageVersion, decision, comment }),
+  chat: (message, caseId) => call("POST", "/api/chat", { message, case_id: caseId || null }),
   alerts: (caseId) => call("GET", `/api/alerts${caseId ? `?case_id=${encodeURIComponent(caseId)}` : ""}`),
 };
 

@@ -70,6 +70,10 @@ class CaseServiceClient(Protocol):
 
     def case_data(self, case_id: str) -> dict[str, Any]: ...
 
+    def find_case(self, ref: str) -> str | None:
+        """A case by its ID or candidate reference, or None."""
+        ...
+
     def record_answers(
         self, case_id: str, values: dict[str, Any], *, agent: str, source: str
     ) -> None:

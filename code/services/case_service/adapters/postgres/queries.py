@@ -26,6 +26,16 @@ def list_cases(conn: psycopg.Connection) -> list[dict[str, Any]]:
     ]
 
 
+def find_case(conn: psycopg.Connection, ref: str) -> str | None:
+    """A case by its ID or, latest first, by the candidate reference."""
+    row = conn.execute(
+        "SELECT id FROM cases WHERE id = %s OR person_ref = %s"
+        " ORDER BY created_at DESC LIMIT 1",
+        (ref, ref),
+    ).fetchone()
+    return row[0] if row else None
+
+
 def case_detail(conn: psycopg.Connection, case_id: str) -> dict[str, Any] | None:
     row = conn.execute(
         "SELECT id, person_ref, start_date, state, current_package_version, data"
