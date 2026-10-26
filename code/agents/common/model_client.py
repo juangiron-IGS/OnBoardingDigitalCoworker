@@ -82,9 +82,18 @@ class RulesModelClient:
         return Extraction(values=values, ambiguous=ambiguous)
 
 
-def load_labels(path: Path = LABELS_FILE) -> dict[str, list[str]]:
+def _catalog(path: Path) -> dict:
     with path.open(encoding="utf-8") as handle:
-        return yaml.safe_load(handle)["fields"]
+        return yaml.safe_load(handle)
+
+
+def load_labels(path: Path = LABELS_FILE) -> dict[str, list[str]]:
+    return _catalog(path)["fields"]
+
+
+def load_required(path: Path = LABELS_FILE) -> list[str]:
+    """Fields a case needs before it can be set up (FR-VAL-001, FR-VAL-002)."""
+    return list(_catalog(path)["required"])
 
 
 def get_model_client() -> ModelClient:

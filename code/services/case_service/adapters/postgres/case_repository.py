@@ -42,6 +42,20 @@ class PostgresCaseRepository:
             (case_id, person_ref, start_date, Jsonb(data)),
         )
 
+    def case_data(self, case_id: str) -> dict[str, Any]:
+        row = self._conn.execute(
+            "SELECT data FROM cases WHERE id = %s", (case_id,)
+        ).fetchone()
+        if row is None:
+            raise GovernanceError("case_not_found")
+        return row[0]
+
+    def merge_case_data(self, case_id: str, values: dict[str, Any]) -> None:
+        self._conn.execute(
+            "UPDATE cases SET data = data || %s, updated_at = now() WHERE id = %s",
+            (Jsonb(values), case_id),
+        )
+
     def lock_case(self, case_id: str) -> CaseRow:
         row = self._conn.execute(
             "SELECT state, current_package_version FROM cases WHERE id = %s FOR UPDATE",

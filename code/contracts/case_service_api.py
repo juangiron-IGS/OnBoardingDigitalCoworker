@@ -4,7 +4,7 @@ Agents and the web API call the case service only through this interface.
 Changing this file needs an approval from someone in each lane.
 """
 
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from services.case_service.application.create_case import CaseIntake
 from services.case_service.domain.case import CaseState
@@ -67,3 +67,24 @@ class CaseServiceClient(Protocol):
     def case_state(self, case_id: str) -> CaseState: ...
 
     def current_package_version(self, case_id: str) -> int: ...
+
+    def case_data(self, case_id: str) -> dict[str, Any]: ...
+
+    def record_answers(
+        self, case_id: str, values: dict[str, Any], *, agent: str, source: str
+    ) -> None:
+        """Merge confirmed values into the case; the audit names fields only."""
+        ...
+
+    def log_action(
+        self,
+        case_id: str,
+        *,
+        agent: str,
+        action: str,
+        outcome: str = "completed",
+        rule_ids: list[str] | None = None,
+        data_refs: dict[str, str] | None = None,
+    ) -> None:
+        """Audit an agent action that changes no case data (US-018)."""
+        ...
