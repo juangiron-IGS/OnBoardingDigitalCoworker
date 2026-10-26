@@ -30,7 +30,8 @@ def _connect(url_var: str) -> psycopg.Connection:
     if not url:
         pytest.fail(f"{url_var} is not set; copy code/.env.example to code/.env")
     try:
-        return psycopg.connect(url)
+        # Autocommit, like production: each use case owns its transactions.
+        return psycopg.connect(url, autocommit=True)
     except psycopg.OperationalError as exc:
         pytest.fail(
             f"Cannot reach PostgreSQL ({url_var}); run ./scripts/start.sh: {exc}"
@@ -39,23 +40,15 @@ def _connect(url_var: str) -> psycopg.Connection:
 
 @pytest.fixture
 def app_conn() -> Iterator[psycopg.Connection]:
-    """Application-role connection; each test's transaction is rolled back."""
-    conn = _connect("DATABASE_URL")
-    try:
+    """Application-role connection; everything a test writes is rolled back."""
+    with _connect("DATABASE_URL") as conn, conn.transaction(force_rollback=True):
         yield conn
-    finally:
-        conn.rollback()
-        conn.close()
 
 
 @pytest.fixture
 def audit_writer_conn() -> Iterator[psycopg.Connection]:
-    conn = _connect("AUDIT_DATABASE_URL")
-    try:
+    with _connect("AUDIT_DATABASE_URL") as conn, conn.transaction(force_rollback=True):
         yield conn
-    finally:
-        conn.rollback()
-        conn.close()
 
 
 @pytest.fixture
