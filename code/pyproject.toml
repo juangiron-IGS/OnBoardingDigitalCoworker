@@ -30,6 +30,7 @@ include = ["contracts*", "services*", "web*", "agents*", "mcp_servers*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = ["db: needs the local PostgreSQL (./scripts/start.sh)"]
 
 [tool.ruff]
 line-length = 88
