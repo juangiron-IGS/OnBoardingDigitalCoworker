@@ -1,0 +1,156 @@
+import pytest
+from fastapi.testclient import TestClient
+
+from web.api.deps import get_conn
+from web.api.main import app
+
+pytestmark = pytest.mark.db
+
+
+@pytest.fixture
+def client(app_conn):
+    app.dependency_overrides[get_conn] = lambda: app_conn
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+def _as(role: str) -> dict:
+    return {"X-Role": role}
+
+
+def _process(client, message_id: str) -> dict:
+    response = client.post(f"/api/inbox/{message_id}/process", headers=_as("recruiter"))
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def test_inbox_lists_the_seed_emails(client) -> None:
+    response = client.get("/api/inbox", headers=_as("recruiter"))
+
+    assert response.status_code == 200
+    assert "02_missing_two_fields" in [m["id"] for m in response.json()]
+
+
+def test_processed_email_shows_its_case_and_package(client) -> None:
+    started = _process(client, "01_complete_and_consistent")
+
+    view = client.get(
+        f"/api/cases/{started['case_id']}", headers=_as("approver")
+    ).json()
+
+    assert started["state"] == "ready_for_review"
+    assert view["case"]["state"] == "ready_for_review"
+    assert view["package"]["version"] == 1
+    assert {"label", "source_or_rule_id"} <= set(view["package"]["lines"][0])
+    assert any(entry["agent"] == "policy_case_setup" for entry in view["audit"])
+
+
+def test_it_role_does_not_see_restricted_fields(client) -> None:
+    # US-040 AC-001 / AC-002
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    it_view = client.get(f"/api/cases/{case_id}", headers=_as("it")).json()
+    approver_view = client.get(f"/api/cases/{case_id}", headers=_as("approver")).json()
+
+    def flsa(view):
+        return next(
+            line["value"]
+            for line in view["package"]["lines"]
+            if line["field"] == "flsa"
+        )
+
+    assert it_view["case"]["data"]["flsa"] == "Restricted"
+    assert it_view["case"]["data"]["sponsorship_visa"] == "Restricted"
+    assert flsa(it_view) == "Restricted"
+    assert flsa(approver_view) == "Non-exempt"
+
+
+def test_answers_complete_the_demo_case(client) -> None:
+    case_id = _process(client, "02_missing_two_fields")["case_id"]
+
+    client.post(
+        f"/api/cases/{case_id}/answers",
+        json={"field": "timesheet_approver", "value": "Lee Example"},
+        headers=_as("recruiter"),
+    )
+    response = client.post(
+        f"/api/cases/{case_id}/answers",
+        json={"field": "bill_rate", "value": "61.00 USD/h"},
+        headers=_as("recruiter"),
+    )
+
+    assert response.json()["state"] == "ready_for_review"
+
+
+def test_approval_runs_the_actions(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    view = client.get(f"/api/cases/{case_id}", headers=_as("approver")).json()
+
+    assert response.status_code == 200
+    assert response.json()["state"] == "actions_executed"
+    assert {r["system"] for r in view["records"]} == {"jobdiva_cases", "task_lists"}
+
+
+def test_stale_version_returns_409_with_current_version(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 2, "decision": "approve"},
+        headers=_as("approver"),
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == {
+        "refused": "version_mismatch",
+        "current_version": 1,
+    }
+
+
+def test_only_the_approver_can_decide(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("recruiter"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_bad_input_returns_400_naming_the_field(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": "one", "decision": "approve"},
+        headers=_as("approver"),
+    )
+
+    assert response.status_code == 400
+    assert "package_version" in response.text
+
+
+def test_unknown_role_is_refused(client) -> None:
+    assert client.get("/api/inbox", headers=_as("admin")).status_code == 400
+
+
+def test_unknown_message_returns_404(client) -> None:
+    response = client.post("/api/inbox/nope/process", headers=_as("recruiter"))
+
+    assert response.status_code == 404
+
+
+def test_path_traversal_reads_nothing(client) -> None:
+    response = client.post("/api/inbox/../../.env/process", headers=_as("recruiter"))
+
+    assert response.status_code in {404, 405}
+    assert "DATABASE_URL" not in response.text
