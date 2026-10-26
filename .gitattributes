@@ -1,0 +1,2 @@
+# Shell scripts must keep LF line endings, or they fail in Git Bash and WSL on Windows
+*.sh text eol=lf
