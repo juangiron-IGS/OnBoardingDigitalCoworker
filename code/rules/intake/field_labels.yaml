@@ -15,6 +15,7 @@ fields:
   additional_notes: ["Additional notes", "Notes"]
   # Mandatory JobDiva and chat data
   person_ref: ["Candidate", "Candidate ID", "New hire"]
+  jobdiva_start_id: ["JobDiva start ID", "Start ID"]
   role: ["Role", "Position", "Job title"]
   manager: ["Manager", "Hiring manager"]
   start_date: ["Start date", "Start"]

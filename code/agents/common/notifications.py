@@ -26,6 +26,17 @@ def missing_fields_text(
     return f"Case {case_id} needs your answer. " + " ".join(parts)
 
 
+def escalation_text(
+    case_id: str, fields: list[str], labels: dict[str, list[str]]
+) -> str:
+    names = ", ".join(label(f, labels) for f in fields)
+    return (
+        f"Case {case_id}: {names} differs between the start email and the JobDiva "
+        "start notes. It is escalated for your decision; the Coworker has not chosen "
+        "a value."
+    )
+
+
 def duplicate_text(existing_ref: str) -> str:
     return (
         "This start was not processed: a case for the same person and start date "

@@ -11,7 +11,7 @@ from agents.intake_validation import agent as intake
 from agents.jobdiva_workflow import agent as workflow_agent
 from agents.policy_case_setup import agent as policy
 from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
-from contracts.mcp_tools import Alerts, JobDivaWorkflow
+from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import DuplicateCase
 
@@ -39,12 +39,14 @@ class Orchestrator:
         catalog: RulesCatalog,
         alerts: Alerts,
         workflow: JobDivaWorkflow,
+        jobdiva: JobDivaRead | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
         self._catalog = catalog
         self._alerts = alerts
         self._workflow = workflow
+        self._jobdiva = jobdiva
         self._labels = load_labels()
         self._required = load_required()
 
@@ -189,6 +191,27 @@ class Orchestrator:
             for f in fields
         ]
 
+    def _start_notes(self, data: dict) -> dict:
+        start_id = data.get("jobdiva_start_id")
+        if not self._jobdiva or not start_id:
+            return {}
+        try:
+            return self._jobdiva.read_start_notes(str(start_id))
+        except KeyError:
+            return {}
+
+    def _escalate(self, case_id: str, fields: list[str]) -> None:
+        """US-009: Onboarding and HR decide; alerts name fields only (BR-011)."""
+        text = notifications.escalation_text(case_id, fields, self._labels)
+        for recipient in ("Onboarding Team", "HR"):
+            notifications.notify(self._alerts, case_id, recipient, text)
+        self._cases.log_action(
+            case_id,
+            agent=policy.AGENT,
+            action="escalate_conflict",
+            data_refs={f: policy.CONFLICT_SOURCE for f in fields},
+        )
+
     def _pending(self, data: dict) -> list[str]:
         return intake.missing_fields(data, self._required) + list(
             data.get("contradictions", [])
@@ -225,6 +248,11 @@ class Orchestrator:
             )
 
         self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
-        lines = policy.recommend(data, self._catalog)
-        self._cases.build_package(case_id, lines, agent=policy.AGENT)
+        conflicts = policy.find_conflicts(data, self._start_notes(data))
+        lines = policy.recommend(data, self._catalog, conflicts)
+        self._cases.build_package(
+            case_id, lines, agent=policy.AGENT, escalated=bool(conflicts)
+        )
+        if conflicts:
+            self._escalate(case_id, list(conflicts))
         return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)

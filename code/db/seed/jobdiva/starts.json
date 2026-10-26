@@ -1,11 +1,52 @@
 {
   "_note": "Synthetic JobDiva data for mock mode. Every ID and name is invented.",
   "starts": [
-    {"start_id": "JD-START-1042", "person_ref": "SYN-0042", "start_date": "2026-11-02", "notes": {"work_city": "San Diego", "work_state": "CA", "flsa": "Non-exempt", "billing_contact": "billing.acme@example.com", "timesheet_approver": "Pat Example", "equipment": "Standard laptop, INSPYR", "sponsorship_visa": "No"}},
-    {"start_id": "JD-START-1043", "person_ref": "SYN-0043", "start_date": "2026-11-09", "notes": {}},
-    {"start_id": "JD-START-1040", "person_ref": "SYN-0040", "start_date": "2026-11-02", "notes": {"work_city": "Austin", "work_state": "TX"}}
+    {
+      "start_id": "JD-START-1042",
+      "person_ref": "SYN-0042",
+      "start_date": "2026-11-02",
+      "notes": {
+        "work_city": "San Diego",
+        "work_state": "CA",
+        "flsa": "Non-exempt",
+        "billing_contact": "billing.acme@example.com",
+        "timesheet_approver": "Pat Example",
+        "equipment": "Standard laptop, INSPYR",
+        "sponsorship_visa": "No"
+      }
+    },
+    {
+      "start_id": "JD-START-1043",
+      "person_ref": "SYN-0043",
+      "start_date": "2026-11-09",
+      "notes": {}
+    },
+    {
+      "start_id": "JD-START-1040",
+      "person_ref": "SYN-0040",
+      "start_date": "2026-11-02",
+      "notes": {
+        "work_city": "Austin",
+        "work_state": "TX"
+      }
+    },
+    {
+      "start_id": "JD-START-1045",
+      "person_ref": "SYN-0045",
+      "start_date": "2026-11-16",
+      "notes": {
+        "work_city": "San Diego",
+        "work_state": "CA",
+        "flsa": "Exempt"
+      }
+    }
   ],
   "onboarding_records": [
-    {"start_id": "JD-START-1040", "person_ref": "SYN-0040", "start_date": "2026-11-02", "status": "Onboarding in progress"}
+    {
+      "start_id": "JD-START-1040",
+      "person_ref": "SYN-0040",
+      "start_date": "2026-11-02",
+      "status": "Onboarding in progress"
+    }
   ]
 }
