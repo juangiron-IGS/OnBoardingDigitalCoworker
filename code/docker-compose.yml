@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"      # loopback only (TC-002)
+    environment:
+      POSTGRES_DB: ${DB_NAME:-coworker}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD}
+    volumes:
+      - coworker_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  coworker_pgdata:
