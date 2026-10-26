@@ -45,6 +45,9 @@ select = [
     "UP",       # pyupgrade
     "S",        # bandit-derived security rules
 ]
+# N818: governance refusals (ApprovalRefused, InvalidTransition) are expected,
+# audited outcomes named in the Tech Doc and Code Standards, not "...Error" types.
+ignore = ["N818"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ANN", "S101"]
