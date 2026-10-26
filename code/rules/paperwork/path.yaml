@@ -1,0 +1,21 @@
+# Onboarding path by contract type (FR-REC-001). Example content (status: draft).
+domain: path
+rules:
+  - id: R-PT-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {path: "Employee onboarding"}
+  - id: R-PT-02
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: Contractor}
+    result: {path: "Contractor onboarding"}
+  - id: R-PT-03
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: Corp-to-corp}
+    result: {path: "Vendor onboarding"}
