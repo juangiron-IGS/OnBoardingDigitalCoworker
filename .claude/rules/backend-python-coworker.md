@@ -13,15 +13,16 @@ paths:
 These rules are binding for every plan, implementation and review in `code/`. They condense the approved design. When a rule here and a source document disagree, the source wins, in this order:
 
 1. Checkpoint: `Documents/CheckPoint/14October/checkpoint-deliverable.md`
-2. SAD v1.1: `Documents/Velocity/02. Architecture/05. Onboarding Digital Coworker_software-architecture-document.md`
-3. Tech Doc v1.1: `Documents/Velocity/03. Development/01. Onboarding Digital Coworker_tech-doc.md` (structure, patterns, commands)
+2. SAD v1.2: `Documents/Velocity/02. Architecture/05. Onboarding Digital Coworker_software-architecture-document.md`
+3. Tech Doc v1.2: `Documents/Velocity/03. Development/01. Onboarding Digital Coworker_tech-doc.md` (structure, patterns, commands)
 4. Code Standards v1.1: `Documents/Velocity/03. Development/02. Onboarding Digital Coworker_code-standards.md` (style, security, tests, Git)
 
 If a task seems to require breaking a rule marked **non-negotiable**, stop and ask. Do not work around it.
 
 ## Stack and structure
 
-- Python 3.12, FastAPI, Pydantic, psycopg 3, PostgreSQL in a local container, pytest, ruff. Agents run on Velocity 2.0. Python and FastAPI remain assumed defaults until the day-one spike confirms them.
+- Python 3.12, FastAPI, Pydantic, psycopg 3, PostgreSQL in a local container, `mcp` SDK 2.x (`MCPServer`), pytest, ruff.
+- Velocity 2.0 is the delivery method (the stage documents and `code/velocity/`), not an agent runtime (SAD ADR-006). Agents are Python code; every model call goes through `agents/common/model_client.py`, and `MODEL_PROVIDER=rules` (no model) is the default.
 - Everything runs on `127.0.0.1`. Never bind to `0.0.0.0`.
 - Base branch is `main`. Work on `feature/…` (or `docs/…`) branches and merge through a pull request.
 - Folder placement (Tech Doc §5.1):
@@ -86,7 +87,7 @@ If a task seems to require breaking a rule marked **non-negotiable**, stop and a
 
 ## Tests (required for "done")
 
-- pytest, named `test_<behavior>`, Arrange-Act-Assert. Mock only at connector boundaries (MCP servers, Velocity model calls), never the approval gate or the case service logic under test.
+- pytest, named `test_<behavior>`, Arrange-Act-Assert. Mock only at connector boundaries (MCP servers, the model client), never the approval gate or the case service logic under test.
 - Every governance rule above has a negative test in `tests/governance/`. These tests must pass before merge:
   - no action without approval;
   - version mismatch blocked;
