@@ -16,6 +16,7 @@ app = FastAPI(title="Onboarding Digital Coworker")
 app.include_router(inbox.router)
 app.include_router(cases.router)
 app.include_router(alerts.router)
+app.include_router(cases.chat_router)
 
 
 @app.exception_handler(RequestValidationError)

@@ -15,6 +15,8 @@ from contracts.mcp_tools import Alerts, JobDivaWorkflow
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import DuplicateCase
 
+from .chat import ChatReply
+
 AGENT = "orchestrator"
 RECRUITER = "Recruiter"
 
@@ -46,7 +48,26 @@ class Orchestrator:
         self._labels = load_labels()
         self._required = load_required()
 
-    def process_start(self, text: str, *, source: str) -> StartResult:
+    @property
+    def cases(self) -> CaseServiceClient:
+        return self._cases
+
+    def chat(self, message: str, *, case_id: str | None = None) -> "ChatReply":
+        """One chat message from the recruiter or the Onboarding Team."""
+        from .chat import respond
+
+        return respond(self, message, case_id)
+
+    def read_labelled(self, text: str) -> dict[str, str]:
+        """Fields stated in a message, through the metered model client."""
+        extraction = self._model.extract_fields(
+            text, list(self._labels), case_id="chat", run_id=uuid.uuid4().hex
+        )
+        return {k: v for k, v in extraction.values.items() if v is not None}
+
+    def process_start(
+        self, text: str, *, source: str, channel: str = "email"
+    ) -> StartResult:
         """J1: a start email or chat message becomes a case (US-001, US-002)."""
         run_id = uuid.uuid4().hex
         reading = intake.read_start(
@@ -68,6 +89,7 @@ class Orchestrator:
         data = {
             **reading.values,
             "source": source,
+            "source_channel": channel,
             "contradictions": reading.contradictions,
         }
         try:
