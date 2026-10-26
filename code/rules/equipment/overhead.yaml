@@ -1,0 +1,15 @@
+# Equipment overhead by provider (BR-007): 2% INSPYR, 5% Apple Direct. Owned by IT.
+domain: overhead
+rules:
+  - id: R-OH-01
+    owner: IT
+    version: 1
+    status: approved
+    when: {equipment_provider: INSPYR}
+    result: {provider: INSPYR, overhead_pct: 2}
+  - id: R-OH-02
+    owner: IT
+    version: 1
+    status: approved
+    when: {equipment_provider: Apple Direct}
+    result: {provider: Apple Direct, overhead_pct: 5}

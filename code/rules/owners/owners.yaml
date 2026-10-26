@@ -1,0 +1,17 @@
+# Onboarding owner by client type and role (FR-OWN-001, BR-009). The result is a
+# recommendation only; the Consultant Onboarding Supervisor assigns the owner.
+# Example content (status: draft) naming roles, not people.
+domain: owner
+rules:
+  - id: R-OW-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {client_type: Enterprise}
+    result: {owner: "Enterprise onboarding specialist"}
+  - id: R-OW-02
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {client_type: Mid-market}
+    result: {owner: "Mid-market onboarding specialist"}

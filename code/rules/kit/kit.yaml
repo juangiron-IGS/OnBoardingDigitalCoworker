@@ -1,0 +1,22 @@
+# Welcome kit by contract type (FR-REC-003). Owned by LDC. Example content
+# (status: draft). A contract type with no rule gets no kit recommendation.
+domain: kit
+rules:
+  - id: R-KT-01
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {kit: "Employee welcome kit"}
+  - id: R-KT-02
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: Contractor}
+    result: {kit: "Consultant welcome kit"}
+  - id: R-KT-03
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: Corp-to-corp}
+    result: {kit: "Partner welcome note"}

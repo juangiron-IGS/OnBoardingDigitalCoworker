@@ -1,0 +1,61 @@
+# Paperwork by contract type, FLSA, state, city and client (FR-REC-002, BR-001).
+# Example content for the demo (status: draft): the Onboarding Team must confirm
+# every form before these rules are used for a real hire. FLSA is never decided
+# here: the value comes from the field or HR and only selects the agreement.
+domain: paperwork
+rules:
+  - id: R-PA-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {form: "Federal withholding form (W-4)"}
+  - id: R-PA-02
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2, work_state: CA}
+    result: {form: "CA state withholding form (DE 4)"}
+  - id: R-PA-03
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2, work_city: Philadelphia}
+    result: {form: "Philadelphia city wage tax notice"}
+    note: Texas has no state withholding form, so no rule adds one.
+  - id: R-PA-04
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2, flsa: Exempt}
+    result: {form: "Exempt employee agreement"}
+  - id: R-PA-05
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2, flsa: Non-exempt}
+    result: {form: "Non-exempt employee agreement"}
+  - id: R-PA-06
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {form: "Employment eligibility verification (I-9)"}
+  - id: R-PA-07
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: Contractor}
+    result: {form: "Independent contractor agreement"}
+  - id: R-PA-08
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: Contractor}
+    result: {form: "Taxpayer identification (W-9)"}
+  - id: R-PA-09
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: Corp-to-corp}
+    result: {form: "Vendor services agreement"}
