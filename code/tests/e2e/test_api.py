@@ -191,3 +191,11 @@ def test_chat_endpoint_refuses_an_empty_message(client) -> None:
     response = client.post("/api/chat", json={"message": ""}, headers=_as("recruiter"))
 
     assert response.status_code == 400
+
+
+def test_health_reports_the_database(client) -> None:
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert response.json()["database"] == "ok"

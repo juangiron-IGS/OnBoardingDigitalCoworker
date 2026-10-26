@@ -8,7 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routers import alerts, cases, inbox
+from .routers import alerts, cases, health, inbox
 
 UI = Path(__file__).resolve().parents[1] / "ui"
 
@@ -16,6 +16,7 @@ app = FastAPI(title="Onboarding Digital Coworker")
 app.include_router(inbox.router)
 app.include_router(cases.router)
 app.include_router(alerts.router)
+app.include_router(health.router)
 app.include_router(cases.chat_router)
 
 
