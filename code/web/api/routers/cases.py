@@ -27,10 +27,11 @@ def list_cases(cases: Cases, role: Role) -> list[dict]:
 
 
 @router.get("/{case_id}")
-def get_case(case_id: str, cases: Cases, role: Role) -> dict:
+def get_case(case_id: str, cases: Cases, coworker: Coworker, role: Role) -> dict:
     view = cases.case_view(case_id, role=role)
     if view is None:
         raise HTTPException(404, detail=f"No case {case_id!r}")
+    view["questions"] = coworker.questions(case_id)
     return view
 
 

@@ -154,3 +154,18 @@ def test_path_traversal_reads_nothing(client) -> None:
 
     assert response.status_code in {404, 405}
     assert "DATABASE_URL" not in response.text
+
+
+def test_case_view_lists_the_open_questions(client) -> None:
+    case_id = _process(client, "02_missing_two_fields")["case_id"]
+
+    view = client.get(f"/api/cases/{case_id}", headers=_as("recruiter")).json()
+
+    assert view["questions"] == [
+        {"field": "bill_rate", "label": "Bill rate", "kind": "missing"},
+        {
+            "field": "timesheet_approver",
+            "label": "Timesheet approver",
+            "kind": "missing",
+        },
+    ]

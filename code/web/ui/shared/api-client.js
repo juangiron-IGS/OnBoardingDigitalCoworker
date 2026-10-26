@@ -1,0 +1,81 @@
+// Talks only to the local API. The role travels in X-Role; the server decides
+// what each role may see and do.
+function savedRole() {
+  try { return localStorage.getItem("role") || "recruiter"; } catch { return "recruiter"; }
+}
+const state = { role: savedRole(), caseId: null };
+
+export function getRole() { return state.role; }
+export function setRole(role) {
+  state.role = role;
+  try { localStorage.setItem("role", role); } catch { /* private mode */ }
+}
+export function getCase() { return state.caseId; }
+export function setCase(id) { state.caseId = id; }
+
+export class ApiError extends Error {
+  constructor(status, detail) {
+    super(typeof detail === "string" ? detail : JSON.stringify(detail));
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+async function call(method, path, body) {
+  const response = await fetch(path, {
+    method,
+    headers: { "X-Role": state.role, ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new ApiError(response.status, data.detail ?? response.statusText);
+  return data;
+}
+
+export const api = {
+  inbox: () => call("GET", "/api/inbox"),
+  process: (id) => call("POST", `/api/inbox/${encodeURIComponent(id)}/process`),
+  cases: () => call("GET", "/api/cases"),
+  case: (id) => call("GET", `/api/cases/${encodeURIComponent(id)}`),
+  answer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/answers`, { field, value }),
+  decide: (id, packageVersion, decision, comment) =>
+    call("POST", `/api/cases/${encodeURIComponent(id)}/decision`, { package_version: packageVersion, decision, comment }),
+  alerts: (caseId) => call("GET", `/api/alerts${caseId ? `?case_id=${encodeURIComponent(caseId)}` : ""}`),
+};
+
+// Small DOM helper: text only, never innerHTML.
+export function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === "class") node.className = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else if (value !== false && value != null) node.setAttribute(key, value === true ? "" : value);
+  }
+  for (const child of children.flat()) {
+    if (child == null || child === false) continue;
+    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+  }
+  return node;
+}
+
+export const STATE_LABELS = {
+  received: "Received", blocked_duplicate: "Blocked: duplicate", validated: "Validated",
+  needs_clarification: "Needs clarification", case_set_up: "Case set up",
+  ready_for_review: "Ready for review", approval_gate: "Approval gate", approved: "Approved",
+  rejected: "Rejected", actions_executed: "Actions executed", closed: "Closed",
+};
+
+export function statePill(stateName) {
+  const tone = { actions_executed: "ok", approved: "ok", ready_for_review: "warn",
+    needs_clarification: "warn", rejected: "bad", blocked_duplicate: "bad" }[stateName] || "neutral";
+  return el("span", { class: `pill ${tone}` }, STATE_LABELS[stateName] || stateName);
+}
+
+export function errorNotice(error) {
+  if (error.status === 409 && error.detail?.refused) {
+    const current = error.detail.current_version ? ` The current version is v${error.detail.current_version}.` : "";
+    return el("div", { class: "notice bad", role: "alert" }, `Refused: ${error.detail.refused.replaceAll("_", " ")}.${current}`);
+  }
+  if (error.status === 403) return el("div", { class: "notice bad", role: "alert" }, "Your role cannot do this. Switch to the Approver role.");
+  return el("div", { class: "notice bad", role: "alert" }, `Something went wrong: ${error.message}`);
+}

@@ -153,6 +153,20 @@ class Orchestrator:
         )
         return {"state": self._cases.case_state(case_id).value, "approval_id": None}
 
+    def questions(self, case_id: str) -> list[dict]:
+        """Open questions for the recruiter: missing fields and contradictions."""
+        data = self._cases.case_data(case_id)
+        contradictions = list(data.get("contradictions", []))
+        missing = intake.missing_fields(data, self._required, contradictions)
+        return [
+            {"field": f, "label": notifications.label(f, self._labels), "kind": kind}
+            for kind, fields in (
+                ("missing", missing),
+                ("contradiction", contradictions),
+            )
+            for f in fields
+        ]
+
     def _pending(self, data: dict) -> list[str]:
         return intake.missing_fields(data, self._required) + list(
             data.get("contradictions", [])
