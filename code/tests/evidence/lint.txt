@@ -1,3 +1,3 @@
-# ruff — commit c5fbb01 (main)
+# ruff — commit 7d96807 (feature/b4-mcp)
 All checks passed!
-104 files already formatted
+113 files already formatted

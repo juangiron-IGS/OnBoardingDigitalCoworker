@@ -1,4 +1,4 @@
-# pytest — 2026-10-26T18:58Z — commit c5fbb01 (main)
+# pytest — 2026-10-26T19:40Z — commit 7d96807 (feature/b4-mcp)
 # PostgreSQL 16 in Docker, separate test database, MODEL_PROVIDER=rules
 tests/connectors/test_jobdiva_read.py::test_mock_is_the_default_mode PASSED
 tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[sandbox] PASSED
@@ -15,6 +15,13 @@ tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[POST] PA
 tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PUT] PASSED
 tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PATCH] PASSED
 tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[DELETE] PASSED
+tests/connectors/test_mcp_transport.py::test_adapters_fulfil_the_contracts PASSED
+tests/connectors/test_mcp_transport.py::test_approved_action_runs_over_mcp PASSED
+tests/connectors/test_mcp_transport.py::test_refusal_over_mcp_keeps_its_reason PASSED
+tests/connectors/test_mcp_transport.py::test_unknown_approval_over_mcp_is_refused PASSED
+tests/connectors/test_mcp_transport.py::test_jobdiva_reads_over_mcp PASSED
+tests/connectors/test_mcp_transport.py::test_alert_posted_over_mcp PASSED
+tests/connectors/test_mcp_transport.py::test_unreachable_server_fails_visibly PASSED
 tests/e2e/test_api.py::test_inbox_lists_the_seed_emails PASSED
 tests/e2e/test_api.py::test_processed_email_shows_its_case_and_package PASSED
 tests/e2e/test_api.py::test_it_role_does_not_see_restricted_fields PASSED
@@ -30,6 +37,10 @@ tests/e2e/test_api.py::test_case_view_lists_the_open_questions PASSED
 tests/e2e/test_api.py::test_chat_endpoint_starts_and_continues_a_case PASSED
 tests/e2e/test_api.py::test_chat_endpoint_refuses_an_empty_message PASSED
 tests/e2e/test_api.py::test_health_reports_the_database PASSED
+tests/e2e/test_api.py::test_health_reports_mcp_servers_that_are_down PASSED
+tests/e2e/test_over_mcp.py::test_j1_and_j2_run_with_every_system_call_over_mcp PASSED
+tests/e2e/test_over_mcp.py::test_duplicate_in_jobdiva_is_found_over_mcp PASSED
+tests/e2e/test_over_mcp.py::test_flsa_conflict_is_escalated_from_notes_read_over_mcp PASSED
 tests/governance/test_chat.py::test_chat_starts_a_case_and_asks_one_question_at_a_time PASSED
 tests/governance/test_chat.py::test_chat_package_lines_cite_the_chat PASSED
 tests/governance/test_chat.py::test_status_question_names_state_and_who_acts PASSED
@@ -43,6 +54,11 @@ tests/governance/test_duplicates_blocked.py::test_second_start_same_person_and_d
 tests/governance/test_duplicates_blocked.py::test_block_message_names_existing_case PASSED
 tests/governance/test_duplicates_blocked.py::test_duplicate_found_in_jobdiva_also_blocks PASSED
 tests/governance/test_duplicates_blocked.py::test_refusal_is_committed_on_its_own PASSED
+tests/governance/test_escalation.py::test_flsa_conflict_is_escalated_and_no_value_is_chosen PASSED
+tests/governance/test_escalation.py::test_escalation_alerts_onboarding_and_hr_without_values PASSED
+tests/governance/test_escalation.py::test_escalated_package_cannot_be_approved PASSED
+tests/governance/test_escalation.py::test_matching_values_are_not_escalated PASSED
+tests/governance/test_escalation.py::test_duplicate_already_onboarding_in_jobdiva_is_blocked PASSED
 tests/governance/test_every_action_is_audited.py::test_completed_action_has_agent_rules_and_data PASSED
 tests/governance/test_every_action_is_audited.py::test_refused_action_is_audited PASSED
 tests/governance/test_every_action_is_audited.py::test_unknown_outcome_is_rejected PASSED
@@ -165,4 +181,10 @@ tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[01_complete_
 tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[02_missing_two_fields.eml] PASSED
 tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[03_duplicate.eml] PASSED
 tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[04_work_arrangement_contradiction.eml] PASSED
-============================= 165 passed in 6.91s =============================
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[05_flsa_conflict.eml] PASSED
+tests/unit/test_transport.py::test_transport_defaults_to_in_process PASSED
+tests/unit/test_transport.py::test_unknown_transport_is_refused PASSED
+tests/unit/test_transport.py::test_in_process_uses_the_services_directly PASSED
+tests/unit/test_transport.py::test_mcp_uses_the_adapters PASSED
+tests/unit/test_transport.py::test_mcp_urls_come_from_the_environment PASSED
+============================ 187 passed in 12.82s =============================
