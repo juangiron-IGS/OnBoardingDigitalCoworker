@@ -26,6 +26,8 @@ SOURCE_FIELDS = [
 ESCALATED_FIELDS = ("flsa", "employment_type")
 CONFLICT_SOURCE = "email vs JobDiva start notes"
 HR = "HR"
+TEAM = "Onboarding Team"
+REVIEWABLE = ("path", "paperwork")  # US-026: what the team confirms or changes
 
 
 def find_conflicts(
@@ -67,8 +69,13 @@ def recommend(
     ]
     # A value in conflict must not pick a rule: that would decide it (BR-001).
     data = {k: v for k, v in data.items() if k not in conflicts}
-    lines += _from_rules(catalog, "path", "path", "path", data)
-    lines += _from_rules(catalog, "paperwork", "paperwork", "form", data)
+    review = dict(data.get("team_review") or {})
+    lines += _team_lines("path", review) or _from_rules(
+        catalog, "path", "path", "path", data
+    )
+    lines += _team_lines("paperwork", review) or _from_rules(
+        catalog, "paperwork", "paperwork", "form", data
+    )
     lines += _from_rules(catalog, "kit", "welcome_kit", "kit", data)
     owners = catalog.matching("owner", data)
     lines += [
@@ -81,6 +88,15 @@ def recommend(
         for rule in owners
     ] or [_no_rule("owner")]
     return lines
+
+
+def _team_lines(field: str, review: dict) -> list[PackageLine]:
+    """US-026: the Onboarding Team's change replaces the recommendation."""
+    values = (review.get(field) or {}).get("values") or []
+    return [
+        PackageLine(field=field, value=value, label="source", source_or_rule_id=TEAM)
+        for value in values
+    ]
 
 
 def _from_rules(

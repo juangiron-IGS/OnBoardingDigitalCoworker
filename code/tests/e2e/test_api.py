@@ -362,3 +362,19 @@ def test_onboarding_team_records_hr_answer(client) -> None:
 
     assert refused.status_code == 403
     assert recorded.json() == {"state": "ready_for_review", "package_version": 2}
+
+
+def test_onboarding_team_changes_the_paperwork(client) -> None:
+    # US-026, through the API
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    body = {"field": "paperwork", "action": "change", "values": ["Client NDA"]}
+
+    refused = client.post(
+        f"/api/cases/{case_id}/recommendation", json=body, headers=_as("recruiter")
+    )
+    changed = client.post(
+        f"/api/cases/{case_id}/recommendation", json=body, headers=_as("onboarding")
+    )
+
+    assert refused.status_code == 403
+    assert changed.json() == {"state": "ready_for_review", "package_version": 2}
