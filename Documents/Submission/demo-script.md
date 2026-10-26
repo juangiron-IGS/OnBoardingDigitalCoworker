@@ -8,10 +8,10 @@ From `code/` in Git Bash:
 
 ```bash
 ./scripts/reset.sh     # empty demo database, seed rules and emails
-./scripts/start.sh     # starts the web app and runs the health check
+./scripts/start.sh     # starts the MCP servers and the web app, then runs the health check
 ```
 
-Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · JobDiva: mock · model: rules`.
+Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp` and `JOBDIVA_MODE=mock`.
 
 ## 1. The problem in one sentence (20 s)
 
@@ -65,4 +65,5 @@ Open **Status**:
 ## If something fails live
 
 - Run `./scripts/reset.sh` and then `./scripts/start.sh`, and resume from the step you were on.
+- If an MCP server will not start, set `AGENT_TRANSPORT=in_process` in `code/.env`, run `./scripts/stop.sh` and `./scripts/start.sh`. The agents then call the same services directly, with the same controls.
 - If it still fails, play the backup video.

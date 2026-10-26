@@ -1,4 +1,5 @@
-"""Wait for the web app to answer /api/health; print one line or exit 1."""
+"""Wait for the web app (and, over MCP, its servers) to be healthy; print one line
+or exit 1."""
 
 import json
 import os
@@ -18,10 +19,20 @@ def main() -> int:
         try:
             with urllib.request.urlopen(URL, timeout=3) as response:  # noqa: S310 - fixed local URL
                 body = json.load(response)
-            print(
+            servers = body.get("mcp_servers", {})
+            if any(state != "ok" for state in servers.values()):
+                # MCP servers may still be starting: keep waiting until the deadline.
+                last_error = f"MCP servers: {servers}"
+                time.sleep(1)
+                continue
+            line = (
                 f"web app: {body['status']} · database: {body['database']} · "
-                f"JobDiva: {body['jobdiva_mode']} · model: {body['model_provider']}"
+                f"transport: {body['transport']} · JobDiva: {body['jobdiva_mode']} · "
+                f"model: {body['model_provider']}"
             )
+            if servers:
+                line += " · MCP: " + ", ".join(f"{n} {s}" for n, s in servers.items())
+            print(line)
             return 0
         except (urllib.error.URLError, OSError, ValueError) as exc:
             last_error = str(exc)

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Single-command start (Tech Doc §4.4). Run from code/, in Git Bash or WSL on Windows.
 # 1. container runtime  2. PostgreSQL  3. database setup on a new volume
-# 4. web app with the Orchestrator and agents on 127.0.0.1  5. health check
+# 4. MCP servers when AGENT_TRANSPORT=mcp  5. web app with the Orchestrator and agents
+# 6. health check. Everything binds to 127.0.0.1.
 set -euo pipefail
 
 set -a; source .env; set +a
@@ -28,12 +29,23 @@ PY=.venv/Scripts/python.exe
 [ -x "$PY" ] || PY=.venv/bin/python
 mkdir -p logs
 
-if [ -f logs/web.pid ] && kill -0 "$(cat logs/web.pid)" 2>/dev/null; then
-  echo "Web app already running (pid $(cat logs/web.pid))."
-else
-  nohup "$PY" -m web.api.main > logs/web.log 2>&1 &
-  echo $! > logs/web.pid
+# Start one process in the background unless its pid file points to a live one.
+launch() {
+  local name="$1" module="$2"
+  if [ -f "logs/$name.pid" ] && kill -0 "$(cat "logs/$name.pid")" 2>/dev/null; then
+    echo "$name already running (pid $(cat "logs/$name.pid"))."
+  else
+    nohup "$PY" -m "$module" > "logs/$name.log" 2>&1 &
+    echo $! > "logs/$name.pid"
+  fi
+}
+
+if [ "${AGENT_TRANSPORT:-in_process}" = "mcp" ]; then
+  launch jobdiva-read mcp_servers.jobdiva_read.server
+  launch jobdiva-workflow mcp_servers.jobdiva_workflow.server
+  launch teams-mock mcp_servers.mocks.teams.server
 fi
+launch web web.api.main
 
 "$PY" scripts/health_check.py
 echo "Open http://127.0.0.1:${WEB_APP_PORT:-3000} · stop with ./scripts/stop.sh · logs in code/logs/"

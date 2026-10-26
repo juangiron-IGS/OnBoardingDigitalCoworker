@@ -199,3 +199,15 @@ def test_health_reports_the_database(client) -> None:
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.json()["database"] == "ok"
+
+
+def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_TRANSPORT", "mcp")
+    for var in ("JOBDIVA_MOCK_URL", "JOBDIVA_WORKFLOW_URL", "TEAMS_MOCK_URL"):
+        monkeypatch.setenv(var, "http://127.0.0.1:9")
+
+    body = client.get("/api/health").json()
+
+    assert body["transport"] == "mcp"
+    assert body["status"] == "degraded"
+    assert set(body["mcp_servers"].values()) == {"down"}

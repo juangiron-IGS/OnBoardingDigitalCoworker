@@ -93,6 +93,7 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
 | `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key |
 | `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
+| `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
 | `JOBDIVA_MODE` | `mock` | `mock`, or read-only `sandbox` for the JobDiva READ server |
 | `JOBDIVA_BASE_URL`, `JOBDIVA_CLIENT_ID`, `JOBDIVA_API_USER`, `JOBDIVA_API_PASSWORD` | none | Sandbox mode only: Client ID from JobDiva support and a dedicated API user |
 
@@ -101,12 +102,12 @@ All configuration comes from environment variables in `code/.env`. The repositor
 From `code/` (in Git Bash or WSL on Windows):
 
 ```bash
-./scripts/start.sh     # PostgreSQL, database setup on first run, web app, health check
-./scripts/stop.sh      # stop the web app (--all also stops PostgreSQL; data is kept)
+./scripts/start.sh     # PostgreSQL, database setup on first run, MCP servers, web app, health check
+./scripts/stop.sh      # stop the web app and MCP servers (--all also stops PostgreSQL; data is kept)
 ./scripts/reset.sh     # recreate the database with the seed data
 ```
 
-`start.sh` ends with one line such as `web app: ok · database: ok · JobDiva: mock · model: rules`. Then open http://127.0.0.1:3000.
+`start.sh` ends with one line such as `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Then open http://127.0.0.1:3000.
 
 Quality gates, also run from `code/`:
 
@@ -144,7 +145,6 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 
 - **Everything is simulated.** All enterprise systems (JobDiva, IT and equipment, payroll, email, Teams, LDC tracker) are mocks in the hackathon.
 - **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
-- **Agents call the services in process.** The MCP servers run on their own, but the demo's agents call the same services directly instead of over MCP. This is the SAD's Alternative A fallback behind the same interface (task B4).
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
 - **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging), the supervisor's owner assignment (US-032) and the 5-minute package timing report (US-012 AC-003).
