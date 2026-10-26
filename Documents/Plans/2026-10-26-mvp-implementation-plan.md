@@ -5,12 +5,12 @@
 **Goal:** demo the two Must journeys end to end by **October 28, 2026**. J1 covers intake and validation. J2 covers the package, approval and simulated actions. At least three specialized agents must collaborate on one case, under the governance rules, using synthetic data only.
 
 **Architecture:** SAD v1.1, Alternative B.
-- An Onboarding Orchestrator on Velocity 2.0 routes work to the specialized agents.
+- An Onboarding Orchestrator (Python) routes work to the specialized agents. Velocity 2.0 is the delivery method, not a runtime (SAD ADR-006); a model is reached only through `agents/common/model_client.py`.
 - A case service owns state, the approval gate and the audit log in PostgreSQL.
 - Each enterprise system is a mock MCP server. Only `jobdiva_workflow` has write tools.
 - A FastAPI web app serves the five views.
 
-**Stack:** Python 3.12, FastAPI, Pydantic, psycopg 3, PostgreSQL 16 in Docker, FastMCP, pytest, ruff. All source lives under `code/`, and every command runs from `code/`.
+**Stack:** Python 3.12, FastAPI, Pydantic, psycopg 3, PostgreSQL 16 in Docker, `mcp` SDK 2.x (`MCPServer`), pytest, ruff. All source lives under `code/`, and every command runs from `code/`.
 
 **Sources:**
 - Tech Doc v1.1 (structure, code patterns, commands)
@@ -51,28 +51,13 @@ Cut these first, in this order. The demo still holds without them.
 
 ---
 
-## Phase 0 — Gate: Velocity spike (October 26, morning)
+## Phase 0 — Model client (replaces the Velocity spike)
 
-### Task 0.1: Confirm Velocity 2.0 can drive our agents
+### Task 0.1: Model client with a deterministic engine — done
 
-**Goal:** confirm that an agent defined on Velocity 2.0 can:
-- call a tool exposed by a local MCP server on `127.0.0.1`;
-- return a structured result to Python code.
+Velocity 2.0 turned out to be the delivery method that produced the documents, not an agent runtime, and no model API key is available yet (SAD ADR-006). Task 0.1 therefore became `agents/common/model_client.py`: one interface, `MODEL_PROVIDER=rules` by default (reads the labelled synthetic emails and chat messages with no model, no key and no cost), and the usage meter that enforces `MODEL_USAGE_CAP_PER_RUN`. A local model or the Claude API plugs in behind the same interface once one is approved and funded.
 
-**Steps:**
-1. Write the smallest possible FastMCP server with one tool, `echo(text) -> text`, on `127.0.0.1:8199`.
-2. Define one Velocity agent that calls `echo`, then invoke it from a Python script.
-3. Record the outcome in `code/velocity/SPIKE.md`:
-   - the SDK or API used;
-   - how agents and tools are registered;
-   - the models available;
-   - how model usage is metered.
-
-**Decision:**
-- **Pass:** continue with this plan as written.
-- **Fail:** switch to the SAD fallback, Alternative A. The mock servers become in-process adapters behind the same `contracts/mcp_tools.py` signatures. Only `agents/common/mcp_client.py` and the start script change, because the tasks below are written against the contracts.
-
-> Every task below depends on Velocity only through `agents/common/velocity_binding.py`. Tests use a fake binding, so lane A never waits for this gate.
+> Agents depend on a model only through `model_client.py`. Tests use the `rules` engine, so nothing waits for a key.
 
 ---
 
@@ -279,9 +264,9 @@ Lane B starts from the A6 contracts. Until A3 to A5 merge, it uses fakes of `Cas
 
 > **Time saver:** for the MVP, only `outlook` and `teams` are required. Create the others as stubs with one read tool each.
 
-### Task B4: Velocity binding, usage meter and notifications
+### Task B4: MCP client, case context and notifications
 
-**Files:** `agents/common/{velocity_binding.py,usage_meter.py,mcp_client.py,case_context.py,notifications.py}`
+**Files:** `agents/common/{mcp_client.py,case_context.py,notifications.py}` (`model_client.py` and `usage_meter.py` are done in Task 0.1)
 
 **Steps:**
 1. **Failing tests:**
@@ -289,9 +274,8 @@ Lane B starts from the A6 contracts. Until A3 to A5 merge, it uses fakes of `Cas
    - `test_usage_logged_per_run_and_case`
    - `test_leader_message_never_contains_restricted_values` (US-040 AC-003)
 2. **Implement:**
-   - `velocity_binding` uses the API confirmed in Task 0.1, plus a `FakeBinding` for tests.
    - `notifications` renders templates per audience from `rules/templates/` and posts through the Teams or Outlook mock.
-3. Commit: `Add the Velocity binding, usage meter and notifications tool`.
+3. Commit: `Add the MCP client, case context and notifications tool`.
 
 ### Task B5: Intake and Validation agent (US-001, US-002, US-004, US-005, US-006)
 
@@ -439,7 +423,7 @@ Record the demo sequence on the seed data:
 
 | Who | October 26 | October 27 | October 28 |
 |---|---|---|---|
-| Lane A (2 people) | 0.1, then A1 to A7 | Support B8 and C1, fix review findings | D1 |
+| Lane A (2 people) | A1 to A7, model client (0.1) | Support B8 and C1, fix review findings | D1 |
 | Lane B (2 to 3 people) | B1, B2, B3 (against contracts) | B4 to B8 | D2 |
 | Lane C (1 to 2 people) | C2 view scaffolding | C1, C2, C3, C4 | D2, D3 |
 
@@ -449,7 +433,7 @@ Merge to `main` through one PR per task or small group of tasks. Run `code-revie
 
 | # | Question | Default used until answered |
 |---|---|---|
-| 1 | Velocity SDK and tool-calling mechanism | Settled by Task 0.1 |
+| 1 | Model engine for free-text intake | `rules` engine until a model key or a local model is approved (SAD ADR-006) |
 | 2 | Authorized roles for restricted data (OQ-003) | Onboarding Team and Approver see them. Recruiter, IT and leaders do not |
 | 3 | Unit of `MODEL_USAGE_CAP_PER_RUN` | Number of model calls per run |
 | 4 | Exact demo text of the alert messages | Taken from `rules/templates/`, reviewed by the PO before recording |
