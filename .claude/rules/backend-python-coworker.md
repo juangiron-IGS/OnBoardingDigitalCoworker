@@ -47,7 +47,7 @@ If a task seems to require breaking a rule marked **non-negotiable**, stop and a
 4. **JobDiva token.** It is held in memory only, inside `jobdiva_read`. It never reaches another process, a log, the database or a response.
 5. **Audit every agent action.** Every entry records the case, the agent (or human role), the action, the outcome (`completed`, `refused` or `failed`), the rules used (`rule_ids`) and the data used (`data_refs`).
    - An action and its audit entry commit in **one transaction**.
-   - The audit table is append-only. `audit_writer` has INSERT only, and `coworker_app` has SELECT only.
+   - The audit table is append-only. No role has UPDATE, DELETE or TRUNCATE on it. `coworker_app` has SELECT and INSERT, so the audit entry is written on the caller's connection, in the same transaction as the action. `audit_writer` has INSERT only, for standalone writes.
    - A refusal is audited before the error reaches the caller.
 6. **Restricted data.** Visa, sponsorship and FLSA values are shown only to authorized roles, using the case service's policy decision. In logs, audit entries, prompts and messages they are referenced by field name, never by value. They never appear in messages to leaders or in mass communications.
 7. **No legal decisions.** No code or prompt decides or infers FLSA status, worker classification or compensation. These values come from the source field or from HR. A conflict becomes an exception line, escalated to the Onboarding Team.
