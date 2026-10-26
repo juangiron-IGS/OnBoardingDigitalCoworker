@@ -166,3 +166,25 @@ def test_returned_package_goes_back_for_correction(coworker, mailbox) -> None:
 
     assert outcome["state"] == "validated"
     assert outcome["approval_id"] is None
+
+
+def test_answered_fields_cite_the_recruiter_as_their_source(
+    app_conn, coworker, mailbox
+) -> None:
+    # US-011: each data point names where it came from
+    message = mailbox.read_message("01_complete_and_consistent")
+    body = "\n".join(
+        line for line in message["body"].splitlines() if not line.startswith("FLSA")
+    )
+    result = coworker.process_start(body, source=message["from"])
+    coworker.answer(result.case_id, "flsa", "Non-exempt")
+
+    sources = dict(
+        app_conn.execute(
+            "SELECT field, source_or_rule_id FROM package_lines WHERE case_id = %s",
+            (result.case_id,),
+        ).fetchall()
+    )
+    assert result.missing == ["flsa"]
+    assert sources["flsa"] == "recruiter"
+    assert sources["work_city"] == "email"

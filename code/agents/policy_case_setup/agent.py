@@ -46,7 +46,8 @@ def recommend(
     conflicts: dict[str, tuple[str, str]] | None = None,
 ) -> list[PackageLine]:
     conflicts = conflicts or {}
-    origin = str(data.get("source_channel") or "email")
+    channel = str(data.get("source_channel") or "email")
+    answered = dict(data.get("answered_by") or {})
     lines = [
         _escalated(field, *conflicts[field])
         if field in conflicts
@@ -54,7 +55,7 @@ def recommend(
             field=field,
             value=str(data[field]),
             label="source",
-            source_or_rule_id=origin,
+            source_or_rule_id=answered.get(field, channel),
         )
         for field in SOURCE_FIELDS
         if data.get(field)
