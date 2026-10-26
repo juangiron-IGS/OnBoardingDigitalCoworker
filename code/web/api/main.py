@@ -20,6 +20,15 @@ app.include_router(health.router)
 app.include_router(cases.chat_router)
 
 
+@app.middleware("http")
+async def revalidate_ui(request: Request, call_next):  # noqa: ANN001, ANN201
+    """The browser revalidates the UI files, so a restart never serves stale code."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.exception_handler(RequestValidationError)
 def invalid_input(request: Request, exc: RequestValidationError) -> JSONResponse:
     """Bad input is a 400 that names each field, never a 500."""

@@ -20,21 +20,23 @@ Open http://127.0.0.1:3000. The health line should read `web app: ok · database
 ## 2. A start with missing data (J1) (1 min 30 s)
 
 1. Select **Recruiter** at the top right.
-2. Go to **Simulated inbox** and press **Simulate arrival** on *New start - SYN-0043 - QA Engineer*.
-3. Point out the yellow banner: *Needs clarification*. Two fields are missing.
-4. Open **Simulated alerts**. The alert names the exact fields (*Bill rate*, *Timesheet approver*), not a generic "data incomplete".
+2. In **Simulated inbox**, press **New email**. The compose window is filled with a sample start (note its candidate ID, for example *SYN-0873*); press **Send**.
+3. The email lands in the onboarding mailbox and the Coworker processes it at once. Point out the yellow banner: *Needs clarification*. Two fields are missing.
+4. The chat button at the bottom right shows a red badge: the alert to the Recruiter names the exact fields (*Bill rate*, *Timesheet approver*), not a generic "data incomplete".
+
+   *Backup:* press **Simulate arrival** on *New start - SYN-0043 - QA Engineer* instead, and use SYN-0043 below.
 
 ## 3. The recruiter answers in the chat (1 min)
 
-1. Go to **Chat** and pick *SYN-0043* on the left.
-2. The Coworker asks one question at a time. Answer `61.00 USD/h`, then `Lee Example`.
+1. Open the chat (button at the bottom right). The alert is in the conversation; press **Open this case**.
+2. The Coworker asks one question at a time, like a Teams chat. Press Enter to send. Answer `61.00 USD/h`, then `Lee Example`.
 3. The Coworker replies that the case is complete and package v1 is ready for the approver.
 
 > "It asks only for what is missing, once."
 
 ## 4. Status in the chat (30 s)
 
-Type `How is SYN-0043 doing?`. The reply gives the state and who must act, from the record only.
+Type `How is <candidate ID> doing?`, for example `How is SYN-0873 doing?`. The reply gives the state and who must act, from the record only.
 
 ## 5. Approval (J2) and restricted data (1 min 30 s)
 

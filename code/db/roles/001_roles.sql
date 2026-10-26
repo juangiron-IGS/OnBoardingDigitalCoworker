@@ -31,3 +31,8 @@ GRANT USAGE ON SEQUENCE mocks.jobdiva_cases_id_seq, mocks.task_lists_id_seq,
 -- Simulated alerts: added by the notifications tool, read by the alerts view.
 GRANT SELECT, INSERT ON mocks.alerts TO coworker_app;
 GRANT USAGE ON SEQUENCE mocks.alerts_id_seq TO coworker_app;
+
+-- Simulated mailbox: emails arrive, and the Coworker records what it did with each.
+GRANT SELECT, INSERT ON mocks.inbound_mail TO coworker_app;
+GRANT UPDATE (case_id, outcome) ON mocks.inbound_mail TO coworker_app;
+GRANT USAGE ON SEQUENCE mocks.inbound_mail_id_seq TO coworker_app;

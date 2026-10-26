@@ -121,7 +121,7 @@ Quality gates, also run from `code/`:
 
 Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md). It takes about 7 minutes and uses synthetic data only:
 
-1. A start email arrives with two fields missing. The recruiter gets an alert naming them.
+1. A start email arrives in the simulated mailbox (**New email**) with two fields missing. The recruiter gets an alert naming them, in the Teams-like chat panel.
 2. The recruiter answers in the chat, one question at a time. The package is built with a rule ID on every recommendation.
 3. Someone asks for the case status in the chat.
 4. IT cannot see FLSA or sponsorship, and approves the laptop and access request (2% overhead, bill-back by rule). The approver can see them, assigns the follow-up owner and approves package v1.

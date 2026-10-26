@@ -271,3 +271,58 @@ def test_it_approves_the_laptop_request(client, monkeypatch) -> None:
     assert refused.status_code == 403
     assert approved.json() == {"case_id": case_id, "it_approved": True, "sent": False}
     assert view["case"]["it_approved"] is True
+
+
+_NEW_START = """Hi team, new start below.
+
+Candidate ID: SYN-0077
+Position: QA Engineer
+Hiring manager: Lee Example
+Start date: 2026-12-07
+Client: Acme Synthetic
+Client type: Enterprise
+Division: Digital
+Line of business: Professional Services
+Employment type: W-2
+Vendor company: INSPYR Solutions
+Work arrangement: Hybrid
+Pay rate: 40.00 USD/h
+Work city: Los Angeles
+Work state: CA
+FLSA: Non-exempt
+Billing contact: billing.acme@example.com
+Equipment: Standard laptop, INSPYR
+Sponsorship: No
+"""
+
+
+def test_new_email_arrives_and_the_coworker_processes_it(client) -> None:
+    response = client.post(
+        "/api/inbox",
+        json={
+            "sender": "recruiter.sam@example.com",
+            "subject": "New start - SYN-0077 - QA Engineer",
+            "body": _NEW_START,
+        },
+        headers=_as("recruiter"),
+    )
+
+    listed = client.get("/api/inbox", headers=_as("recruiter")).json()[0]
+    assert response.status_code == 200
+    assert response.json()["state"] == "needs_clarification"
+    assert listed["subject"] == "New start - SYN-0077 - QA Engineer"
+    assert listed["case_id"] == response.json()["case_id"]
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"sender": "not-an-email", "subject": "s", "body": "Candidate ID: X"},
+        {"sender": "a@example.com", "subject": "", "body": "Candidate ID: X"},
+        {"sender": "a@example.com", "subject": "s", "body": ""},
+    ],
+)
+def test_new_email_with_bad_fields_is_refused(client, bad) -> None:
+    response = client.post("/api/inbox", json=bad, headers=_as("recruiter"))
+
+    assert response.status_code == 400
