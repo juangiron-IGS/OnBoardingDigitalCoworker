@@ -106,3 +106,18 @@ def test_audit_writer_role_is_insert_only(
 
     with pytest.raises(psycopg.errors.InsufficientPrivilege):
         audit_writer_conn.execute(statement, (case_id,))
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "UPDATE approvals SET comment = comment",
+        "UPDATE action_ledger SET action = action",
+        "UPDATE package_lines SET value = value",
+        "DELETE FROM approvals",
+    ],
+)
+def test_app_role_cannot_change_decision_records(app_conn, statement) -> None:
+    # Decisions, applied actions and package lines are only ever added
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        app_conn.execute(statement)
