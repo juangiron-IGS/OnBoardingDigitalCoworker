@@ -68,7 +68,7 @@ def recommend(
     lines += [
         PackageLine(
             field="owner",
-            value=f"{rule.result['owner']} (recommended, pending assignment)",
+            value=rule.result["owner"],
             label="recommended",
             source_or_rule_id=rule.id,
         )

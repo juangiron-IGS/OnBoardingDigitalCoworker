@@ -109,6 +109,24 @@ class PostgresCaseRepository:
         ).fetchone()
         return row[0] if row else None
 
+    def set_recommended_owner(self, case_id: str, owner: str | None) -> None:
+        self._conn.execute(
+            "UPDATE cases SET recommended_owner = %s, updated_at = now() WHERE id = %s",
+            (owner, case_id),
+        )
+
+    def recommended_owner(self, case_id: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT recommended_owner FROM cases WHERE id = %s", (case_id,)
+        ).fetchone()
+        return row[0] if row else None
+
+    def assign_owner(self, case_id: str, owner: str) -> None:
+        self._conn.execute(
+            "UPDATE cases SET assigned_owner = %s, updated_at = now() WHERE id = %s",
+            (owner, case_id),
+        )
+
     def add_decision(
         self,
         case_id: str,

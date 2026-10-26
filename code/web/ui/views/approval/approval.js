@@ -38,6 +38,30 @@ export async function render(root, show) {
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
+// US-032: the Coworker recommends the follow-up owner; the supervisor assigns it.
+function ownerCard(view, caseId, show) {
+  const { recommended_owner: recommended, assigned_owner: assigned } = view.case;
+  const input = el("input", { type: "text", "aria-label": "Follow-up owner", maxlength: "120", value: assigned || recommended || "" });
+  const feedback = el("div");
+  const assign = async () => {
+    feedback.replaceChildren();
+    try {
+      await api.assignOwner(caseId, input.value);
+      show("approval");
+    } catch (error) {
+      feedback.replaceChildren(errorNotice(error));
+    }
+  };
+  const canAssign = getRole() === "approver" && recommended;
+  return el("div", {},
+    el("h3", {}, "Follow-up owner"),
+    el("p", {}, assigned
+      ? `Assigned: ${assigned}${assigned === recommended ? " (the recommendation)" : ` (recommended: ${recommended})`}`
+      : recommended ? `Recommended, pending assignment: ${recommended}` : "No recommendation yet."),
+    canAssign ? el("div", { class: "actions" }, input, el("button", { class: "btn", onclick: assign }, assigned ? "Change owner" : "Assign owner")) : null,
+    feedback);
+}
+
 async function drawPackage(root, caseId, show) {
   const view = await api.case(caseId);
   const pkg = view.package;
@@ -58,6 +82,8 @@ async function drawPackage(root, caseId, show) {
         el("td", {}, el("span", { class: `pill ${line.label}` }, line.label)),
         el("td", { class: "mono" }, line.source_or_rule_id))))))
   ].filter(Boolean));
+
+  root.append(ownerCard(view, caseId, show));
 
   const feedback = el("div");
   const canDecide = getRole() === "approver" && DECIDABLE.has(view.case.state) && pkg.status === "ready";

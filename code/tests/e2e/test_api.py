@@ -211,3 +211,41 @@ def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
     assert body["transport"] == "mcp"
     assert body["status"] == "degraded"
     assert set(body["mcp_servers"].values()) == {"down"}
+
+
+def test_approver_assigns_the_follow_up_owner(client) -> None:
+    # US-032 AC-002
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/owner",
+        json={"owner": "Dana Synthetic"},
+        headers=_as("approver"),
+    )
+
+    view = client.get(f"/api/cases/{case_id}", headers=_as("recruiter")).json()
+    assert response.status_code == 200
+    assert view["case"]["assigned_owner"] == "Dana Synthetic"
+
+
+def test_only_the_approver_assigns_the_owner(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/owner",
+        json={"owner": "Dana Synthetic"},
+        headers=_as("recruiter"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_case_reports_the_package_timing(client) -> None:
+    # US-012 AC-001 and AC-003
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    listed = client.get("/api/cases", headers=_as("approver")).json()
+    timing = next(c for c in listed if c["id"] == case_id)["package_timing"]
+
+    assert timing["met"] is True
+    assert timing["target_seconds"] == 300

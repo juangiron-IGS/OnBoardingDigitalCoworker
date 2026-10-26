@@ -70,6 +70,10 @@ class CaseServiceClient(Protocol):
 
     def case_data(self, case_id: str) -> dict[str, Any]: ...
 
+    def assign_owner(self, case_id: str, owner: str, *, assigned_by: str) -> None:
+        """A person assigns the follow-up owner (US-032); the audit records who."""
+        ...
+
     def find_case(self, ref: str) -> str | None:
         """A case by its ID or candidate reference, or None."""
         ...

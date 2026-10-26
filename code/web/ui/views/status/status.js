@@ -32,6 +32,13 @@ export async function render(root, show) {
   if (getCase()) await drawCase(detail, getCase());
 }
 
+// US-012: package ready within 5 minutes of the last answer, or reported as late.
+function timingLine(timing) {
+  if (!timing) return null;
+  return el("p", {}, `Package ready ${timing.seconds} s after the last answer `,
+    el("span", { class: `pill ${timing.met ? "ok" : "bad"}` }, timing.met ? "Within the 5-minute target" : "Missed the 5-minute target"));
+}
+
 async function drawCase(root, caseId) {
   const view = await api.case(caseId);
   const now = view.case.state;
@@ -40,7 +47,8 @@ async function drawCase(root, caseId) {
     el("h2", {}, `${view.case.person_ref} · ${view.case.id}`),
     el("div", { class: "steps", "aria-label": "Case states" }, PATH.map((s, i) =>
       el("span", { class: `step${s === now ? " now" : reached > i ? " done" : ""}` }, STATE_LABELS[s]))),
-    PATH.includes(now) ? null : el("p", {}, "Current state: ", statePill(now))));
+    PATH.includes(now) ? null : el("p", {}, "Current state: ", statePill(now)),
+    timingLine(view.case.package_timing)));
 
   root.append(el("section", { class: "card" }, el("h2", {}, "Records created after approval"),
     view.records.length

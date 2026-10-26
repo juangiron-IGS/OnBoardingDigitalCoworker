@@ -1,17 +1,36 @@
 """Read model for the web views: cases, their current package, audit trail and the
 records the single writer created. Read only."""
 
+from datetime import datetime
 from typing import Any
 
 import psycopg
 
+from ...domain.timing import package_timing
+
 MOCK_STORES = ("jobdiva_cases", "task_lists", "it_requests")
+
+
+def _timing(
+    last_answer_at: datetime | None, package_at: datetime | None
+) -> dict | None:
+    """From the last start data or answer to the current package (US-012)."""
+    if last_answer_at is None or package_at is None:
+        return None
+    return package_timing(last_answer_at, package_at)
 
 
 def list_cases(conn: psycopg.Connection) -> list[dict[str, Any]]:
     rows = conn.execute(
-        "SELECT id, person_ref, start_date, state, current_package_version, created_at"
-        " FROM cases ORDER BY created_at DESC LIMIT 200"
+        "SELECT c.id, c.person_ref, c.start_date, c.state,"
+        " c.current_package_version, c.created_at, last.at, p.created_at"
+        " FROM cases c"
+        " LEFT JOIN package_versions p"
+        "   ON p.case_id = c.id AND p.version = c.current_package_version"
+        " LEFT JOIN LATERAL (SELECT max(a.recorded_at) AS at FROM audit_log a"
+        "   WHERE a.case_id = c.id AND a.action IN ('create_case', 'record_answers')"
+        "   AND a.recorded_at <= p.created_at) last ON true"
+        " ORDER BY c.created_at DESC LIMIT 200"
     ).fetchall()
     return [
         {
@@ -21,6 +40,7 @@ def list_cases(conn: psycopg.Connection) -> list[dict[str, Any]]:
             "state": r[3],
             "package_version": r[4],
             "created_at": r[5].isoformat(),
+            "package_timing": _timing(r[6], r[7]),
         }
         for r in rows
     ]
@@ -38,8 +58,15 @@ def find_case(conn: psycopg.Connection, ref: str) -> str | None:
 
 def case_detail(conn: psycopg.Connection, case_id: str) -> dict[str, Any] | None:
     row = conn.execute(
-        "SELECT id, person_ref, start_date, state, current_package_version, data"
-        " FROM cases WHERE id = %s",
+        "SELECT c.id, c.person_ref, c.start_date, c.state, c.current_package_version,"
+        " c.data, c.recommended_owner, c.assigned_owner, last.at, p.created_at"
+        " FROM cases c"
+        " LEFT JOIN package_versions p"
+        "   ON p.case_id = c.id AND p.version = c.current_package_version"
+        " LEFT JOIN LATERAL (SELECT max(a.recorded_at) AS at FROM audit_log a"
+        "   WHERE a.case_id = c.id AND a.action IN ('create_case', 'record_answers')"
+        "   AND a.recorded_at <= p.created_at) last ON true"
+        " WHERE c.id = %s",
         (case_id,),
     ).fetchone()
     if row is None:
@@ -51,6 +78,9 @@ def case_detail(conn: psycopg.Connection, case_id: str) -> dict[str, Any] | None
         "state": row[3],
         "package_version": row[4],
         "data": row[5],
+        "recommended_owner": row[6],
+        "assigned_owner": row[7],
+        "package_timing": _timing(row[8], row[9]),
     }
     return {
         "case": case,

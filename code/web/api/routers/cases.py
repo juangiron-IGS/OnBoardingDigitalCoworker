@@ -21,6 +21,10 @@ class Decision(BaseModel):
     comment: str | None = Field(default=None, max_length=1000)
 
 
+class Owner(BaseModel):
+    owner: str = Field(min_length=1, max_length=120)
+
+
 @router.get("")
 def list_cases(cases: Cases, role: Role) -> list[dict]:
     return cases.list_cases()
@@ -44,6 +48,18 @@ def answer(case_id: str, body: Answer, coworker: Coworker, role: Role) -> dict:
     except GovernanceError as refusal:
         raise HTTPException(409, detail={"refused": refusal.reason}) from None
     return {"case_id": case_id, "state": state}
+
+
+@router.post("/{case_id}/owner")
+def assign_owner(case_id: str, body: Owner, cases: Cases, role: Role) -> dict:
+    """The Consultant Onboarding Supervisor assigns the follow-up owner (US-032)."""
+    if role != "approver":
+        raise HTTPException(403, detail="Only the approver can assign the owner")
+    try:
+        cases.assign_owner(case_id, body.owner.strip(), assigned_by=role)
+    except GovernanceError as refusal:
+        raise HTTPException(409, detail={"refused": refusal.reason}) from None
+    return {"case_id": case_id, "assigned_owner": body.owner.strip()}
 
 
 @router.post("/{case_id}/decision")

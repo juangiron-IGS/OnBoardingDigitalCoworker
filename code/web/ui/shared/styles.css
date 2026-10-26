@@ -98,7 +98,7 @@ tr:last-child td { border-bottom: 0; }
 .bubble { max-width: 640px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); }
 .bubble.me { align-self: flex-end; background: var(--bg); border: 1px solid var(--line); }
 .answer { display: grid; grid-template-columns: minmax(140px, 200px) 1fr auto; gap: 8px; align-items: center; }
-.answer input { padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); min-width: 0; }
+.answer input, .actions input { padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); min-width: 0; }
 @media (max-width: 560px) { .answer { grid-template-columns: 1fr; } }
 
 .steps { display: flex; flex-wrap: wrap; gap: 6px; }

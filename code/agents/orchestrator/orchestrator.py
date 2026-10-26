@@ -19,6 +19,7 @@ from .chat import ChatReply
 
 AGENT = "orchestrator"
 RECRUITER = "Recruiter"
+SUPERVISOR = "Onboarding Supervisor"
 
 
 @dataclass(frozen=True)
@@ -212,6 +213,32 @@ class Orchestrator:
             data_refs={f: policy.CONFLICT_SOURCE for f in fields},
         )
 
+    def _notify_supervisor(self, case_id: str, lines: list) -> None:
+        """US-032 AC-001: the supervisor hears of each new hire, then assigns."""
+        owner = next(
+            (
+                line
+                for line in lines
+                if line.field == "owner" and line.label == "recommended"
+            ),
+            None,
+        )
+        if owner is None:
+            return
+        notifications.notify(
+            self._alerts,
+            case_id,
+            SUPERVISOR,
+            notifications.owner_text(case_id, owner.value, owner.source_or_rule_id),
+        )
+        self._cases.log_action(
+            case_id,
+            agent=AGENT,
+            action="notify_supervisor",
+            rule_ids=[owner.source_or_rule_id],
+            data_refs={"owner": owner.source_or_rule_id},
+        )
+
     def _pending(self, data: dict) -> list[str]:
         return intake.missing_fields(data, self._required) + list(
             data.get("contradictions", [])
@@ -255,4 +282,5 @@ class Orchestrator:
         )
         if conflicts:
             self._escalate(case_id, list(conflicts))
+        self._notify_supervisor(case_id, lines)
         return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)

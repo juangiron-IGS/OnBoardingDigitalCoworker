@@ -6,6 +6,7 @@ from .adapters.postgres import queries
 from .adapters.postgres.audit_log import PostgresAuditLog
 from .adapters.postgres.case_repository import PostgresCaseRepository
 from .application import decisions
+from .application.assign_owner import assign_owner
 from .application.build_package import build_package
 from .application.case_data import log_action, record_answers
 from .application.create_case import CaseIntake, create_case
@@ -105,6 +106,9 @@ class LocalCaseService:
             approver_role=approver_role,
             comment=comment,
         )
+
+    def assign_owner(self, case_id: str, owner: str, *, assigned_by: str) -> None:
+        assign_owner(self._repo, self._audit, case_id, owner, assigned_by=assigned_by)
 
     def case_state(self, case_id: str) -> CaseState:
         return self._repo.lock_case(case_id).state

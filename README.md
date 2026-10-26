@@ -147,7 +147,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging), the supervisor's owner assignment (US-032) and the 5-minute package timing report (US-012 AC-003).
+- **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging).
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components
