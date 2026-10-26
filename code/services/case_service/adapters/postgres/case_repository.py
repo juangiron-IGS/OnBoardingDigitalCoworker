@@ -127,6 +127,36 @@ class PostgresCaseRepository:
             (owner, case_id),
         )
 
+    def has_line(self, case_id: str, version: int, field: str) -> bool:
+        row = self._conn.execute(
+            "SELECT 1 FROM package_lines"
+            " WHERE case_id = %s AND version = %s AND field = %s LIMIT 1",
+            (case_id, version, field),
+        ).fetchone()
+        return row is not None
+
+    def add_it_approval(self, case_id: str, version: int, approver_role: str) -> None:
+        self._conn.execute(
+            "INSERT INTO it_approvals (case_id, package_version, approver_role)"
+            " VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+            (case_id, version, approver_role),
+        )
+
+    def it_approved(self, case_id: str, version: int) -> bool:
+        row = self._conn.execute(
+            "SELECT 1 FROM it_approvals WHERE case_id = %s AND package_version = %s",
+            (case_id, version),
+        ).fetchone()
+        return row is not None
+
+    def approval_id_for(self, case_id: str, version: int) -> str | None:
+        row = self._conn.execute(
+            "SELECT approval_id FROM approvals WHERE case_id = %s"
+            " AND package_version = %s AND decision = 'approve'",
+            (case_id, version),
+        ).fetchone()
+        return row[0] if row else None
+
     def add_decision(
         self,
         case_id: str,

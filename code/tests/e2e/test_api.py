@@ -249,3 +249,25 @@ def test_case_reports_the_package_timing(client) -> None:
 
     assert timing["met"] is True
     assert timing["target_seconds"] == 300
+
+
+def test_it_approves_the_laptop_request(client, monkeypatch) -> None:
+    # US-020 AC-002, through the API
+    monkeypatch.setenv("FEATURE_ACCESS_EQUIPMENT", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    refused = client.post(
+        f"/api/cases/{case_id}/it-approval",
+        json={"package_version": 1},
+        headers=_as("recruiter"),
+    )
+    approved = client.post(
+        f"/api/cases/{case_id}/it-approval",
+        json={"package_version": 1},
+        headers=_as("it"),
+    )
+
+    view = client.get(f"/api/cases/{case_id}", headers=_as("it")).json()
+    assert refused.status_code == 403
+    assert approved.json() == {"case_id": case_id, "it_approved": True, "sent": False}
+    assert view["case"]["it_approved"] is True

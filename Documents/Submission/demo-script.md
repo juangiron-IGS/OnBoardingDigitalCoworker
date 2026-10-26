@@ -11,7 +11,7 @@ From `code/` in Git Bash:
 ./scripts/start.sh     # starts the MCP servers and the web app, then runs the health check
 ```
 
-Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp` and `JOBDIVA_MODE=mock`.
+Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp`, `JOBDIVA_MODE=mock` and `FEATURE_ACCESS_EQUIPMENT=true`.
 
 ## 1. The problem in one sentence (20 s)
 
@@ -39,9 +39,11 @@ Type `How is SYN-0043 doing?`. The reply gives the state and who must act, from 
 ## 5. Approval (J2) and restricted data (1 min 30 s)
 
 1. Select **IT** and open **Approval**. FLSA and sponsorship show *Restricted*.
-2. Select **Approver (Consultant Onboarding Supervisor)**. The values are now visible.
-3. Point out that every line shows its label (source, recommended, exception) and its source or rule, for example **R-PA-02** (*CA state withholding form, DE 4*).
-4. Press **Approve v1**. The JobDiva and Workflow agent creates 2 simulated records.
+2. Point out the Access and Equipment lines: the Chelsea Tech laptop request (**R-AC-01**), 2% overhead for INSPYR equipment (**R-OH-01**) and the bill-back rule (**R-BB-01**). Press **Approve request for v1**.
+3. Select **Approver (Consultant Onboarding Supervisor)**. The restricted values are now visible.
+4. Point out that every line shows its label (source, recommended, exception) and its source or rule, for example **R-PA-02** (*CA state withholding form, DE 4*).
+5. Under **Follow-up owner**, the Coworker only recommends (**R-OW-01**). Type another name and press **Assign owner**: the assignment replaces the recommendation and is audited.
+6. Press **Approve v1**. The JobDiva and Workflow agent creates 3 simulated records: the JobDiva case, the task list and the Chelsea Tech request, which goes out only because IT and the approver both approved v1.
 
 ## 6. Status and audit (1 min)
 

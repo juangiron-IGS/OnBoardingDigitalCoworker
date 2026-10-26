@@ -1,0 +1,11 @@
+# Equipment bill-back by client (FR-ACC-003, BR-008). Owned by the Onboarding Team.
+# A client with no rule here becomes an exception for the Onboarding Team.
+# Example content (status: draft), synthetic clients only.
+domain: billback
+rules:
+  - id: R-BB-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {client: Acme Synthetic}
+    result: {bill_back: "Bill equipment cost and overhead to the client"}

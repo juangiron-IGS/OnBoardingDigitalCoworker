@@ -13,6 +13,7 @@ flowchart LR
             Intake["Intake and Validation"]
             Policy["Policy and Case Setup"]
             WF["JobDiva and Workflow"]
+            Access["Access and Equipment (Should)<br/>FEATURE_ACCESS_EQUIPMENT"]
             Model["Model client<br/>engine: rules (no model)<br/>usage meter"]
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
@@ -32,6 +33,7 @@ flowchart LR
     Browser --> API --> Orch
     Orch --> Intake --> Model
     Orch --> Policy --> Rules
+    Orch --> Access --> Rules
     Orch --> Case
     WF --> Client
     Orch --> WF

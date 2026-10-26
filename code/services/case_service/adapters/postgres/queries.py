@@ -81,6 +81,11 @@ def case_detail(conn: psycopg.Connection, case_id: str) -> dict[str, Any] | None
         "recommended_owner": row[6],
         "assigned_owner": row[7],
         "package_timing": _timing(row[8], row[9]),
+        "it_approved": conn.execute(
+            "SELECT 1 FROM it_approvals WHERE case_id = %s AND package_version = %s",
+            (case_id, row[4]),
+        ).fetchone()
+        is not None,
     }
     return {
         "case": case,

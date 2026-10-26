@@ -1,0 +1,10 @@
+# Access and laptop request prepared for IT approval (FR-ACC-001, BR-012). Owned by IT.
+# Example content (status: draft) until IT confirms the access set.
+domain: access
+rules:
+  - id: R-AC-01
+    owner: IT
+    version: 1
+    status: draft
+    when: {}
+    result: {provider: Chelsea Tech, access: "Email, Teams and line-of-business apps"}

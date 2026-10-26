@@ -6,6 +6,7 @@ const FIELD_NAMES = {
   work_city: "Work city", work_state: "Work state", work_arrangement: "Work arrangement",
   flsa: "FLSA", sponsorship_visa: "Sponsorship / visa", path: "Onboarding path",
   paperwork: "Paperwork", welcome_kit: "Welcome kit", owner: "Owner",
+  equipment_request: "Laptop and access request", equipment_overhead: "Equipment overhead", bill_back: "Bill-back",
 };
 
 export async function render(root, show) {
@@ -36,6 +37,30 @@ export async function render(root, show) {
   }
   if (getCase() && cases.some((c) => c.id === getCase())) await drawPackage(detail, getCase(), show);
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
+}
+
+// US-020 AC-002: the laptop request goes to Chelsea Tech only after IT and the approver approve.
+function itCard(view, pkg, caseId, show) {
+  const feedback = el("div");
+  const approve = async () => {
+    feedback.replaceChildren();
+    try {
+      const outcome = await api.approveIt(caseId, pkg.version);
+      feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
+        outcome.sent ? "IT approved. The request was sent to Chelsea Tech (simulated)." : "IT approved. The request is sent once the approver approves this version."));
+      setTimeout(() => show("approval"), 1200);
+    } catch (error) {
+      feedback.replaceChildren(errorNotice(error));
+    }
+  };
+  return el("div", {},
+    el("h3", {}, "IT approval of the laptop and access request"),
+    el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}.`),
+    getRole() === "it" && !view.case.it_approved
+      ? el("div", { class: "actions" }, el("button", { class: "btn primary", onclick: approve }, `Approve request for v${pkg.version}`))
+      : null,
+    getRole() !== "it" && !view.case.it_approved ? el("p", { class: "lead" }, "Switch to the IT role to approve it.") : null,
+    feedback);
 }
 
 // US-032: the Coworker recommends the follow-up owner; the supervisor assigns it.
@@ -84,6 +109,7 @@ async function drawPackage(root, caseId, show) {
   ].filter(Boolean));
 
   root.append(ownerCard(view, caseId, show));
+  if (lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
 
   const feedback = el("div");
   const canDecide = getRole() === "approver" && DECIDABLE.has(view.case.state) && pkg.status === "ready";

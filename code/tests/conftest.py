@@ -43,6 +43,8 @@ _use_test_database()
 os.environ["JOBDIVA_MODE"] = "mock"
 # The API tests call the services in process; tests/e2e/test_over_mcp.py covers MCP.
 os.environ["AGENT_TRANSPORT"] = "in_process"
+# Should features are off unless a test turns one on.
+os.environ["FEATURE_ACCESS_EQUIPMENT"] = "false"
 
 
 def _connect(url_var: str) -> psycopg.Connection:

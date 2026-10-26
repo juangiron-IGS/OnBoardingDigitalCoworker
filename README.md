@@ -47,7 +47,7 @@ To users it is one Coworker. Inside, an Onboarding Orchestrator owns the case an
 
 ![Agent architecture](Documents/CheckPoint/14October/images/08-architecture.png)
 
-The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The Should and Could agents are not built yet.
+The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the Access and Equipment agent (Should, behind `FEATURE_ACCESS_EQUIPMENT`), the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The other Should and Could agents are not built yet.
 
 | Agent | Priority | Responsibility |
 | --- | --- | --- |
@@ -93,6 +93,7 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
 | `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key |
 | `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
+| `FEATURE_ACCESS_EQUIPMENT` | `false` (`.env.example`: `true`) | Access and Equipment agent: laptop and access request, 2% or 5% overhead, bill-back, IT approval |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
 | `JOBDIVA_MODE` | `mock` | `mock`, or read-only `sandbox` for the JobDiva READ server |
 | `JOBDIVA_BASE_URL`, `JOBDIVA_CLIENT_ID`, `JOBDIVA_API_USER`, `JOBDIVA_API_PASSWORD` | none | Sandbox mode only: Client ID from JobDiva support and a dedicated API user |
@@ -123,8 +124,8 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 1. A start email arrives with two fields missing. The recruiter gets an alert naming them.
 2. The recruiter answers in the chat, one question at a time. The package is built with a rule ID on every recommendation.
 3. Someone asks for the case status in the chat.
-4. IT cannot see FLSA or sponsorship. The approver can, and approves package v1.
-5. The single writer creates the JobDiva case (mock) and the task list, each with the approval ID. The status view shows the full audit log.
+4. IT cannot see FLSA or sponsorship, and approves the laptop and access request (2% overhead, bill-back by rule). The approver can see them, assigns the follow-up owner and approves package v1.
+5. The single writer creates the JobDiva case (mock), the task list and the Chelsea Tech request, each with the approval ID. The status view shows the full audit log and whether the package met the 5-minute target.
 6. Guardrails:
    - a duplicate start is blocked;
    - an FLSA conflict between the email and JobDiva is escalated and blocks the package;
@@ -147,7 +148,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging).
+- **Not built yet:** the Should and Could agents Candidate Follow-up, Onboarding Knowledge and Culture and Belonging.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components

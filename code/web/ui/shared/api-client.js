@@ -41,6 +41,7 @@ export const api = {
   decide: (id, packageVersion, decision, comment) =>
     call("POST", `/api/cases/${encodeURIComponent(id)}/decision`, { package_version: packageVersion, decision, comment }),
   assignOwner: (id, owner) => call("POST", `/api/cases/${encodeURIComponent(id)}/owner`, { owner }),
+  approveIt: (id, packageVersion) => call("POST", `/api/cases/${encodeURIComponent(id)}/it-approval`, { package_version: packageVersion }),
   chat: (message, caseId) => call("POST", "/api/chat", { message, case_id: caseId || null }),
   alerts: (caseId) => call("GET", `/api/alerts${caseId ? `?case_id=${encodeURIComponent(caseId)}` : ""}`),
 };
