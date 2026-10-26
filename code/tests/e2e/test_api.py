@@ -326,3 +326,15 @@ def test_new_email_with_bad_fields_is_refused(client, bad) -> None:
     response = client.post("/api/inbox", json=bad, headers=_as("recruiter"))
 
     assert response.status_code == 400
+
+
+def test_claude_engine_without_a_key_is_a_clear_503(client, monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "claude")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    response = client.post(
+        "/api/chat", json={"message": "hello"}, headers=_as("recruiter")
+    )
+
+    assert response.status_code == 503
+    assert "ANTHROPIC_API_KEY" in response.json()["detail"]

@@ -63,3 +63,12 @@ def test_it_request_payload_carries_no_restricted_fields() -> None:
     assert payload["provider"] == "Chelsea Tech"
     assert payload["hardware"] == "Standard laptop"
     assert "flsa" not in payload
+
+
+def test_free_text_equipment_finds_the_provider() -> None:
+    case = CASE | {"equipment": "standard laptop from INSPYR"}
+
+    lines = access.recommend(case, CATALOG)
+
+    assert _line(lines, "equipment_overhead").value == "2% (INSPYR)"
+    assert "standard laptop" in _line(lines, "equipment_request").value

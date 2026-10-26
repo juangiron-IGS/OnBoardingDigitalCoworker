@@ -166,3 +166,13 @@ def test_model_calls_count_against_the_cap() -> None:
 
     with pytest.raises(ModelBudgetExceeded):
         _extract(engine, "free text two")
+
+
+def test_redaction_keeps_the_other_sentences_of_the_line() -> None:
+    messages = FakeMessages({"values": {}, "ambiguous": []})
+
+    _extract(_engine(messages), "Needs a standard laptop. She is non-exempt.")
+
+    content = messages.calls[0]["messages"][0]["content"]
+    assert "standard laptop" in content
+    assert "non-exempt" not in content
