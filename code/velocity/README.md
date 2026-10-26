@@ -23,4 +23,4 @@ Every setting is an environment variable. Names are in [`code/.env.example`](../
 | `WEB_APP_PORT` | 3000 | Port of the web app on `127.0.0.1` |
 | `DATABASE_URL`, `AUDIT_DATABASE_URL` | none | PostgreSQL roles: application, and INSERT-only audit |
 
-The `VELOCITY_*` variables in `.env.example` come from an earlier assumption that Velocity 2.0 was a runtime (ADR-006). They are unused and may stay empty.
+The `VELOCITY_*` variables come from an earlier assumption that Velocity 2.0 was a runtime (ADR-006). The build does not read them; `.env.example` keeps them commented out in its "Reserved for the pilot" section.

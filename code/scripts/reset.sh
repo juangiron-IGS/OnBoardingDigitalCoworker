@@ -2,7 +2,7 @@
 # Recreate the PostgreSQL volume and reload migrations, roles and seed data. Run from code/.
 set -euo pipefail
 
-set -a; source .env; set +a
+source scripts/load_env.sh
 
 docker compose down --volumes
 docker compose up -d --wait postgres

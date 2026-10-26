@@ -5,7 +5,7 @@
 # 6. health check. Everything binds to 127.0.0.1.
 set -euo pipefail
 
-set -a; source .env; set +a
+source scripts/load_env.sh
 
 if ! docker info >/dev/null 2>&1; then
   echo "Container runtime not running. Start Docker or Podman and run this again." >&2

@@ -6,9 +6,11 @@ from .adapters.postgres import queries
 from .adapters.postgres.audit_log import PostgresAuditLog
 from .adapters.postgres.case_repository import PostgresCaseRepository
 from .application import decisions
+from .application.assign_owner import assign_owner
 from .application.build_package import build_package
 from .application.case_data import log_action, record_answers
 from .application.create_case import CaseIntake, create_case
+from .application.it_approval import record_it_approval
 from .application.move_case import move_case
 from .domain.case import CaseState
 from .domain.package import PackageLine
@@ -105,6 +107,29 @@ class LocalCaseService:
             approver_role=approver_role,
             comment=comment,
         )
+
+    def assign_owner(self, case_id: str, owner: str, *, assigned_by: str) -> None:
+        assign_owner(self._repo, self._audit, case_id, owner, assigned_by=assigned_by)
+
+    def record_it_approval(
+        self, case_id: str, *, package_version: int, approver_role: str
+    ) -> None:
+        record_it_approval(
+            self._repo,
+            self._audit,
+            case_id,
+            package_version=package_version,
+            approver_role=approver_role,
+        )
+
+    def it_approved(self, case_id: str, package_version: int) -> bool:
+        return self._repo.it_approved(case_id, package_version)
+
+    def has_it_request(self, case_id: str, package_version: int) -> bool:
+        return self._repo.has_line(case_id, package_version, "equipment_request")
+
+    def approval_id_for(self, case_id: str, package_version: int) -> str | None:
+        return self._repo.approval_id_for(case_id, package_version)
 
     def case_state(self, case_id: str) -> CaseState:
         return self._repo.lock_case(case_id).state

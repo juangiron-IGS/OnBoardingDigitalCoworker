@@ -76,7 +76,8 @@ def test_j1_and_j2_run_with_every_system_call_over_mcp(conn, coworker) -> None:
     )
 
     alert = conn.execute(
-        "SELECT text FROM mocks.alerts WHERE case_id = %s", (started.case_id,)
+        "SELECT text FROM mocks.alerts WHERE case_id = %s AND recipient = 'Recruiter'",
+        (started.case_id,),
     ).fetchone()[0]
     records = conn.execute(
         "SELECT count(*) FROM mocks.jobdiva_cases WHERE approval_id = %s",

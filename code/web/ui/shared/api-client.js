@@ -34,12 +34,15 @@ async function call(method, path, body) {
 
 export const api = {
   inbox: () => call("GET", "/api/inbox"),
+  sendEmail: (sender, subject, body) => call("POST", "/api/inbox", { sender, subject, body }),
   process: (id) => call("POST", `/api/inbox/${encodeURIComponent(id)}/process`),
   cases: () => call("GET", "/api/cases"),
   case: (id) => call("GET", `/api/cases/${encodeURIComponent(id)}`),
   answer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/answers`, { field, value }),
   decide: (id, packageVersion, decision, comment) =>
     call("POST", `/api/cases/${encodeURIComponent(id)}/decision`, { package_version: packageVersion, decision, comment }),
+  assignOwner: (id, owner) => call("POST", `/api/cases/${encodeURIComponent(id)}/owner`, { owner }),
+  approveIt: (id, packageVersion) => call("POST", `/api/cases/${encodeURIComponent(id)}/it-approval`, { package_version: packageVersion }),
   chat: (message, caseId) => call("POST", "/api/chat", { message, case_id: caseId || null }),
   alerts: (caseId) => call("GET", `/api/alerts${caseId ? `?case_id=${encodeURIComponent(caseId)}` : ""}`),
 };
@@ -76,6 +79,10 @@ export function errorNotice(error) {
   if (error.status === 409 && error.detail?.refused) {
     const current = error.detail.current_version ? ` The current version is v${error.detail.current_version}.` : "";
     return el("div", { class: "notice bad", role: "alert" }, `Refused: ${error.detail.refused.replaceAll("_", " ")}.${current}`);
+  }
+  if (error.status === 400 && Array.isArray(error.detail)) {
+    const fields = error.detail.map((e) => `${e.field}: ${e.message}`).join("; ");
+    return el("div", { class: "notice bad", role: "alert" }, `Please check ${fields}.`);
   }
   if (error.status === 403) return el("div", { class: "notice bad", role: "alert" }, "Your role cannot do this. Switch to the Approver role.");
   return el("div", { class: "notice bad", role: "alert" }, `Something went wrong: ${error.message}`);

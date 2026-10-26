@@ -37,6 +37,20 @@ def escalation_text(
     )
 
 
+def owner_text(case_id: str, owner: str, rule_id: str) -> str:
+    return (
+        f"New hire in case {case_id}. Recommended follow-up owner: {owner} "
+        f"({rule_id}). Please assign the owner in the approval view."
+    )
+
+
+def it_request_text(case_id: str, package_version: int) -> str:
+    return (
+        f"Case {case_id}: package v{package_version} is approved. The laptop and "
+        "access request waits for your approval in the approval view."
+    )
+
+
 def duplicate_text(existing_ref: str) -> str:
     return (
         "This start was not processed: a case for the same person and start date "

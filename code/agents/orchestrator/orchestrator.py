@@ -1,10 +1,12 @@
 """Onboarding Orchestrator: owns each case and routes it through the specialized
 agents on one shared context (STACK-002, AC8)."""
 
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import date
 
+from agents.access_equipment import agent as access
 from agents.common import notifications
 from agents.common.model_client import ModelClient, load_labels, load_required
 from agents.intake_validation import agent as intake
@@ -14,11 +16,14 @@ from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
 from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import DuplicateCase
+from services.case_service.domain.package import PackageLine
 
 from .chat import ChatReply
 
 AGENT = "orchestrator"
 RECRUITER = "Recruiter"
+SUPERVISOR = "Onboarding Supervisor"
+IT = "IT"
 
 
 @dataclass(frozen=True)
@@ -40,6 +45,7 @@ class Orchestrator:
         alerts: Alerts,
         workflow: JobDivaWorkflow,
         jobdiva: JobDivaRead | None = None,
+        access_equipment: bool | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
@@ -47,6 +53,12 @@ class Orchestrator:
         self._alerts = alerts
         self._workflow = workflow
         self._jobdiva = jobdiva
+        # Should agent S1, behind its feature flag (checkpoint scope priority)
+        self._access = (
+            os.environ.get("FEATURE_ACCESS_EQUIPMENT", "false").lower() == "true"
+            if access_equipment is None
+            else access_equipment
+        )
         self._labels = load_labels()
         self._required = load_required()
 
@@ -158,6 +170,9 @@ class Orchestrator:
                 data=self._cases.case_data(case_id),
             )
             self._cases.move_case(case_id, CaseState.ACTIONS_EXECUTED, agent=AGENT)
+            sent = self._send_it_request(case_id, package_version, approval_id)
+            if sent:
+                results.append(sent)
             return {
                 "state": self._cases.case_state(case_id).value,
                 "approval_id": approval_id,
@@ -176,6 +191,56 @@ class Orchestrator:
             comment=comment,
         )
         return {"state": self._cases.case_state(case_id).value, "approval_id": None}
+
+    def approve_it_request(
+        self, case_id: str, *, package_version: int, approver_role: str
+    ) -> dict:
+        """IT approves the laptop request (US-020); it is sent once both approved."""
+        self._cases.record_it_approval(
+            case_id, package_version=package_version, approver_role=approver_role
+        )
+        approval_id = self._cases.approval_id_for(case_id, package_version)
+        sent = (
+            self._send_it_request(case_id, package_version, approval_id)
+            if approval_id
+            else None
+        )
+        return {"case_id": case_id, "it_approved": True, "sent": sent is not None}
+
+    def _send_it_request(
+        self, case_id: str, package_version: int, approval_id: str
+    ) -> dict | None:
+        if not self._cases.has_it_request(case_id, package_version):
+            return None
+        if not self._cases.it_approved(case_id, package_version):
+            notifications.notify(
+                self._alerts,
+                case_id,
+                IT,
+                notifications.it_request_text(case_id, package_version),
+            )
+            self._cases.log_action(case_id, agent=access.AGENT, action="alert_it")
+            return None
+        return workflow_agent.send_it_request(
+            self._workflow,
+            approval_id=approval_id,
+            package_version=package_version,
+            payload=access.it_request(self._cases.case_data(case_id), self._catalog),
+        )
+
+    def _equipment_lines(self, data: dict) -> list:
+        """S1 lines; a failing Should agent adds an exception and never stops J1."""
+        try:
+            return access.recommend(data, self._catalog)
+        except Exception:  # noqa: BLE001 - any failure becomes a visible exception
+            return [
+                PackageLine(
+                    field="equipment_request",
+                    value="Access and Equipment agent failed; IT to prepare it",
+                    label="exception",
+                    source_or_rule_id=access.AGENT,
+                )
+            ]
 
     def questions(self, case_id: str) -> list[dict]:
         """Open questions for the recruiter: missing fields and contradictions."""
@@ -210,6 +275,32 @@ class Orchestrator:
             agent=policy.AGENT,
             action="escalate_conflict",
             data_refs={f: policy.CONFLICT_SOURCE for f in fields},
+        )
+
+    def _notify_supervisor(self, case_id: str, lines: list) -> None:
+        """US-032 AC-001: the supervisor hears of each new hire, then assigns."""
+        owner = next(
+            (
+                line
+                for line in lines
+                if line.field == "owner" and line.label == "recommended"
+            ),
+            None,
+        )
+        if owner is None:
+            return
+        notifications.notify(
+            self._alerts,
+            case_id,
+            SUPERVISOR,
+            notifications.owner_text(case_id, owner.value, owner.source_or_rule_id),
+        )
+        self._cases.log_action(
+            case_id,
+            agent=AGENT,
+            action="notify_supervisor",
+            rule_ids=[owner.source_or_rule_id],
+            data_refs={"owner": owner.source_or_rule_id},
         )
 
     def _pending(self, data: dict) -> list[str]:
@@ -250,9 +341,12 @@ class Orchestrator:
         self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
         conflicts = policy.find_conflicts(data, self._start_notes(data))
         lines = policy.recommend(data, self._catalog, conflicts)
+        if self._access:
+            lines += self._equipment_lines(data)
         self._cases.build_package(
             case_id, lines, agent=policy.AGENT, escalated=bool(conflicts)
         )
         if conflicts:
             self._escalate(case_id, list(conflicts))
+        self._notify_supervisor(case_id, lines)
         return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)
