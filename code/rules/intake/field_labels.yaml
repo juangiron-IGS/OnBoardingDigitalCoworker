@@ -19,6 +19,7 @@ fields:
   manager: ["Manager", "Hiring manager"]
   start_date: ["Start date", "Start"]
   client: ["Client"]
+  client_type: ["Client type"]
   division: ["Division"]
   line_of_business: ["Line of business", "LOB"]
   employment_type: ["Employment type", "Contract type"]
@@ -26,3 +27,26 @@ fields:
   work_arrangement: ["Work arrangement", "Arrangement"]
   pay_rate: ["Pay rate"]
   bill_rate: ["Bill rate"]
+
+# Fields a case needs before it can be set up (FR-VAL-001, FR-VAL-002). Each one
+# that is missing is named in an alert to the recruiter (FR-VAL-004).
+required:
+  - work_city
+  - work_state
+  - flsa
+  - billing_contact
+  - timesheet_approver
+  - equipment
+  - sponsorship_visa
+  - person_ref
+  - role
+  - manager
+  - start_date
+  - client
+  - division
+  - line_of_business
+  - employment_type
+  - vendor_company
+  - work_arrangement
+  - pay_rate
+  - bill_rate

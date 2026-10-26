@@ -2,6 +2,7 @@ import os
 import uuid
 from collections.abc import Iterator
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import psycopg
 import pytest
@@ -23,6 +24,21 @@ def _load_env_file() -> None:
 
 
 _load_env_file()
+
+
+def _use_test_database() -> None:
+    """Point the suite at <DB_NAME>_test (or TEST_DB_NAME), never the dev database."""
+    test_db = (
+        os.environ.get("TEST_DB_NAME")
+        or f"{os.environ.get('DB_NAME', 'coworker')}_test"
+    )
+    for var in ("DATABASE_URL", "AUDIT_DATABASE_URL"):
+        if os.environ.get(var):
+            url = urlsplit(os.environ[var])
+            os.environ[var] = urlunsplit(url._replace(path=f"/{test_db}"))
+
+
+_use_test_database()
 
 
 def _connect(url_var: str) -> psycopg.Connection:

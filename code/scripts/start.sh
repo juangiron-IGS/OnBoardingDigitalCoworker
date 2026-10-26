@@ -20,4 +20,6 @@ docker compose up -d --wait postgres
 
 if [ "$new_volume" = true ]; then
   ./scripts/apply_db.sh
+  docker compose exec -T postgres createdb -U postgres "${DB_NAME}_test"
+  DB_NAME="${DB_NAME}_test" ./scripts/apply_db.sh
 fi

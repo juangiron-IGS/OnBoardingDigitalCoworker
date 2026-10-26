@@ -13,6 +13,9 @@ Documents/HackatonDocuments/*.pptx
 .env.*
 !.env.example
 
+# Local browser test artifacts
+.playwright-mcp/
+
 # OS and editor files
 .DS_Store
 Thumbs.db

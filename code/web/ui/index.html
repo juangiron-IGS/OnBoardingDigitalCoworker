@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Onboarding Coworker</title>
+  <link rel="stylesheet" href="shared/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%231f5fae%27/%3E%3Cpath d=%27M9 17l5 5 9-11%27 stroke=%27white%27 stroke-width=%273.5%27 fill=%27none%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <strong>Onboarding Coworker</strong>
+      <span>INSPYR · synthetic data only · local demo</span>
+    </div>
+    <label class="role">Viewing as
+      <select id="role">
+        <option value="recruiter">Recruiter</option>
+        <option value="onboarding">Onboarding Team</option>
+        <option value="approver">Approver (Consultant Onboarding Supervisor)</option>
+        <option value="it">IT</option>
+      </select>
+    </label>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" data-view="inbox">Simulated inbox</button>
+    <button role="tab" data-view="chat">Chat</button>
+    <button role="tab" data-view="approval">Approval</button>
+    <button role="tab" data-view="alerts">Simulated alerts</button>
+    <button role="tab" data-view="status">Status</button>
+  </nav>
+  <main id="view" aria-live="polite"></main>
+  <script type="module" src="shared/app.js"></script>
+</body>
+</html>
