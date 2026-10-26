@@ -28,7 +28,7 @@ def create_case(
     """Create a case in Received, or block a duplicate start (BR-004, US-017)."""
     existing = _find_duplicate(repo, jobdiva_read, intake)
     if existing:
-        _refuse(audit, existing, agent)
+        _refuse(repo, audit, existing, agent)
 
     case_id = f"case-{uuid.uuid4().hex[:12]}"
     try:
@@ -44,7 +44,7 @@ def create_case(
     except psycopg.errors.UniqueViolation:
         # A concurrent start for the same person and date won the race.
         existing = repo.find_case_id(intake.person_ref, intake.start_date)
-        _refuse(audit, existing or "unknown", agent)
+        _refuse(repo, audit, existing or "unknown", agent)
     return case_id
 
 
@@ -58,12 +58,16 @@ def _find_duplicate(
     return f"jobdiva:{found['start_id']}" if found["found"] else None
 
 
-def _refuse(audit: AuditLog, existing_ref: str, agent: str) -> None:
-    audit.append(
-        case_id=existing_ref,
-        agent=agent,
-        action="create_case",
-        outcome="refused",
-        data_refs={"person_ref": "intake", "start_date": "intake"},
-    )
+def _refuse(
+    repo: CaseRepository, audit: AuditLog, existing_ref: str, agent: str
+) -> None:
+    # Its own transaction, so the refusal is kept even if the caller rolls back.
+    with repo.transaction():
+        audit.append(
+            case_id=existing_ref,
+            agent=agent,
+            action="create_case",
+            outcome="refused",
+            data_refs={"person_ref": "intake", "start_date": "intake"},
+        )
     raise DuplicateCase(existing_ref)

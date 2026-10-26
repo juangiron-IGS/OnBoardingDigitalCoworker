@@ -35,7 +35,7 @@ def build_package(
             outcome="completed",
             package_version=version,
             rule_ids=sorted(
-                {line.source_or_rule_id for line in lines if line.label != "source"}
+                {line.source_or_rule_id for line in lines if line.cites_rule}
             ),
             data_refs={line.field: line.source_or_rule_id for line in lines},
         )

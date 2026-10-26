@@ -72,6 +72,8 @@ def authorize_action(repo: CaseRepository, *, approval_id: str) -> Approval:
     """Return the approval only if it is for the case's current package version.
 
     Used by the JobDiva and Workflow server before every simulated action (BR-002).
+    Call it inside the transaction that applies the action: the case row stays
+    locked until that transaction ends, so the package cannot change in between.
     """
     approval = repo.find_approval(approval_id)
     if approval is None:
@@ -97,8 +99,10 @@ def _decide(
     try:
         with repo.transaction():
             case = repo.lock_case(case_id)
-            if package_version != case.current_package_version:
-                raise ApprovalRefused("version_mismatch")
+            verify(
+                Approval("pending", case_id, package_version),
+                case.current_package_version,
+            )
             if decision == "approve" and (
                 repo.package_status(case_id, package_version) != "ready"
             ):
@@ -119,11 +123,13 @@ def _decide(
                 package_version=package_version,
             )
     except GovernanceError:
-        audit.append(
-            case_id=case_id,
-            agent=approver_role,
-            action=action,
-            outcome="refused",
-            package_version=package_version,
-        )
+        # Its own transaction, so the refusal is kept even if the caller rolls back.
+        with repo.transaction():
+            audit.append(
+                case_id=case_id,
+                agent=approver_role,
+                action=action,
+                outcome="refused",
+                package_version=package_version,
+            )
         raise

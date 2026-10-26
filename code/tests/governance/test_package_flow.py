@@ -9,6 +9,7 @@ from services.case_service.application.decisions import (
 from services.case_service.application.move_case import move_case
 from services.case_service.domain.case import CaseState
 from services.case_service.domain.errors import GovernanceError
+from services.case_service.domain.package import PackageLine
 
 pytestmark = pytest.mark.db
 
@@ -142,3 +143,23 @@ def test_blocked_package_cannot_be_approved(repo, audit, case_set_up, lines) -> 
             approver_role="approver",
         )
     assert refusal.value.reason == "package_not_ready"
+
+
+def test_audit_rule_ids_hold_only_catalog_rules(
+    app_conn, repo, audit, case_set_up, lines
+) -> None:
+    # US-018 AC-001: "rule IDs used" never contains a source name
+    inferred = PackageLine(
+        field="work_arrangement",
+        value="remote",
+        label="inferred",
+        source_or_rule_id="jobdiva",
+    )
+    build_package(repo, audit, case_set_up, [*lines, inferred], agent="orchestrator")
+
+    rule_ids = app_conn.execute(
+        "SELECT rule_ids FROM audit_log"
+        " WHERE case_id = %s AND action = 'build_package'",
+        (case_set_up,),
+    ).fetchone()[0]
+    assert rule_ids == ["R-PA-02"]

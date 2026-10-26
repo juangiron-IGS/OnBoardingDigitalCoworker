@@ -53,3 +53,14 @@ def test_verify_refuses_other_version() -> None:
 
 def test_verify_accepts_current_version() -> None:
     verify(Approval("apr-1", "case-1", 3), current_package_version=3)
+
+
+def test_only_catalog_ids_count_as_rules() -> None:
+    def cites(source: str) -> bool:
+        return PackageLine(
+            field="f", label="inferred", source_or_rule_id=source
+        ).cites_rule
+
+    assert cites("R-PA-02")
+    assert not cites("jobdiva")
+    assert not cites("R-PA-02-extra")

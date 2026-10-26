@@ -13,7 +13,12 @@ from ...ports.case_repository import CaseRow
 
 
 class PostgresCaseRepository:
-    """Case store on the caller's connection, so writes share its transaction."""
+    """Case store on the caller's connection, so writes share its transaction.
+
+    The connection must be in autocommit mode: each use case opens its own
+    transactions with transaction(), and a refusal is audited in its own
+    transaction so it is kept when the refused change is rolled back.
+    """
 
     def __init__(self, conn: psycopg.Connection) -> None:
         self._conn = conn
