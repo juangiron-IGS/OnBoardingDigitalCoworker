@@ -133,9 +133,15 @@ class Orchestrator:
             raise ValueError(f"unknown field {field_name!r}")
         data = self._cases.case_data(case_id)
         contradictions = [f for f in data.get("contradictions", []) if f != field_name]
+        # The package cites the recruiter for this value, not the start's channel.
+        answered = {**data.get("answered_by", {}), field_name: "recruiter"}
         self._cases.record_answers(
             case_id,
-            {field_name: value, "contradictions": contradictions},
+            {
+                field_name: value,
+                "contradictions": contradictions,
+                "answered_by": answered,
+            },
             agent=RECRUITER.lower(),
             source="recruiter",
         )
