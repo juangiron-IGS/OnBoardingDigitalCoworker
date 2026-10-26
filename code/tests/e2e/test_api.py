@@ -203,7 +203,12 @@ def test_health_reports_the_database(client) -> None:
 
 def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
     monkeypatch.setenv("AGENT_TRANSPORT", "mcp")
-    for var in ("JOBDIVA_MOCK_URL", "JOBDIVA_WORKFLOW_URL", "TEAMS_MOCK_URL"):
+    for var in (
+        "JOBDIVA_MOCK_URL",
+        "JOBDIVA_WORKFLOW_URL",
+        "TEAMS_MOCK_URL",
+        "COWORKER_MCP_URL",
+    ):
         monkeypatch.setenv(var, "http://127.0.0.1:9")
 
     body = client.get("/api/health").json()

@@ -4,7 +4,7 @@
 set -euo pipefail
 
 stopped=false
-for name in web jobdiva-read jobdiva-workflow teams-mock; do
+for name in web jobdiva-read jobdiva-workflow teams-mock coworker-mcp; do
   if [ -f "logs/$name.pid" ]; then
     kill "$(cat "logs/$name.pid")" 2>/dev/null || true
     rm -f "logs/$name.pid"
