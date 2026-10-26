@@ -3,8 +3,10 @@ Documents/Meetings Transcript/
 Documents/Team Ideas/
 Documents/HackatonDocuments/*.pptx
 
-# Local tool settings
-.claude/
+# Local tool settings (only the shared project rules and settings are versioned)
+.claude/*
+!.claude/rules/
+!.claude/settings.json
 
 # Secrets
 .env
