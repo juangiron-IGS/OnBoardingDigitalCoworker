@@ -1,0 +1,3 @@
+# ruff — commit c5fbb01 (main)
+All checks passed!
+104 files already formatted
