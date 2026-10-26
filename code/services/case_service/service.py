@@ -143,6 +143,9 @@ class LocalCaseService:
             data_refs=data_refs,
         )
 
+    def find_case(self, ref: str) -> str | None:
+        return queries.find_case(self._conn, ref)
+
     def list_cases(self) -> list[dict[str, Any]]:
         return queries.list_cases(self._conn)
 
