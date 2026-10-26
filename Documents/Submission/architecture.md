@@ -8,7 +8,7 @@ flowchart LR
 
     subgraph Web["Web app (FastAPI) on 127.0.0.1:3000"]
         API["API<br/>X-Role · 400 / 403 / 409"]
-        subgraph Agents["Onboarding Coworker (in process)"]
+        subgraph Agents["Onboarding Coworker"]
             Orch["Onboarding Orchestrator<br/>+ chat channel"]
             Intake["Intake and Validation"]
             Policy["Policy and Case Setup"]
@@ -17,35 +17,35 @@ flowchart LR
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
         Rules[("Rules catalog<br/>YAML: paperwork, path, kit,<br/>owner, overhead, intake labels")]
-        JDR["JobDiva mock<br/>reads only"]
         Mail["Outlook mock<br/>synthetic .eml"]
-        Alerts["Teams mock<br/>alerts"]
-        Writer["Single writer<br/>re-verifies approval + version"]
+        Client["MCP client<br/>refusals keep their reason"]
     end
 
     DB[("PostgreSQL 16 (Docker)<br/>cases · package versions · approvals<br/>audit_log (insert-only) · action_ledger<br/>mocks: jobdiva_cases · task_lists · alerts")]
 
-    subgraph MCP["MCP servers (also runnable on their own)"]
-        S1["jobdiva-read :8101<br/>mock or read-only sandbox"]
-        S2["jobdiva-workflow :8106<br/>only write tool"]
-        S3["outlook-mock · teams-mock"]
+    subgraph MCP["MCP servers (one process each, streamable HTTP on 127.0.0.1)"]
+        S1["jobdiva-read :8101<br/>mock or read-only sandbox<br/>no write tools"]
+        S2["jobdiva-workflow :8106<br/>single writer: re-verifies<br/>approval + version"]
+        S3["teams-mock :8108<br/>alerts"]
     end
 
     Browser --> API --> Orch
     Orch --> Intake --> Model
     Orch --> Policy --> Rules
-    Orch --> WF --> Writer
     Orch --> Case
-    Orch --> JDR
-    Orch --> Alerts
+    WF --> Client
+    Orch --> WF
+    Orch --> Client
+    Client -- MCP --> S1
+    Client -- MCP --> S2
+    Client -- MCP --> S3
     API --> Mail
     Case --> DB
-    Writer --> DB
-    Alerts --> DB
-    S2 -. same service .-> Writer
-    S1 -. same adapters .-> JDR
-    S3 -. same services .-> Mail
+    S2 --> DB
+    S3 --> DB
 ```
+
+`AGENT_TRANSPORT=mcp` (the default in `.env.example`) runs the layout above: `start.sh` starts the three MCP servers before the web app, and the health check waits until each one answers. `AGENT_TRANSPORT=in_process` is the fallback for the demo: the agents call the same services the servers wrap, behind the same interfaces, with the same governance code. The Outlook mock is read by the web app's inbox in both modes.
 
 ## Where it matches the design
 
@@ -63,6 +63,5 @@ flowchart LR
 
 | Topic | Target (SAD) | Demo | Reason |
 |---|---|---|---|
-| Agent to system calls | Over MCP, one process per server | In process, through the same services the MCP servers wrap (task B4 pending) | Time. The SAD names this as the Alternative A fallback behind the same interface. The governance controls are the same code |
 | Model | A model reads free text | `rules` engine reads labelled messages | No model API key yet (ADR-006). A model engine plugs in behind `model_client.py` |
 | Velocity 2.0 | Agent runtime | Delivery method | Corrected in ADR-006 |

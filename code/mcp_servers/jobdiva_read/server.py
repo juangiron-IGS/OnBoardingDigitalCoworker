@@ -34,14 +34,20 @@ server = MCPServer(
 
 @server.tool()
 def read_start(start_id: str) -> dict:
-    """Read one start by its JobDiva start ID."""
-    return _jobdiva.read_start(start_id)
+    """Read one start by its JobDiva start ID; {} when there is none."""
+    try:
+        return _jobdiva.read_start(start_id)
+    except KeyError:
+        return {}
 
 
 @server.tool()
 def read_start_notes(start_id: str) -> dict:
-    """Read the recruiter notes of one start."""
-    return _jobdiva.read_start_notes(start_id)
+    """Read the recruiter notes of one start; {} when there is none."""
+    try:
+        return _jobdiva.read_start_notes(start_id)
+    except KeyError:
+        return {}
 
 
 @server.tool()

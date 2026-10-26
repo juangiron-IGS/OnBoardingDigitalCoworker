@@ -1,3 +1,4 @@
+import os
 from collections.abc import Iterator
 from typing import Annotated
 
@@ -7,19 +8,14 @@ from fastapi import Depends, Header, HTTPException
 from agents.common.model_client import get_model_client
 from agents.orchestrator.orchestrator import Orchestrator
 from mcp_servers.common.db import connect
-from mcp_servers.jobdiva_read.adapters.mock import MockJobDiva
-from mcp_servers.jobdiva_workflow.service import WorkflowService
 from mcp_servers.mocks.outlook.service import MailboxService
-from mcp_servers.mocks.teams.service import AlertsService
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.privacy import ROLES
 from services.case_service.service import LocalCaseService
 
+from .transport import systems
+
 _catalog = RulesCatalog.load()
-
-
-# JobDiva in mock mode, in process. Sandbox mode runs the JobDiva READ server.
-_jobdiva = MockJobDiva()
 
 
 def get_conn() -> Iterator[psycopg.Connection]:
@@ -41,17 +37,18 @@ Role = Annotated[str, Depends(get_role)]
 
 
 def get_cases(conn: Conn) -> LocalCaseService:
-    return LocalCaseService(conn, _jobdiva)
+    return LocalCaseService(conn, systems(os.environ, conn).jobdiva)
 
 
 def get_orchestrator(conn: Conn) -> Orchestrator:
+    wired = systems(os.environ, conn)
     return Orchestrator(
-        cases=LocalCaseService(conn, _jobdiva),
+        cases=LocalCaseService(conn, wired.jobdiva),
         model=get_model_client(),
         catalog=_catalog,
-        alerts=AlertsService(conn),
-        workflow=WorkflowService(conn),
-        jobdiva=_jobdiva,
+        alerts=wired.alerts,
+        workflow=wired.workflow,
+        jobdiva=wired.jobdiva,
     )
 
 
