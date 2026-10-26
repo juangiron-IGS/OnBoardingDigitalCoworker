@@ -1,0 +1,28 @@
+# Labels the intake reads from synthetic start emails and chat messages.
+# Field names are the case data keys (US-004). Owner: Onboarding. Version: 1.
+id: R-IN-01
+owner: Onboarding
+version: 1
+fields:
+  # Recruiter-note fields (FRS 3.3); additional_notes is the only optional one
+  work_city: ["Work city", "City"]
+  work_state: ["Work state", "State"]
+  flsa: ["FLSA", "FLSA status"]
+  billing_contact: ["Billing contact"]
+  timesheet_approver: ["Timesheet approver"]
+  equipment: ["Equipment", "Hardware"]
+  sponsorship_visa: ["Sponsorship", "Visa", "Sponsorship and visa"]
+  additional_notes: ["Additional notes", "Notes"]
+  # Mandatory JobDiva and chat data
+  person_ref: ["Candidate", "Candidate ID", "New hire"]
+  role: ["Role", "Position", "Job title"]
+  manager: ["Manager", "Hiring manager"]
+  start_date: ["Start date", "Start"]
+  client: ["Client"]
+  division: ["Division"]
+  line_of_business: ["Line of business", "LOB"]
+  employment_type: ["Employment type", "Contract type"]
+  vendor_company: ["Vendor company", "Vendor"]
+  work_arrangement: ["Work arrangement", "Arrangement"]
+  pay_rate: ["Pay rate"]
+  bill_rate: ["Bill rate"]
