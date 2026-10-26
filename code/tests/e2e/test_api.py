@@ -169,3 +169,45 @@ def test_case_view_lists_the_open_questions(client) -> None:
             "kind": "missing",
         },
     ]
+
+
+def test_chat_endpoint_starts_and_continues_a_case(client) -> None:
+    start = "Candidate ID: SYN-0051\nStart date: 2026-11-30\nPosition: Analyst"
+
+    first = client.post("/api/chat", json={"message": start}, headers=_as("recruiter"))
+    reply = client.post(
+        "/api/chat",
+        json={"message": "Remote", "case_id": first.json()["case_id"]},
+        headers=_as("recruiter"),
+    )
+
+    assert first.status_code == 200
+    assert first.json()["asking"]
+    assert reply.status_code == 200
+    assert reply.json()["case_id"] == first.json()["case_id"]
+
+
+def test_chat_endpoint_refuses_an_empty_message(client) -> None:
+    response = client.post("/api/chat", json={"message": ""}, headers=_as("recruiter"))
+
+    assert response.status_code == 400
+
+
+def test_health_reports_the_database(client) -> None:
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert response.json()["database"] == "ok"
+
+
+def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
+    monkeypatch.setenv("AGENT_TRANSPORT", "mcp")
+    for var in ("JOBDIVA_MOCK_URL", "JOBDIVA_WORKFLOW_URL", "TEAMS_MOCK_URL"):
+        monkeypatch.setenv(var, "http://127.0.0.1:9")
+
+    body = client.get("/api/health").json()
+
+    assert body["transport"] == "mcp"
+    assert body["status"] == "degraded"
+    assert set(body["mcp_servers"].values()) == {"down"}

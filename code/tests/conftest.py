@@ -39,6 +39,10 @@ def _use_test_database() -> None:
 
 
 _use_test_database()
+# The suite never reaches a real JobDiva, whatever code/.env says.
+os.environ["JOBDIVA_MODE"] = "mock"
+# The API tests call the services in process; tests/e2e/test_over_mcp.py covers MCP.
+os.environ["AGENT_TRANSPORT"] = "in_process"
 
 
 def _connect(url_var: str) -> psycopg.Connection:

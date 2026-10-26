@@ -68,3 +68,28 @@ def decide(
                 "current_version": cases.current_package_version(case_id),
             },
         ) from None
+
+
+chat_router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+
+class ChatMessage(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+    case_id: str | None = Field(default=None, max_length=64)
+
+
+@chat_router.post("")
+def chat(body: ChatMessage, coworker: Coworker, role: Role) -> dict:
+    """The chat view (US-002, US-003, US-019)."""
+    try:
+        reply = coworker.chat(body.message, case_id=body.case_id)
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc)) from None
+    except GovernanceError as refusal:
+        raise HTTPException(409, detail={"refused": refusal.reason}) from None
+    return {
+        "reply": reply.reply,
+        "case_id": reply.case_id,
+        "state": reply.state,
+        "asking": reply.asking,
+    }

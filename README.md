@@ -4,14 +4,14 @@ A multi-agent Digital Coworker for INSPYR that turns a new-hire notification int
 
 Built for the INSPYR *Movers n’ Shakers* hackathon (October 2026) on **Velocity 2.0**. Business owner: **Tonya Ramirez**, Consultant Onboarding Supervisor.
 
-> **Status:** design and scope approved at the October 14 checkpoint. Implementation is in progress; sections marked *planned* describe the target setup and will be completed as the code lands.
+> **Status:** the Must journeys J1 (intake and validation) and J2 (package, approval and simulated actions) run end to end in a local demo, with synthetic data only. Every hackathon deliverable is listed in [Documents/Submission](Documents/Submission/README.md).
 
 | Milestone | Date | Status |
 | --- | --- | --- |
 | Checkpoint: design and scope | October 14, 2026 | Delivered: [checkpoint deliverable](Documents/CheckPoint/14October/checkpoint-deliverable.md) |
-| Foundations: Velocity 2.0, data, mocks | October 15–16 | In progress |
-| Journeys J1 and J2 (Must) | October 17–20 | Planned |
-| Tests, README, presentation, video | By October 28 | Planned |
+| Velocity stages: understanding, architecture, development | October 15–26 | Done: [Documents/Velocity](Documents/Velocity/) |
+| Governance core, agents, web app (J1 and J2) | October 26 | Done: automated tests and evidence in [code/tests/evidence](code/tests/evidence/) |
+| Presentation and backup video | By October 28 | In progress |
 | Final submission | October 28, 2026 | Planned |
 
 ## Business problem and expected outcome
@@ -47,6 +47,8 @@ To users it is one Coworker. Inside, an Onboarding Orchestrator owns the case an
 
 ![Agent architecture](Documents/CheckPoint/14October/images/08-architecture.png)
 
+The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The Should and Could agents are not built yet.
+
 | Agent | Priority | Responsibility |
 | --- | --- | --- |
 | Onboarding Orchestrator | Must | Case state, routing, timing, escalations, approval package and approval gate |
@@ -62,46 +64,71 @@ Case lifecycle and the demo sequence are documented in [section 5 of the checkpo
 
 ## Prerequisites and installation
 
-*Planned.* The solution runs as a local demo:
+- **Python 3.12 or later**
+- **Docker** (Docker Desktop on Windows), for the local PostgreSQL 16
+- **Git Bash or WSL** on Windows, to run the `scripts/*.sh`
+- No model API key: the default model engine (`MODEL_PROVIDER=rules`) uses no model (see ADR-006 in the [Software Architecture Document](Documents/Velocity/02.%20Architecture/))
 
-- Access to **Velocity 2.0** with the team’s license
-- A local web app (the Coworker’s chat and approval screens) connected to the orchestrator on Velocity 2.0
-- Simulated services (MCP servers) for JobDiva, IT and equipment, payroll, email and Teams, and the LDC tracker
-- Python 3 for the helper scripts in `tools/` (`python-docx` for `docx_to_md.py`)
+```bash
+git clone https://github.com/juangiron-IGS/OnBoardingDigitalCoworker.git
+cd OnBoardingDigitalCoworker/code
+python -m venv .venv
+.venv/Scripts/python -m pip install -e ".[dev]"   # macOS/Linux: .venv/bin/python
+cp .env.example .env
+```
 
-Step-by-step installation commands will be added with the source code.
+In `code/.env`:
+- set `DB_ADMIN_PASSWORD`, `DB_APP_PASSWORD` and `DB_AUDIT_PASSWORD`;
+- put the last two inside `DATABASE_URL` and `AUDIT_DATABASE_URL`;
+- keep `JOBDIVA_MODE=mock`.
 
 ## Configuration
 
-All configuration comes from environment variables. The repository will ship a `.env.example` with variable names only; real values go in a local `.env`, which is git-ignored.
+All configuration comes from environment variables in `code/.env`. The repository ships [`code/.env.example`](code/.env.example) with the names only, and `.env` is git-ignored. The settings that matter for the demo:
 
-| Variable | Purpose |
-| --- | --- |
-| `JOBDIVA_MODE` | `mock` (default) or `sandbox` (read-only) |
-| `JOBDIVA_BASE_URL` | JobDiva API base URL (sandbox mode only) |
-| `JOBDIVA_CLIENT_ID` | Account Client ID issued by JobDiva support (sandbox mode only) |
-| `JOBDIVA_API_USER` | Dedicated API user (sandbox mode only) |
-| `JOBDIVA_API_PASSWORD` | API user password (sandbox mode only) |
-
-Velocity 2.0 and model settings will be added to the same file.
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` / `AUDIT_DATABASE_URL` | none | PostgreSQL as the application role, and as the INSERT-only audit role |
+| `DB_PORT`, `DB_NAME`, `DB_*_PASSWORD` | `5432`, `coworker` | The local container and its roles |
+| `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
+| `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key |
+| `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
+| `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
+| `JOBDIVA_MODE` | `mock` | `mock`, or read-only `sandbox` for the JobDiva READ server |
+| `JOBDIVA_BASE_URL`, `JOBDIVA_CLIENT_ID`, `JOBDIVA_API_USER`, `JOBDIVA_API_PASSWORD` | none | Sandbox mode only: Client ID from JobDiva support and a dedicated API user |
 
 ## How to run the solution
 
-*Planned.* Start the simulated services, the orchestrator on Velocity 2.0 and the local web app, then open the chat view. Exact commands will be added with the source code.
+From `code/` (in Git Bash or WSL on Windows):
+
+```bash
+./scripts/start.sh     # PostgreSQL, database setup on first run, MCP servers, web app, health check
+./scripts/stop.sh      # stop the web app and MCP servers (--all also stops PostgreSQL; data is kept)
+./scripts/reset.sh     # recreate the database with the seed data
+```
+
+`start.sh` ends with one line such as `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Then open http://127.0.0.1:3000.
+
+Quality gates, also run from `code/`:
+
+```bash
+.venv/Scripts/python -m pytest      # uses a separate <DB_NAME>_test database
+.venv/Scripts/python -m ruff check . && .venv/Scripts/python -m ruff format --check .
+```
 
 ## How to run the demonstration
 
-*Planned.* The demo uses synthetic data only:
+Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md). It takes about 7 minutes and uses synthetic data only:
 
-1. A start email arrives for a W-2 consultant in Philadelphia with the timesheet approver blank and a contradictory work arrangement.
-2. The Coworker alerts the recruiter with the two exact fields; the recruiter answers in the chat.
-3. The Coworker recommends the paperwork, the owner and, if available, access and an INSPYR laptop with 2% overhead.
-4. The Consultant Onboarding Supervisor assigns the follow-up owner, who reviews the package with sources.
-5. The Onboarding Team asks the Coworker for the status of their candidates in the chat.
-6. After approval (and IT approval for the laptop), the Coworker creates the case in the JobDiva mock, the requests and the task list.
-7. A second attempt with the same person and date is blocked as a duplicate.
-
-A backup demo video will be added before the final submission.
+1. A start email arrives with two fields missing. The recruiter gets an alert naming them.
+2. The recruiter answers in the chat, one question at a time. The package is built with a rule ID on every recommendation.
+3. Someone asks for the case status in the chat.
+4. IT cannot see FLSA or sponsorship. The approver can, and approves package v1.
+5. The single writer creates the JobDiva case (mock) and the task list, each with the approval ID. The status view shows the full audit log.
+6. Guardrails:
+   - a duplicate start is blocked;
+   - an FLSA conflict between the email and JobDiva is escalated and blocks the package;
+   - a person already onboarding in JobDiva is blocked.
 
 ## Security and governance considerations
 
@@ -116,33 +143,46 @@ A backup demo video will be added before the final submission.
 
 ## Known limitations
 
-- All enterprise systems (JobDiva, IT and equipment, payroll, email, Teams, LDC tracker) are simulated in the hackathon.
-- JobDiva sandbox access depends on API credentials (Client ID and API user) that are not available yet; without them the demo runs on the mock only.
-- Microsoft Teams integration is optional and depends on tenant permissions.
-- Business rules (forms by state and city, overhead, bill-back) are seed data still being validated with the onboarding team.
-- The scope covers the request through approval and its actions; background checks, I-9, payroll processing and real e-signature are out of scope.
+- **Everything is simulated.** All enterprise systems (JobDiva, IT and equipment, payroll, email, Teams, LDC tracker) are mocks in the hackathon.
+- **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
+- **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
+- **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
+- **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging), the supervisor's owner assignment (US-032) and the 5-minute package timing report (US-012 AC-003).
+- **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components
 
-- **JobDiva connector** with mock and read-only sandbox modes behind one interface
-- **Rules catalog as data** (path, paperwork, owner, overhead) maintained by the business
-- **Approval package and approval gate** pattern with labeled, sourced data points
-- **Onboarding knowledge module** with human validation before publishing
-- **Audit log** schema for agent actions, data and rules used
+- **JobDiva connector** (`code/mcp_servers/jobdiva_read/`): mock and read-only sandbox modes behind one interface; the token stays in memory
+- **Single-writer MCP server** (`code/mcp_servers/jobdiva_workflow/`): approval re-verified in the action's transaction, with idempotency keys
+- **Rules catalog as data** (`code/rules/`, `RulesCatalog`): rule ID, owner, version and status, maintained by the business
+- **Approval package and approval gate** (`code/services/case_service/`): labelled, sourced data points and versioned packages
+- **Append-only audit log** (`code/db/`): agent, action, outcome, rules used and data used, enforced by database roles
+- **Model client** (`code/agents/common/model_client.py`): one interface, replaceable engines and a usage meter
 
 ## Repository structure
 
 ```
 .
+├── code/                        Application (dependencies: code/THIRD_PARTY_LICENSES.md)
+│   ├── agents/                  Orchestrator (+ chat), Intake and Validation, Policy and Case Setup, JobDiva and Workflow
+│   ├── services/case_service/   Case states, approval gate, audit, privacy, rules catalog
+│   ├── mcp_servers/             jobdiva_read, jobdiva_workflow (single writer), mocks (outlook, teams)
+│   ├── contracts/               Interfaces shared by both lanes
+│   ├── web/                     FastAPI app and the five views
+│   ├── rules/                   Business rules and intake labels (YAML)
+│   ├── db/                      Migrations, roles, synthetic seed data
+│   ├── scripts/                 start, stop, reset, apply_db, health_check
+│   ├── tests/                   unit, connectors, governance, e2e, evidence
+│   └── velocity/                Velocity 2.0 configuration and stage map
 ├── Documents/
-│   ├── CheckPoint/14October/    Checkpoint deliverable (md, pptx, images)
-│   ├── HackatonDocuments/       Hackathon requirements and evaluation criteria
-│   └── Velocity/                Velocity stage documents (01. Understanding: Source of Truth) and alignment notes
+│   ├── CheckPoint/14October/    Checkpoint deliverable
+│   ├── Velocity/                Velocity stage documents
+│   ├── Plans/                   MVP implementation plan
+│   ├── Submission/              Architecture, demo script, submission checklist
+│   └── HackatonDocuments/       Hackathon requirements and evaluation criteria
 ├── tools/                       Helper scripts (docx_to_md.py)
-└── CLAUDE.md                    Guidance for AI-assisted development in this repo
+└── LICENSE
 ```
-
-Planned additions for the final submission: Velocity configuration, application source, agent definitions and prompts, integration scripts, database schema and migrations, seed data, tests and evidence, final presentation and backup video.
 
 ## Team
 
@@ -150,4 +190,4 @@ Juan Giron, Laura Hernandez, David Valdez, Carlos Puerta, Viviana Gomez and Mich
 
 ## License
 
-To be defined before the final submission, together with the dependency list.
+Proprietary: copyright 2026 INSPYR Global Solutions, all rights reserved. See [LICENSE](LICENSE). Third-party dependencies and their licenses are listed in [code/THIRD_PARTY_LICENSES.md](code/THIRD_PARTY_LICENSES.md).
