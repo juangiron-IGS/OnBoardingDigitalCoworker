@@ -56,3 +56,16 @@ def lines() -> list[PackageLine]:
             source_or_rule_id="R-PA-02",
         ),
     ]
+
+
+@pytest.fixture
+def approved_case(repo, audit, case_set_up, lines) -> tuple[str, str]:
+    """A case whose package version 1 is approved: (case_id, approval_id)."""
+    from services.case_service.application.build_package import build_package
+    from services.case_service.application.decisions import record_approval
+
+    build_package(repo, audit, case_set_up, lines, agent="orchestrator")
+    approval_id = record_approval(
+        repo, audit, case_id=case_set_up, package_version=1, approver_role="approver"
+    )
+    return case_set_up, approval_id

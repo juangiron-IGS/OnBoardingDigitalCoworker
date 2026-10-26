@@ -12,7 +12,7 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "psycopg[binary,pool]",
-    "mcp",
+    "mcp>=2.3,<3",
     "pyyaml",
 ]
 
