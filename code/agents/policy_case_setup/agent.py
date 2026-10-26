@@ -25,16 +25,21 @@ SOURCE_FIELDS = [
 # Values the Coworker never decides; a disagreement between sources is escalated.
 ESCALATED_FIELDS = ("flsa", "employment_type")
 CONFLICT_SOURCE = "email vs JobDiva start notes"
+HR = "HR"
 
 
 def find_conflicts(
     data: dict[str, object], notes: dict[str, object]
 ) -> dict[str, tuple[str, str]]:
-    """FLSA or classification values that differ between the start and JobDiva."""
+    """FLSA or classification values that differ between the start and JobDiva.
+
+    A value HR has answered is HR's decision, not a conflict (US-027)."""
+    by_hr = {f for f, who in dict(data.get("answered_by") or {}).items() if who == HR}
     return {
         field: (str(data[field]), str(notes[field]))
         for field in ESCALATED_FIELDS
-        if data.get(field)
+        if field not in by_hr
+        and data.get(field)
         and notes.get(field)
         and str(data[field]).strip().casefold() != str(notes[field]).strip().casefold()
     }

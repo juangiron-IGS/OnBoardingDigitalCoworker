@@ -31,7 +31,11 @@ ALLOWED: dict[CaseState, frozenset[CaseState]] = {
     ),
     CaseState.NEEDS_CLARIFICATION: frozenset({CaseState.VALIDATED}),
     CaseState.CASE_SET_UP: frozenset({CaseState.READY_FOR_REVIEW}),
-    CaseState.READY_FOR_REVIEW: frozenset({CaseState.APPROVAL_GATE}),
+    # Back to Case set up when HR answers a conflict or the team changes the
+    # recommendation (US-026, US-027): the package is rebuilt as a new version.
+    CaseState.READY_FOR_REVIEW: frozenset(
+        {CaseState.APPROVAL_GATE, CaseState.CASE_SET_UP}
+    ),
     CaseState.APPROVAL_GATE: frozenset(
         {CaseState.APPROVED, CaseState.REJECTED, CaseState.VALIDATED}
     ),

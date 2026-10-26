@@ -345,14 +345,43 @@ class Orchestrator:
             )
 
         self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
+        self._set_up(case_id, data)
+        return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)
+
+    def _set_up(self, case_id: str, data: dict) -> int:
+        """Build the package for a case in Case set up; returns its version."""
         conflicts = policy.find_conflicts(data, self._start_notes(data))
         lines = policy.recommend(data, self._catalog, conflicts)
         if self._access:
             lines += self._equipment_lines(data)
-        self._cases.build_package(
+        version = self._cases.build_package(
             case_id, lines, agent=policy.AGENT, escalated=bool(conflicts)
         )
         if conflicts:
             self._escalate(case_id, list(conflicts))
-        self._notify_supervisor(case_id, lines)
-        return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)
+        if version == 1:  # the supervisor hears of each new hire once
+            self._notify_supervisor(case_id, lines)
+        return version
+
+    def record_hr_answer(
+        self, case_id: str, field_name: str, value: str, *, recorded_by: str
+    ) -> dict:
+        """US-027: the Onboarding Team records HR's answer to an escalated FLSA or
+        classification conflict; the package is rebuilt as a new version (BR-001).
+        Without an answer the case stays escalated and no value is chosen."""
+        data = self._cases.case_data(case_id)
+        if field_name not in policy.find_conflicts(data, self._start_notes(data)):
+            raise ValueError(f"no open conflict for {field_name!r} on this case")
+        answered = {**data.get("answered_by", {}), field_name: policy.HR}
+        self._cases.record_answers(
+            case_id,
+            {field_name: value, "answered_by": answered},
+            agent=recorded_by,
+            source=policy.HR,
+        )
+        self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
+        version = self._set_up(case_id, self._cases.case_data(case_id))
+        return {
+            "state": self._cases.case_state(case_id).value,
+            "package_version": version,
+        }
