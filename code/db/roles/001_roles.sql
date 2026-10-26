@@ -20,3 +20,10 @@ GRANT SELECT, INSERT ON audit_log TO coworker_app;
 GRANT INSERT ON audit_log TO audit_writer;
 GRANT USAGE ON SEQUENCE audit_log_id_seq TO coworker_app, audit_writer;
 -- No UPDATE, DELETE or TRUNCATE on audit_log is granted to any application role.
+
+-- Simulated systems: records are only added, by the JobDiva and Workflow server.
+GRANT USAGE ON SCHEMA mocks TO coworker_app;
+GRANT SELECT, INSERT ON mocks.jobdiva_cases, mocks.task_lists, mocks.it_requests
+    TO coworker_app;
+GRANT USAGE ON SEQUENCE mocks.jobdiva_cases_id_seq, mocks.task_lists_id_seq,
+    mocks.it_requests_id_seq TO coworker_app;
