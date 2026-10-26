@@ -13,6 +13,7 @@ Direct dependencies declared in `code/pyproject.toml`. The versions are those in
 | mcp | 2.3.0 | MIT | MCP servers (`MCPServer`) |
 | PyYAML | 6.0.3 | MIT | Rules catalog (`yaml.safe_load`) |
 | httpx | 0.28.1 | BSD-3-Clause | JobDiva sandbox client, read only |
+| anthropic | 2.3.0 | Apache-2.0 | Claude engine (`MODEL_PROVIDER=claude`), optional |
 
 ## Development and test
 

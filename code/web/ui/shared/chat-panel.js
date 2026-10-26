@@ -21,7 +21,7 @@ const state = {
   messages: [{
     who: "bot",
     at: new Date(),
-    text: "Hi! I am the Onboarding Coworker. Send me a new start as 'Label: value' lines, " +
+    text: "Hi! I am the Onboarding Coworker. Send me a new start (candidate ID and start date at least), " +
       "answer my questions about a case, or ask how one is going, for example: How is SYN-0043 doing?",
   }],
 };

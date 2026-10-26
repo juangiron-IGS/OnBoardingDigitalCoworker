@@ -67,7 +67,7 @@ Case lifecycle and the demo sequence are documented in [section 5 of the checkpo
 - **Python 3.12 or later**
 - **Docker** (Docker Desktop on Windows), for the local PostgreSQL 16
 - **Git Bash or WSL** on Windows, to run the `scripts/*.sh`
-- No model API key: the default model engine (`MODEL_PROVIDER=rules`) uses no model (see ADR-006 in the [Software Architecture Document](Documents/Velocity/02.%20Architecture/))
+- No model API key needed: the default model engine (`MODEL_PROVIDER=rules`) uses no model. With an Anthropic API key, `MODEL_PROVIDER=claude` reads start details written as free text (see ADR-006 in the [Software Architecture Document](Documents/Velocity/02.%20Architecture/))
 
 ```bash
 git clone https://github.com/juangiron-IGS/OnBoardingDigitalCoworker.git
@@ -91,7 +91,8 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `DATABASE_URL` / `AUDIT_DATABASE_URL` | none | PostgreSQL as the application role, and as the INSERT-only audit role |
 | `DB_PORT`, `DB_NAME`, `DB_*_PASSWORD` | `5432`, `coworker` | The local container and its roles |
 | `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
-| `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key |
+| `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key; `claude` also reads free text |
+| `ANTHROPIC_API_KEY`, `MODEL_EXTRACTION` | none, `claude-haiku-5-5` | `claude` engine only: the key (never committed) and the model that reads start details |
 | `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
 | `FEATURE_ACCESS_EQUIPMENT` | `false` (`.env.example`: `true`) | Access and Equipment agent: laptop and access request, 2% or 5% overhead, bill-back, IT approval |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
@@ -145,7 +146,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 ## Known limitations
 
 - **Everything is simulated.** All enterprise systems (JobDiva, IT and equipment, payroll, email, Teams, LDC tracker) are mocks in the hackathon.
-- **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
+- **Free text needs the `claude` engine.** With `rules`, a new start must be sent as `Label: value` lines. With `claude`, labelled lines are still read first at no cost, and Claude reads only the fields still missing. FLSA, sponsorship and visa are never sent to the model: they come from labelled lines or from the recruiter's answers.
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
 - **Not built yet:** the Should and Could agents Candidate Follow-up, Onboarding Knowledge and Culture and Belonging.
