@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Hackathon project building the **Onboarding Digital Coworker** for INSPYR on **Velocity 2.0**. The design and scope were delivered at the 2026-10-14 checkpoint. Final submission is due **2026-10-28** (moved from 2026-10-22). No application code exists yet: the repo holds requirement and design documents plus one utility script. There are no build, lint or test commands until source code lands.
+Hackathon project building the **Onboarding Digital Coworker** for INSPYR on **Velocity 2.0**. The design and scope were delivered at the 2026-10-14 checkpoint. Final submission is due **2026-10-28** (moved from 2026-10-22). The MVP is built in `code/`: the Must journeys J1 and J2 run end to end, with the agents calling the systems over MCP. Binding implementation rules are in [.claude/rules/backend-python-coworker.md](.claude/rules/backend-python-coworker.md); the submission checklist is [Documents/Submission/README.md](Documents/Submission/README.md).
+
+Commands, run from `code/` (Git Bash on Windows):
+- `./scripts/start.sh` / `./scripts/stop.sh` / `./scripts/reset.sh`: PostgreSQL, MCP servers and web app on 127.0.0.1:3000.
+- `.venv/Scripts/python -m pytest` (uses a separate `<DB_NAME>_test` database), `.venv/Scripts/python -m ruff check .` and `ruff format --check .`.
 
 ## Documents and which one wins
 
@@ -14,7 +18,7 @@ Read these in this order of authority when they disagree:
 2. [Documents/Velocity/01. Understanding/](Documents/Velocity/01.%20Understanding/): Velocity stage-01 Source of Truth (SOT-001). It uses ID catalogs (CAP capabilities, BR business rules, UR user roles, INT integrations, OQ open questions) that later Velocity stages (Strategic Intake, Functional Spec, Backlog) trace back to; its Glossary defines them. Two versions exist: `(offline)` is v1.1, edited by hand to match the checkpoint, and is the one aligned with it; the other is a later Velocity regeneration (v1.0) that drops several of those fixes. Velocity rebuilds the SOT from its own Answers record, so regenerating it discards manual edits. `Documents/Velocity/sot-001-*-considerations.md` record the alignment facts used for v1.1.
 3. [Documents/HackatonDocuments/](Documents/HackatonDocuments/): hackathon rules. `TechnicalRequirements.md` (platform and security), `GitHubSubmisionPackage.md` (required repo contents and README sections), `evaluationCriteria.md` (scoring weights), `expectedvalue.md`.
 
-[README.md](README.md) already contains every required submission section. Sections marked *Planned* must be filled in as code lands (install, run, demo commands, `.env.example`, license).
+[README.md](README.md) contains every required submission section; keep it in step with the code.
 
 ## Target architecture (from the checkpoint)
 
