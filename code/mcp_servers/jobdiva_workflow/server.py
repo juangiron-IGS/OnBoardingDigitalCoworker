@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from mcp.server.mcpserver import MCPServer
 
 from mcp_servers.common.db import connect
+from services.case_service.domain.errors import GovernanceError
 
 from .service import WorkflowService
 
@@ -32,10 +33,15 @@ def execute_simulated_action(
     """Apply one approved action: create_jobdiva_case, create_task_list or
     create_it_request. Refused without an approval for the current package version.
     """
-    with connect() as conn:
-        return WorkflowService(conn).execute_simulated_action(
-            approval_id, package_version, action, payload or {}
-        )
+    try:
+        with connect() as conn:
+            return WorkflowService(conn).execute_simulated_action(
+                approval_id, package_version, action, payload or {}
+            )
+    except GovernanceError as refusal:
+        # A refusal is an expected outcome, returned as data so its reason crosses
+        # MCP; the service has already audited it.
+        return {"status": "refused", "reason": refusal.reason}
 
 
 def main() -> None:

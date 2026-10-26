@@ -39,6 +39,8 @@ def _use_test_database() -> None:
 
 
 _use_test_database()
+# The suite never reaches a real JobDiva, whatever code/.env says.
+os.environ["JOBDIVA_MODE"] = "mock"
 
 
 def _connect(url_var: str) -> psycopg.Connection:
