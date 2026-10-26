@@ -176,3 +176,15 @@ def test_redaction_keeps_the_other_sentences_of_the_line() -> None:
     content = messages.calls[0]["messages"][0]["content"]
     assert "standard laptop" in content
     assert "non-exempt" not in content
+
+
+def test_workspace_id_is_sent_with_every_request(monkeypatch) -> None:
+    from agents.common.model_client import get_model_client
+
+    monkeypatch.setenv("MODEL_PROVIDER", "claude")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+    monkeypatch.setenv("ANTHROPIC_WORKSPACE_ID", "wrkspc_test")
+
+    engine = get_model_client()
+
+    assert engine._client.default_headers["anthropic-workspace-id"] == "wrkspc_test"

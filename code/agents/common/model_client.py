@@ -115,10 +115,13 @@ def get_model_client() -> ModelClient:
 
         from .claude_client import ClaudeModelClient
 
+        # A key not scoped to a workspace names the workspace on every request.
+        workspace = os.environ.get("ANTHROPIC_WORKSPACE_ID")
+        headers = {"anthropic-workspace-id": workspace} if workspace else None
         return ClaudeModelClient(
             load_labels(),
             meter,
-            client=anthropic.Anthropic(),
+            client=anthropic.Anthropic(default_headers=headers),
             model=os.environ.get("MODEL_EXTRACTION") or "claude-haiku-5-5",
         )
     raise ModelNotConfigured(

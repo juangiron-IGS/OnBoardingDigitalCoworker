@@ -92,7 +92,7 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `DB_PORT`, `DB_NAME`, `DB_*_PASSWORD` | `5432`, `coworker` | The local container and its roles |
 | `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
 | `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key; `claude` also reads free text |
-| `ANTHROPIC_API_KEY`, `MODEL_EXTRACTION` | none, `claude-haiku-5-5` | `claude` engine only: the key (never committed) and the model that reads start details |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID`, `MODEL_EXTRACTION` | none, none, `claude-haiku-5-5` | `claude` engine only: the key (never committed), the workspace when the key is not scoped to one, and the model that reads start details |
 | `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
 | `FEATURE_ACCESS_EQUIPMENT` | `false` (`.env.example`: `true`) | Access and Equipment agent: laptop and access request, 2% or 5% overhead, bill-back, IT approval |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
