@@ -111,6 +111,8 @@ From `code/` (in Git Bash or WSL on Windows):
 
 `start.sh` ends with one line such as `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Then open http://127.0.0.1:3000.
 
+The Coworker can also be used from another chat app (Claude Code, Claude Desktop, VS Code) through its MCP server `onboarding-coworker` on `127.0.0.1:8110`: start a case, answer its questions and ask for status. Approvals stay in the web app. See [Documents/Submission/mcp-clients.md](Documents/Submission/mcp-clients.md).
+
 Quality gates, also run from `code/`:
 
 ```bash

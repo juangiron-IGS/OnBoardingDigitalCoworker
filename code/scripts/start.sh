@@ -44,6 +44,7 @@ if [ "${AGENT_TRANSPORT:-in_process}" = "mcp" ]; then
   launch jobdiva-read mcp_servers.jobdiva_read.server
   launch jobdiva-workflow mcp_servers.jobdiva_workflow.server
   launch teams-mock mcp_servers.mocks.teams.server
+  launch coworker-mcp mcp_servers.coworker.server   # the Coworker for other chat apps
 fi
 launch web web.api.main
 
