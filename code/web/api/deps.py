@@ -1,5 +1,4 @@
 from collections.abc import Iterator
-from datetime import date
 from typing import Annotated
 
 import psycopg
@@ -8,6 +7,7 @@ from fastapi import Depends, Header, HTTPException
 from agents.common.model_client import get_model_client
 from agents.orchestrator.orchestrator import Orchestrator
 from mcp_servers.common.db import connect
+from mcp_servers.jobdiva_read.adapters.mock import MockJobDiva
 from mcp_servers.jobdiva_workflow.service import WorkflowService
 from mcp_servers.mocks.outlook.service import MailboxService
 from mcp_servers.mocks.teams.service import AlertsService
@@ -18,11 +18,8 @@ from services.case_service.service import LocalCaseService
 _catalog = RulesCatalog.load()
 
 
-class JobDivaReadMock:
-    """Duplicate search stand-in until the JobDiva READ server lands (task B2)."""
-
-    def search_duplicate(self, person_ref: str, start_date: date) -> dict:
-        return {"found": False, "start_id": None}
+# JobDiva in mock mode, in process. Sandbox mode runs the JobDiva READ server.
+_jobdiva = MockJobDiva()
 
 
 def get_conn() -> Iterator[psycopg.Connection]:
@@ -44,16 +41,17 @@ Role = Annotated[str, Depends(get_role)]
 
 
 def get_cases(conn: Conn) -> LocalCaseService:
-    return LocalCaseService(conn, JobDivaReadMock())
+    return LocalCaseService(conn, _jobdiva)
 
 
 def get_orchestrator(conn: Conn) -> Orchestrator:
     return Orchestrator(
-        cases=LocalCaseService(conn, JobDivaReadMock()),
+        cases=LocalCaseService(conn, _jobdiva),
         model=get_model_client(),
         catalog=_catalog,
         alerts=AlertsService(conn),
         workflow=WorkflowService(conn),
+        jobdiva=_jobdiva,
     )
 
 
