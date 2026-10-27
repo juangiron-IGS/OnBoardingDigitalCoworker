@@ -1,13 +1,26 @@
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from services.case_service.domain.errors import GovernanceError
 
 from ..deps import Cases, Coworker, Role
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
+
+
+def _refused(refusal: GovernanceError, cases: Cases, case_id: str) -> HTTPException:
+    """409 with the current version; an unknown case is a 404, not a 500."""
+    if refusal.reason == "case_not_found":
+        return HTTPException(404, detail=f"No case {case_id}")
+    return HTTPException(
+        409,
+        detail={
+            "refused": refusal.reason,
+            "current_version": cases.current_package_version(case_id),
+        },
+    )
 
 
 class Answer(BaseModel):
@@ -78,13 +91,7 @@ def approve_it_request(
             case_id, package_version=body.package_version, approver_role=role
         )
     except GovernanceError as refusal:
-        raise HTTPException(
-            409,
-            detail={
-                "refused": refusal.reason,
-                "current_version": cases.current_package_version(case_id),
-            },
-        ) from None
+        raise _refused(refusal, cases, case_id) from None
 
 
 class Review(BaseModel):
@@ -113,18 +120,26 @@ def review_recommendation(
     except ValueError as exc:
         raise HTTPException(400, detail=str(exc)) from None
     except GovernanceError as refusal:
-        raise HTTPException(
-            409,
-            detail={
-                "refused": refusal.reason,
-                "current_version": cases.current_package_version(case_id),
-            },
-        ) from None
+        raise _refused(refusal, cases, case_id) from None
+
+
+# HR's decision is one of the values the rules catalog knows (BR-001).
+HR_VALUES = {
+    "flsa": {"Exempt", "Non-exempt"},
+    "employment_type": {"W-2", "Contractor", "Corp-to-corp"},
+}
 
 
 class HrAnswer(BaseModel):
     field: Literal["flsa", "employment_type"]
     value: str = Field(min_length=1, max_length=60)
+
+    @model_validator(mode="after")
+    def known_value(self) -> "HrAnswer":
+        if self.value.strip() not in HR_VALUES[self.field]:
+            allowed = ", ".join(sorted(HR_VALUES[self.field]))
+            raise ValueError(f"value must be one of: {allowed}")
+        return self
 
 
 @router.post("/{case_id}/hr-answer")
@@ -141,6 +156,8 @@ def record_hr_answer(
     except ValueError as exc:
         raise HTTPException(400, detail=str(exc)) from None
     except GovernanceError as refusal:
+        if refusal.reason == "case_not_found":
+            raise HTTPException(404, detail=f"No case {case_id}") from None
         raise HTTPException(409, detail={"refused": refusal.reason}) from None
 
 
@@ -159,13 +176,7 @@ def decide(
             comment=body.comment,
         )
     except GovernanceError as refusal:
-        raise HTTPException(
-            409,
-            detail={
-                "refused": refusal.reason,
-                "current_version": cases.current_package_version(case_id),
-            },
-        ) from None
+        raise _refused(refusal, cases, case_id) from None
 
 
 chat_router = APIRouter(prefix="/api/chat", tags=["chat"])

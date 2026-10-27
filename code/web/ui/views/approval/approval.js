@@ -78,7 +78,7 @@ function reviewCard(view, lines, caseId, show) {
 }
 
 // US-027: HR decides FLSA and classification; the Onboarding Team records the answer.
-const HR_FIELDS = { flsa: ["Exempt", "Non-exempt"], employment_type: null };
+const HR_FIELDS = { flsa: ["Exempt", "Non-exempt"], employment_type: ["W-2", "Contractor", "Corp-to-corp"] };
 
 function hrCard(lines, caseId, show) {
   const feedback = el("div");

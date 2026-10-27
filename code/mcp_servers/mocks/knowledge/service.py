@@ -71,38 +71,40 @@ class KnowledgeService:
             raise KeyError(record_id)
         if decision not in ("validated", "rejected"):
             raise ValueError("decision must be validated or rejected")
-        self._conn.execute(
-            "INSERT INTO mocks.knowledge_validations (record_id, decision, decided_by)"
-            " VALUES (%s, %s, %s)",
-            (record_id, decision, decided_by),
-        )
-        self._audit.append(
-            case_id=AUDIT_CASE,
-            agent=decided_by,
-            action=f"knowledge_{decision}",
-            outcome="completed",
-            rule_ids=[record_id],
-        )
+        with self._conn.transaction():  # the decision and its audit entry together
+            self._conn.execute(
+                "INSERT INTO mocks.knowledge_validations"
+                " (record_id, decision, decided_by) VALUES (%s, %s, %s)",
+                (record_id, decision, decided_by),
+            )
+            self._audit.append(
+                case_id=AUDIT_CASE,
+                agent=decided_by,
+                action=f"knowledge_{decision}",
+                outcome="completed",
+                rule_ids=[record_id],
+            )
         return decision
 
     def register_unresolved(
         self, question: str, *, asked_by: str, channel: str, reason: str
     ) -> str:
         """registerUnresolved: keep a question pending for the Onboarding Team."""
-        row = self._conn.execute(
-            "INSERT INTO mocks.knowledge_questions"
-            " (question, asked_by, channel, reason)"
-            " VALUES (%s, %s, %s, %s) RETURNING id",
-            (question, asked_by, channel, reason),
-        ).fetchone()
-        pending_id = f"{PENDING}{row[0]}"
-        self._audit.append(
-            case_id=AUDIT_CASE,
-            agent="onboarding_knowledge",
-            action="register_unresolved",
-            outcome="completed",
-            data_refs={"question": channel, "pending_id": pending_id},
-        )
+        with self._conn.transaction():
+            row = self._conn.execute(
+                "INSERT INTO mocks.knowledge_questions"
+                " (question, asked_by, channel, reason)"
+                " VALUES (%s, %s, %s, %s) RETURNING id",
+                (question, asked_by, channel, reason),
+            ).fetchone()
+            pending_id = f"{PENDING}{row[0]}"
+            self._audit.append(
+                case_id=AUDIT_CASE,
+                agent="onboarding_knowledge",
+                action="register_unresolved",
+                outcome="completed",
+                data_refs={"question": channel, "pending_id": pending_id},
+            )
         return pending_id
 
     def log_answer(self, record_id: str, status: str, *, channel: str) -> None:

@@ -60,7 +60,10 @@ def respond(
         raise ValueError("message is empty")
     labelled = orch.read_labelled(text)
 
-    if case_id and orch.questions(case_id) and not _is_new_start(labelled):
+    open_fields = {q["field"] for q in orch.questions(case_id)} if case_id else set()
+    # A question is never stored as an answer; labelled answers always count.
+    answering = not QUESTION.search(text) or bool(open_fields & set(labelled))
+    if open_fields and answering and not _is_new_start(labelled):
         return _continue(orch, case_id, text, labelled)
     if _is_new_start(labelled):
         return _start(orch, text)
@@ -114,6 +117,12 @@ def _continue(
 
 def _start(orch: "Orchestrator", text: str) -> ChatReply:
     result = orch.process_start(text, source="chat", channel="chat")
+    if result.state == "needs_sender":
+        return ChatReply(
+            reply="I could not read the start date. Please send it as YYYY-MM-DD, "
+            "for example Start date: 2026-11-23.",
+            state=result.state,
+        )
     if result.state == "blocked_duplicate":
         return ChatReply(
             reply="I did not create a new case: one already exists for this person "

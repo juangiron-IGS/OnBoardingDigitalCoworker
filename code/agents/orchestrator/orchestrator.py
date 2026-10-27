@@ -16,7 +16,11 @@ from agents.policy_case_setup import agent as policy
 from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
 from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow, KnowledgeBase
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
-from services.case_service.domain.errors import DuplicateCase, GovernanceError
+from services.case_service.domain.errors import (
+    DuplicateCase,
+    GovernanceError,
+    InvalidTransition,
+)
 from services.case_service.domain.package import PackageLine
 
 from .chat import ChatReply
@@ -119,6 +123,10 @@ class Orchestrator:
             return StartResult(
                 state="needs_sender", missing=["person_ref", "start_date"]
             )
+        try:
+            start_date = date.fromisoformat(start)
+        except ValueError:  # an unreadable date is asked for, never guessed
+            return StartResult(state="needs_sender", missing=["start_date"])
         data = {
             **reading.values,
             "source": source,
@@ -127,9 +135,7 @@ class Orchestrator:
         }
         try:
             case_id = self._cases.create_case(
-                CaseIntake(
-                    person_ref=person, start_date=date.fromisoformat(start), data=data
-                ),
+                CaseIntake(person_ref=person, start_date=start_date, data=data),
                 agent=intake.AGENT,
             )
         except DuplicateCase as blocked:
@@ -399,9 +405,13 @@ class Orchestrator:
         values = [v.strip() for v in values or [] if v.strip()]
         if not confirm and not values:
             raise ValueError("a change needs at least one value")
-        if self._cases.case_state(case_id) is not CaseState.READY_FOR_REVIEW:
-            raise GovernanceError("case_not_in_review")
+        action = "confirm_recommendation" if confirm else "change_recommendation"
+        self._require_review(case_id, agent=reviewed_by, action=action)
         version = self._cases.current_package_version(case_id)
+        if not confirm:
+            # Leave Ready for review first: if the approver decided meanwhile the
+            # move is refused and the team's change is never stored.
+            self._move_or_refuse(case_id, agent=reviewed_by, action=action)
         data = self._cases.case_data(case_id)
         entry = {"confirmed": True} if confirm else {"values": values}
         review = {
@@ -414,16 +424,41 @@ class Orchestrator:
         self._cases.log_action(
             case_id,
             agent=reviewed_by,
-            action="confirm_recommendation" if confirm else "change_recommendation",
+            action=action,
             data_refs={field_name: policy.TEAM},
         )
         if not confirm:
-            self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
             version = self._set_up(case_id, self._cases.case_data(case_id))
         return {
             "state": self._cases.case_state(case_id).value,
             "package_version": version,
         }
+
+    def _require_review(self, case_id: str, *, agent: str, action: str) -> None:
+        """Team and HR inputs apply only while the package awaits review."""
+        if self._cases.case_state(case_id) is not CaseState.READY_FOR_REVIEW:
+            self._refuse(
+                case_id, agent=agent, action=action, reason="case_not_in_review"
+            )
+
+    def _move_or_refuse(self, case_id: str, *, agent: str, action: str) -> None:
+        try:
+            self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
+        except InvalidTransition:
+            self._refuse(
+                case_id, agent=agent, action=action, reason="case_not_in_review"
+            )
+
+    def _refuse(self, case_id: str, *, agent: str, action: str, reason: str) -> None:
+        """Audit a refusal before it reaches the caller (US-018)."""
+        self._cases.log_action(
+            case_id,
+            agent=agent,
+            action=action,
+            outcome="refused",
+            data_refs={"reason": reason},
+        )
+        raise GovernanceError(reason)
 
     def record_hr_answer(
         self, case_id: str, field_name: str, value: str, *, recorded_by: str
@@ -431,9 +466,12 @@ class Orchestrator:
         """US-027: the Onboarding Team records HR's answer to an escalated FLSA or
         classification conflict; the package is rebuilt as a new version (BR-001).
         Without an answer the case stays escalated and no value is chosen."""
+        action = "record_hr_answer"
+        self._require_review(case_id, agent=recorded_by, action=action)
         data = self._cases.case_data(case_id)
         if field_name not in policy.find_conflicts(data, self._start_notes(data)):
             raise ValueError(f"no open conflict for {field_name!r} on this case")
+        self._move_or_refuse(case_id, agent=recorded_by, action=action)
         answered = {**data.get("answered_by", {}), field_name: policy.HR}
         self._cases.record_answers(
             case_id,
@@ -441,7 +479,6 @@ class Orchestrator:
             agent=recorded_by,
             source=policy.HR,
         )
-        self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
         version = self._set_up(case_id, self._cases.case_data(case_id))
         return {
             "state": self._cases.case_state(case_id).value,

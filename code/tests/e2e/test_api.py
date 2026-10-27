@@ -207,6 +207,7 @@ def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
         "JOBDIVA_MOCK_URL",
         "JOBDIVA_WORKFLOW_URL",
         "TEAMS_MOCK_URL",
+        "KNOWLEDGE_BASE_MOCK_URL",
         "COWORKER_MCP_URL",
     ):
         monkeypatch.setenv(var, "http://127.0.0.1:9")
@@ -443,3 +444,97 @@ def test_only_the_onboarding_team_validates_knowledge(client) -> None:
     assert validated.json() == {"record_id": "KB-005", "status": "validated"}
     assert unknown.status_code == 404
     assert bad.status_code == 400
+
+
+def test_a_question_is_never_stored_as_a_case_answer(client) -> None:
+    case_id = _process(client, "02_missing_two_fields")["case_id"]
+
+    knowledge = client.post(
+        "/api/chat",
+        json={
+            "message": "Which forms does a W-2 hire in Texas need?",
+            "case_id": case_id,
+        },
+        headers=_as("recruiter"),
+    ).json()
+    status = client.post(
+        "/api/chat",
+        json={"message": "How is it going?", "case_id": case_id},
+        headers=_as("recruiter"),
+    ).json()
+    questions = client.get(f"/api/cases/{case_id}", headers=_as("recruiter")).json()
+
+    assert "Source: KB-001" in knowledge["reply"]
+    assert "Needs clarification" in status["reply"]
+    assert len(questions["questions"]) == 2
+
+
+@pytest.mark.parametrize(
+    ("path", "role", "body"),
+    [
+        ("it-approval", "it", {"package_version": 1}),
+        ("recommendation", "onboarding", {"field": "path", "action": "confirm"}),
+        ("decision", "approver", {"package_version": 1, "decision": "approve"}),
+        ("hr-answer", "onboarding", {"field": "flsa", "value": "Exempt"}),
+    ],
+)
+def test_unknown_case_is_a_404_not_a_500(client, path, role, body) -> None:
+    response = client.post(
+        f"/api/cases/case-000000000000/{path}", json=body, headers=_as(role)
+    )
+
+    assert response.status_code == 404
+
+
+def test_new_email_with_an_unreadable_date_asks_the_sender(client) -> None:
+    response = client.post(
+        "/api/inbox",
+        json={
+            "sender": "recruiter@example.com",
+            "subject": "Start",
+            "body": "Candidate ID: SYN-7777\nStart date: 11/02/2026",
+        },
+        headers=_as("recruiter"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["state"] == "needs_sender"
+
+
+def test_hr_answer_must_be_a_known_value(client) -> None:
+    case_id = _process(client, "05_flsa_conflict")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/hr-answer",
+        json={"field": "flsa", "value": "banana"},
+        headers=_as("onboarding"),
+    )
+
+    assert response.status_code == 400
+
+
+def test_hr_answer_on_a_rejected_case_writes_nothing(client, app_conn) -> None:
+    case_id = _process(client, "05_flsa_conflict")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "reject"},
+        headers=_as("approver"),
+    )
+
+    response = client.post(
+        f"/api/cases/{case_id}/hr-answer",
+        json={"field": "flsa", "value": "Exempt"},
+        headers=_as("onboarding"),
+    )
+
+    data = app_conn.execute(
+        "SELECT data FROM cases WHERE id = %s", (case_id,)
+    ).fetchone()[0]
+    refused = app_conn.execute(
+        "SELECT count(*) FROM audit_log WHERE case_id = %s"
+        " AND action = 'record_hr_answer' AND outcome = 'refused'",
+        (case_id,),
+    ).fetchone()[0]
+    assert response.status_code == 409
+    assert "HR" not in data.get("answered_by", {}).values()
+    assert refused == 1

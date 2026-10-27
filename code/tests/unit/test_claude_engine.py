@@ -188,3 +188,23 @@ def test_workspace_id_is_sent_with_every_request(monkeypatch) -> None:
     engine = get_model_client()
 
     assert engine._client.default_headers["anthropic-workspace-id"] == "wrkspc_test"
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "Candidate is on OPT, EAD pending.",
+        "Holds an H1-B today.",
+        "Has a green-card application in progress.",
+        "Work authorization ends in May.",
+        "She is a permanent resident.",
+    ],
+)
+def test_work_authorization_never_reaches_the_model(sentence) -> None:
+    messages = FakeMessages({"values": {}, "ambiguous": []})
+
+    _extract(_engine(messages), f"Needs a standard laptop. {sentence}")
+
+    content = messages.calls[0]["messages"][0]["content"]
+    assert "standard laptop" in content
+    assert sentence not in content

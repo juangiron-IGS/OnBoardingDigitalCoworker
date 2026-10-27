@@ -7,14 +7,15 @@ never answers FLSA, classification, compensation or legal questions (BR-001)."""
 import re
 from dataclasses import dataclass
 
+from agents.common.model_client import RESTRICTED_TERMS
 from contracts.mcp_tools import KnowledgeBase
 
 AGENT = "onboarding_knowledge"
 
 # Questions HR decides: never answered, never kept as text (restricted, BR-001).
 HR_TOPICS = re.compile(
-    r"\b(flsa|exempt|non-exempt|classif\w*|compensation|salary|pay rate|overtime|"
-    r"legal|lawsuit|visa|sponsor\w*)\b",
+    RESTRICTED_TERMS
+    + r"|\b(classif\w*|compensation|salary|pay rate|overtime|legal|lawsuit)\b",
     re.IGNORECASE,
 )
 HR_PLACEHOLDER = "FLSA, classification, compensation or legal question (text not kept)"
