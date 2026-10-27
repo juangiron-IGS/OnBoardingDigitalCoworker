@@ -16,6 +16,8 @@ Direct dependencies declared in `code/pyproject.toml`. The versions are those in
 | anthropic | 2.3.0 | Apache-2.0 | Claude engine (`MODEL_PROVIDER=claude`), optional |
 | pystray | 0.19.5 | LGPL-3.0 | Coworker Tray icon and Windows notifications (extra `tray`), used unmodified as a library |
 | Pillow | 12.3.0 | MIT-CMU | Coworker Tray icon image (extra `tray`) |
+| pywebview | 6.2.1 | BSD-3-Clause | Coworker window the tray opens, on Windows' Edge WebView2 (extra `tray`) |
+| pythonnet | 3.2.1 | MIT | Installed by pywebview on Windows (extra `tray`) |
 
 ## Development and test
 

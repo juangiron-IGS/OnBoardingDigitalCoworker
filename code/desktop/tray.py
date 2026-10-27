@@ -1,8 +1,10 @@
 """Coworker Tray: the Onboarding Coworker in the Windows notification area.
 
 A small icon next to the clock shows a Windows notification when an alert arrives
-for the chosen role, and opens the web app on that case. It reads alerts over MCP
-only; approvals and actions stay with people in the web app (BR-002).
+for the chosen role. A click on the icon opens the Coworker window docked above the
+clock: the web app itself (chat, approval and every other view) on that case. The
+tray reads alerts over MCP only; approvals and actions stay with people in the web
+app (BR-002).
 
 Run from code/: .venv/Scripts/python -m desktop.tray   (or ./scripts/tray.sh)
 """
@@ -17,6 +19,7 @@ from PIL import Image, ImageDraw
 
 from .feed import ROLES, AlertFeed, case_url, title
 from .poller import poll, server_params
+from .window import CoworkerWindow
 
 ACCENT = (31, 95, 174)
 ALERT = (214, 48, 49)
@@ -36,7 +39,7 @@ def icon_image(unseen: int, connected: bool) -> Image.Image:
 
 
 class CoworkerTray:
-    def __init__(self, role: str, app_url: str) -> None:
+    def __init__(self, role: str, app_url: str, *, window: bool = True) -> None:
         self.role = role
         self.app_url = app_url
         self.feed = AlertFeed()
@@ -50,6 +53,7 @@ class CoworkerTray:
             self._tooltip(),
             menu=self._menu(),
         )
+        self.window = CoworkerWindow(case_url(app_url, None, role)) if window else None
 
     # --- MCP polling, on its own thread with its own event loop ---
 
@@ -125,6 +129,7 @@ class CoworkerTray:
         return pystray.Menu(
             pystray.MenuItem("Open latest alert", self._open_latest, default=True),
             pystray.MenuItem("Open the Coworker", self._opener(None)),
+            pystray.MenuItem("Open in the browser", self._browser),
             pystray.MenuItem("Latest alerts", pystray.Menu(recent_items)),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Role", roles),
@@ -140,10 +145,17 @@ class CoworkerTray:
     def _opener(self, case_id: str | None):  # noqa: ANN202
         def open_case(icon, item) -> None:  # noqa: ANN001
             self.feed.mark_seen()
-            webbrowser.open(case_url(self.app_url, case_id, self.role))
+            url = case_url(self.app_url, case_id, self.role)
+            if self.window:
+                self.window.open(url)
+            else:
+                webbrowser.open(url)
             self._refresh()
 
         return open_case
+
+    def _browser(self, icon, item) -> None:  # noqa: ANN001
+        webbrowser.open(case_url(self.app_url, None, self.role))
 
     def _open_latest(self, icon, item) -> None:  # noqa: ANN001
         latest = self.feed.recent[0] if self.feed.recent else None
@@ -169,10 +181,18 @@ class CoworkerTray:
     def _quit(self, icon, item) -> None:  # noqa: ANN001
         self._stop_polling()
         icon.stop()
+        if self.window:
+            self.window.destroy()
 
     def run(self) -> None:
         self._start_polling()
-        self.icon.run()
+        if not self.window:
+            self.icon.run()
+            return
+        # The window loop needs the main thread; the icon runs beside it.
+        self.icon.run_detached()
+        CoworkerWindow.start()
+        self.icon.stop()
 
 
 def main() -> None:

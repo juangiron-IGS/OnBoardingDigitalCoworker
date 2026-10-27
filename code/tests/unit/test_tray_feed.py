@@ -61,3 +61,12 @@ def test_icon_shows_a_red_dot_for_new_alerts() -> None:
 
     assert quiet.getpixel((52, 12))[:3] != ALERT
     assert busy.getpixel((52, 12))[:3] == ALERT
+
+
+def test_the_window_docks_above_the_clock() -> None:
+    from desktop.window import HEIGHT, WIDTH, docked
+
+    x, y = docked(1920, 1080)
+
+    assert (x + WIDTH, y + HEIGHT) == (1920 - 12, 1080 - 48 - 12)
+    assert docked(400, 300) == (0, 0)  # a small screen keeps it on screen
