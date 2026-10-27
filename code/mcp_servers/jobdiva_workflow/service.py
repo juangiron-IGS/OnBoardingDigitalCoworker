@@ -12,6 +12,9 @@ from services.case_service.adapters.postgres.case_repository import (
 from services.case_service.adapters.postgres.followup_repository import (
     PostgresFollowupRepository,
 )
+from services.case_service.adapters.postgres.igs_repository import (
+    PostgresIgsRepository,
+)
 from services.case_service.application.decisions import authorize_action
 from services.case_service.domain.errors import ApprovalRefused, GovernanceError
 
@@ -23,6 +26,8 @@ _STORES = {
     "create_task_list": "task_lists",
     "create_it_request": "it_requests",
     "send_payroll_package": "payroll_packages",
+    "create_ldc_entry": "ldc_tracker",
+    "send_welcome_kit": "welcome_kits",
 }
 if frozenset(_STORES) != SIMULATED_ACTIONS:
     raise RuntimeError("Every simulated action needs exactly one mock store")
@@ -39,6 +44,7 @@ class WorkflowService:
         self._repo = PostgresCaseRepository(conn)
         self._audit = PostgresAuditLog(conn)
         self._followup = PostgresFollowupRepository(conn)
+        self._igs = PostgresIgsRepository(conn)
 
     def execute_simulated_action(
         self,
@@ -69,6 +75,10 @@ class WorkflowService:
                     self._followup.payroll_handoff_approved(case_id, package_version)
                 ):
                     raise GovernanceError("handoff_not_approved")  # US-024 AC-002
+                if action == "send_welcome_kit" and not self._igs.kit_approved(
+                    case_id, package_version
+                ):
+                    raise GovernanceError("kit_not_approved")  # US-028 AC-002
                 self._apply(action, case_id, approval_id, payload)
                 self._conn.execute(
                     "INSERT INTO action_ledger"

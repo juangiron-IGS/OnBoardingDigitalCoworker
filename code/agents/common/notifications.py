@@ -78,6 +78,20 @@ def payroll_return_text(case_id: str) -> str:
     return f"Case {case_id}: Payroll returned an issue. A task was added to the case."
 
 
+def ldc_handoff_text(case_id: str, ship_by: str) -> str:
+    return (
+        f"New hire in the LDC tracker ({case_id}). Please approve the welcome kit "
+        f"so it ships by {ship_by}."
+    )
+
+
+def leader_drafts_text(case_id: str) -> str:
+    return (
+        f"Case {case_id} reached two months. The leader feedback request and the "
+        "congratulation wait for your approval."
+    )
+
+
 def duplicate_text(existing_ref: str) -> str:
     return (
         "This start was not processed: a case for the same person and start date "

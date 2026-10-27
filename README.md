@@ -49,6 +49,7 @@ The Coworker never decides worker classification, compensation or legal employme
 - the Onboarding Team confirms or changes the recommended path and paperwork (US-026);
 - HR's answer to an escalated FLSA or classification conflict (US-027);
 - a status dashboard with every case under its state, what is pending and its risks (US-030, Could);
+- Culture and Belonging (Could): the LDC tracker handoff with accelerated timing, the welcome kit shipped only after LDC approves it (US-028), and the two-month leader feedback request and congratulation, sent only after LDC approves them and never with restricted data (US-029);
 - a simulated mailbox where new start emails arrive, and a Teams-like chat panel;
 - an optional Claude engine that reads start details written as free text;
 - the Coworker as an MCP server for other chat apps.
@@ -59,7 +60,7 @@ To users it is one Coworker. Inside, an Onboarding Orchestrator owns the case an
 
 ![Agent architecture](Documents/CheckPoint/14October/images/08-architecture.png)
 
-The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, three Should agents, the shared notifications tool and the mocks for JobDiva, Outlook, Teams, the knowledge base and payroll (Paychex). With `AGENT_TRANSPORT=mcp`, the agents reach every system through its MCP server.
+The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, three Should agents, the Could agent Culture and Belonging, the shared notifications tool and the mocks for JobDiva, Outlook, Teams, the knowledge base, payroll (Paychex) and the LDC tracker (SharePoint). With `AGENT_TRANSPORT=mcp`, the agents reach every system through its MCP server.
 
 | Agent | Priority | Responsibility | In the demo |
 | --- | --- | --- | --- |
@@ -70,7 +71,7 @@ The architecture as it runs in the demo, with its controls and the tests behind 
 | Access and Equipment | Should | Email, Teams, apps, laptop, 2% or 5% overhead and bill-back | Built, behind `FEATURE_ACCESS_EQUIPMENT` |
 | Candidate Follow-up | Should | Checklist, tiered reminders and document verification | Built, behind `FEATURE_CANDIDATE_FOLLOWUP` |
 | Onboarding Knowledge | Should | Answers process questions from records the Onboarding Team validates, citing the record; drafts are labelled; unanswered questions stay pending for the team | Built |
-| Culture and Belonging (IGS) | Could | LDC tracker, welcome kit and two-month feedback | Next step |
+| Culture and Belonging (IGS) | Could | LDC tracker, welcome kit and two-month feedback | Built, behind `FEATURE_IGS_HANDOFF` |
 
 Case lifecycle and the demo sequence are documented in [section 5 of the checkpoint deliverable](Documents/CheckPoint/14October/checkpoint-deliverable.md#5-solution-design).
 
@@ -109,6 +110,7 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `FEATURE_ACCESS_EQUIPMENT` | `false` (`.env.example`: `true`) | Access and Equipment agent: laptop and access request, 2% or 5% overhead, bill-back, IT approval |
 | `FEATURE_CANDIDATE_FOLLOWUP` | `false` (`.env.example`: `true`) | Candidate Follow-up agent: checklist, reminders (cadence in rule R-RM-01), document countersign |
 | `FEATURE_PAYROLL_PACKAGE` | `false` (`.env.example`: `true`) | Payroll handoff to Paychex (simulated) after the Onboarding Team approves it, and returns as tasks |
+| `FEATURE_IGS_HANDOFF` | `false` (`.env.example`: `true`) | Culture and Belonging agent: LDC tracker, welcome kit and leader messages, each approved by LDC |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, Teams and knowledge base MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
 | `JOBDIVA_MOCK_URL`, `JOBDIVA_WORKFLOW_URL`, `TEAMS_MOCK_URL`, `KNOWLEDGE_BASE_MOCK_URL` | `127.0.0.1` ports 8101, 8106, 8108, 8109 | Addresses of the MCP servers |
 | `COWORKER_MCP_URL`, `COWORKER_MCP_ROLE` | `127.0.0.1:8110`, `recruiter` | The Coworker's own MCP server for other chat apps, and the role it acts as |
@@ -171,7 +173,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **Free text needs the `claude` engine.** With `rules`, a new start must be sent as `Label: value` lines. With `claude`, labelled lines are still read first at no cost, and Claude reads only the fields still missing. FLSA, sponsorship and visa are never sent to the model: they come from labelled lines or from the recruiter's answers.
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** Culture and Belonging (Could): LDC tracker, welcome kit and two-month feedback.
+- **Not built yet:** the new-hire information package (US-031, Could).
 - **Simulated time and documents.** Reminders run when the Onboarding Team presses *Simulate time* in the Status view, and a candidate's delivery is recorded by the team; there is no real scheduler, candidate portal or file upload.
 - **Knowledge search** matches the words of the question against the records and does not use a model. The records are example content in `code/rules/knowledge/records.yaml`.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
@@ -193,7 +195,8 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 .
 ├── code/                        Application (dependencies: code/THIRD_PARTY_LICENSES.md)
 │   ├── agents/                  Orchestrator (+ chat), Intake and Validation, Policy and Case Setup, JobDiva and Workflow,
-│   │                            Access and Equipment, Onboarding Knowledge
+│   │                            Access and Equipment, Candidate Follow-up, Onboarding Knowledge,
+│   │                            Culture and Belonging
 │   ├── services/case_service/   Case states, approval gate, audit, privacy, rules catalog
 │   ├── mcp_servers/             jobdiva_read, jobdiva_workflow (single writer), coworker, mocks (outlook, teams, knowledge)
 │   ├── contracts/               Interfaces shared by both lanes

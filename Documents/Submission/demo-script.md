@@ -71,6 +71,10 @@ Check that `code/.env` has `FEATURE_CANDIDATE_FOLLOWUP=true` and `FEATURE_PAYROL
 3. Press **Candidate delivered** on each item: it shows *Pending countersign*, not verified. Press **Countersign** on each.
 4. Press **Approve payroll handoff**: the single writer sends the payroll package to Paychex (simulated) with validated data only, and the case is *Sent to payroll*. Press **Simulate a Paychex return**: the issue appears as a task and in the audit log.
 
+### Culture and Belonging (optional, 40 s)
+
+With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** in **Status**: the kit ships 5 days before the start (**R-IG-01**). Press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the leader feedback request and the congratulation are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
+
 ## 9. Onboarding knowledge (1 min)
 
 1. Select **Onboarding Team** and open **Knowledge**. Ask *Which forms does a hire in Philadelphia need?*: the answer cites **KB-005** and says it is an *unvalidated draft*.

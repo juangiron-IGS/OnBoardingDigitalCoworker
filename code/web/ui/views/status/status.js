@@ -3,7 +3,9 @@ import { api, el, errorNotice, getCase, getRole, setCase, statePill, STATE_LABEL
 const PATH = ["received", "validated", "case_set_up", "ready_for_review", "approval_gate", "approved", "actions_executed",
   "documents_pending", "in_verification", "sent_to_payroll"];
 const SYSTEMS = { jobdiva_cases: "JobDiva case (mock)", task_lists: "Onboarding task list", it_requests: "IT request (mock)",
-  payroll_packages: "Payroll package (Paychex mock)" };
+  payroll_packages: "Payroll package (Paychex mock)", ldc_tracker: "LDC tracker entry (SharePoint mock)",
+  welcome_kits: "Welcome kit shipment (mock)" };
+const MESSAGE_KIND = { feedback_request: "Leader feedback request", congratulation: "Congratulation" };
 const DOC_STATUS = { outstanding: ["warn", "Outstanding"], pending_countersign: ["neutral", "Pending countersign"], verified: ["ok", "Verified"] };
 
 export async function render(root, show) {
@@ -107,6 +109,44 @@ function followupCard(view, caseId, show) {
     feedback);
 }
 
+// US-028, US-029: LDC tracker, welcome kit and leader messages, all approved by LDC.
+function igsCard(view, caseId, show) {
+  const entry = view.records.find((r) => r.system === "ldc_tracker");
+  if (!entry) return null;
+  const shipped = view.records.some((r) => r.system === "welcome_kits");
+  const isLdc = getRole() === "ldc";
+  const feedback = el("div");
+  const act = (work, message) => async () => {
+    feedback.replaceChildren();
+    try {
+      const result = await work();
+      feedback.replaceChildren(el("div", { class: "notice ok", role: "status" }, message(result)));
+      setTimeout(() => show("status"), 1200);
+    } catch (error) {
+      feedback.replaceChildren(errorNotice(error));
+    }
+  };
+  const messages = view.leader_messages || [];
+  return el("section", { class: "card" },
+    el("h2", {}, "Culture and Belonging (IGS)"),
+    el("p", {}, `In the LDC tracker. Welcome kit: ${entry.data.welcome_kit}, to ship by ${entry.data.kit_ship_by}. Leader feedback due ${entry.data.feedback_due}.`),
+    el("div", { class: "actions" },
+      el("span", { class: `pill ${shipped ? "ok" : "warn"}` }, shipped ? "Kit approved by LDC and shipped" : "Kit waiting for LDC approval"),
+      isLdc && !shipped ? el("button", { class: "btn primary", type: "button",
+        onclick: act(() => api.approveKit(caseId, view.case.package_version), () => "Kit approved. The shipment was sent (simulated).") }, "Approve welcome kit") : null,
+      isLdc && !messages.length ? el("button", { class: "btn", type: "button",
+        onclick: act(() => api.runIgs(caseId, 60), (r) => r.drafted.length ? "Two months reached: the leader messages are drafted for your approval." : "Nothing to draft yet.") },
+        "Simulate two months after the start") : null),
+    messages.length ? el("div", { class: "list" }, messages.map((m) => el("div", { class: "row" },
+      el("div", {}, el("div", {}, `${MESSAGE_KIND[m.kind] || m.kind} to ${m.recipient}`), el("div", { class: "meta" }, m.text)),
+      el("div", { class: "actions" },
+        el("span", { class: `pill ${m.status === "sent" ? "ok" : "warn"}` }, m.status === "sent" ? "Sent" : "Waiting for LDC"),
+        isLdc && m.status === "draft" ? el("button", { class: "btn", type: "button",
+          onclick: act(() => api.approveLeaderMessage(caseId, m.id), () => "Approved and sent.") }, "Approve and send") : null)))) : null,
+    !isLdc ? el("p", { class: "lead" }, "Switch to the LDC role to approve the kit and the leader messages.") : null,
+    feedback);
+}
+
 async function drawCase(root, caseId, show) {
   const view = await api.case(caseId);
   const now = view.case.state;
@@ -120,6 +160,8 @@ async function drawCase(root, caseId, show) {
 
   const followup = followupCard(view, caseId, show);
   if (followup) root.append(followup);
+  const igs = igsCard(view, caseId, show);
+  if (igs) root.append(igs);
 
   root.append(el("section", { class: "card" }, el("h2", {}, "Records created after approval"),
     view.records.length

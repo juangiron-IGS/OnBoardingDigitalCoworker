@@ -9,6 +9,7 @@ const RECIPIENTS = {
   onboarding: ["Onboarding Team", "HR"],
   approver: ["Onboarding Supervisor"],
   it: ["IT"],
+  ldc: ["LDC"],
 };
 const POLL_MS = 5000;
 const SVG = "http://www.w3.org/2000/svg";

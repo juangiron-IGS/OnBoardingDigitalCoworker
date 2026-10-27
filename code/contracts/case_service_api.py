@@ -107,6 +107,27 @@ class CaseServiceClient(Protocol):
 
     def record_payroll_return(self, case_id: str, issue: str, *, agent: str) -> int: ...
 
+    # Culture and Belonging (US-028, US-029): LDC approves before anything is sent
+    def record_kit_approval(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> None: ...
+
+    def kit_approved(self, case_id: str, package_version: int) -> bool: ...
+
+    def draft_leader_messages(
+        self, case_id: str, drafts: list[tuple[str, str, str, str]], *, agent: str
+    ) -> None: ...
+
+    def leader_messages(self, case_id: str) -> list[dict[str, Any]]: ...
+
+    def approve_leader_message(
+        self, case_id: str, message_id: int, *, approved_by: str
+    ) -> None: ...
+
+    def mark_leader_message_sent(
+        self, case_id: str, message_id: int, *, agent: str
+    ) -> dict: ...
+
     def approval_id_for(self, case_id: str, package_version: int) -> str | None:
         """The approval ID of this version, or None if it is not approved."""
         ...
