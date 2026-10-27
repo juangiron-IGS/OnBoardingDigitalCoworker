@@ -1,6 +1,6 @@
 # Demo script (live demo and backup video)
 
-Length: about 7 minutes. All data is synthetic, and every person, company and ID is invented.
+Length: about 8 minutes. All data is synthetic, and every person, company and ID is invented.
 
 ## Before you start
 
