@@ -50,6 +50,14 @@ class ModelClient(Protocol):
         """
         ...
 
+    def pick_record(
+        self, question: str, records: list[dict], *, run_id: str
+    ) -> str | None:
+        """US-025: the ID of the knowledge record that answers the question, "" when
+        none does, or None when this engine does not choose (the agent then matches
+        words). It only chooses: the answer is always the record's own text."""
+        ...
+
 
 class RulesModelClient:
     """Deterministic engine for the synthetic, labelled emails and chat messages."""
@@ -69,6 +77,11 @@ class RulesModelClient:
     ) -> Extraction:
         self._meter.record(run_id=run_id, case_id=case_id, provider=self.provider)
         return read_labelled(text, fields, self._by_label)
+
+    def pick_record(
+        self, question: str, records: list[dict], *, run_id: str
+    ) -> str | None:
+        return None  # no model: the knowledge agent matches words
 
 
 def read_labelled(text: str, fields: list[str], by_label: dict[str, str]) -> Extraction:

@@ -4,6 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from agents.common.model_client import get_model_client
 from agents.onboarding_knowledge import agent as knowledge_agent
 
 from ..deps import Knowledge, Role
@@ -29,7 +30,9 @@ def overview(kb: Knowledge, role: Role) -> dict:
 def ask(body: Question, kb: Knowledge, role: Role) -> dict:
     """Ask the Onboarding Knowledge agent (US-025)."""
     try:
-        result = knowledge_agent.answer(body.question, kb, asked_by=role, channel="web")
+        result = knowledge_agent.answer(
+            body.question, kb, asked_by=role, channel="web", model=get_model_client()
+        )
     except ValueError as exc:
         raise HTTPException(400, detail=str(exc)) from None
     return asdict(result)

@@ -5,7 +5,8 @@
 **Tools.** The knowledge base mock (`mcp_servers/mocks/knowledge`): read records, register unresolved questions. No write tools on any system.
 
 **Rules.**
-- Every answer cites its record ID, title and source.
+- With `MODEL_PROVIDER=claude`, Claude only chooses which record answers the question (or none); it never writes the answer. The answer is the record's own text. With `rules`, or if Claude fails, the words of the question are matched. FLSA, visa and classification questions never reach the model.
+- Every answer cites its record ID, title and source; the audit records whether the model or the words chose it.
 - A record the Onboarding Team has not validated is answered as an *unvalidated draft*, never as confirmed. A rejected record is never used.
 - A question no record answers gets "no validated answer" and is logged as pending for the Onboarding Team. The agent never guesses.
 - FLSA, classification, compensation, visa and legal questions are never answered: they are logged for HR without keeping the text (BR-001).

@@ -176,7 +176,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
 - **Every Must, Should and Could story is built.** The Could features run behind their feature flags.
 - **Simulated time and documents.** Reminders run when the Onboarding Team presses *Simulate time* in the Status view, and a candidate's delivery is recorded by the team; there is no real scheduler, candidate portal or file upload.
-- **Knowledge search** matches the words of the question against the records and does not use a model. The records are example content in `code/rules/knowledge/records.yaml`.
+- **Knowledge search:** with `MODEL_PROVIDER=claude`, Claude chooses which record answers the question (paraphrases and other languages work); the answer is always the record's own text and citation. With `rules`, or if Claude fails, the words of the question are matched. The records are example content in `code/rules/knowledge/records.yaml`.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components

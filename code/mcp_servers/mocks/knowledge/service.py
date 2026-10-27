@@ -110,14 +110,20 @@ class KnowledgeService:
             )
         return pending_id
 
-    def log_answer(self, record_id: str, status: str, *, channel: str) -> None:
+    def log_answer(
+        self, record_id: str, status: str, *, channel: str, matched_by: str = "words"
+    ) -> None:
         self._audit.append(
             case_id=AUDIT_CASE,
             agent="onboarding_knowledge",
             action="answer_from_knowledge",
             outcome="completed",
             rule_ids=[record_id],
-            data_refs={"question": channel, "record_status": status},
+            data_refs={
+                "question": channel,
+                "record_status": status,
+                "matched_by": matched_by,
+            },
         )
 
     def pending(self) -> list[dict]:
