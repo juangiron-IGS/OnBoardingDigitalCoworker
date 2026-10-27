@@ -25,6 +25,13 @@ if (DESKTOP) {
   });
 }
 const DEFAULT_VIEW = DESKTOP ? "chat" : "inbox";
+// The desktop window keeps only what a person acts on from the tray.
+const DESKTOP_VIEWS = ["chat", "dashboard", "approval", "status"];
+if (DESKTOP) {
+  document.querySelectorAll(".tabs button").forEach((tab) => {
+    if (!DESKTOP_VIEWS.includes(tab.dataset.view)) tab.remove();
+  });
+}
 const tabs = [...document.querySelectorAll(".tabs button")];
 const roleSelect = document.getElementById("role");
 
@@ -40,7 +47,8 @@ export async function show(name) {
   } else {
     name = viewName;
   }
-  const view = VIEWS[name] ? name : DEFAULT_VIEW;
+  const allowed = !DESKTOP || DESKTOP_VIEWS.includes(name);
+  const view = VIEWS[name] && allowed ? name : DEFAULT_VIEW;
   tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.view === view)));
   if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
   unmountChat();
