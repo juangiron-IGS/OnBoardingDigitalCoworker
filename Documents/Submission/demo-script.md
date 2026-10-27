@@ -1,6 +1,6 @@
 # Demo script (live demo and backup video)
 
-Length: about 8 minutes. All data is synthetic, and every person, company and ID is invented.
+Length: about 9 minutes. All data is synthetic, and every person, company and ID is invented.
 
 ## Before you start
 
@@ -62,14 +62,23 @@ Open **Status**:
 2. **FLSA conflict:** simulate *SYN-0045* (`05_flsa_conflict`). The start email says Non-exempt and JobDiva says Exempt. The Coworker selects no value, escalates to the Onboarding Team and HR, and the package is **blocked**: *Approve* stays disabled. Then select **Onboarding Team**, choose HR's answer under **Escalated to HR** and press **Record HR's answer**: the package is rebuilt as v2, the FLSA line cites **HR**, and v2 can be approved.
 3. **Already in JobDiva:** in the chat, send `Candidate ID: SYN-0040` and `Start date: 2026-11-02` on two lines. It is blocked: that person is already onboarding in JobDiva.
 
-## 8. Onboarding knowledge (1 min)
+## 8. Documents and payroll after approval (1 min)
+
+Check that `code/.env` has `FEATURE_CANDIDATE_FOLLOWUP=true` and `FEATURE_PAYROLL_PACKAGE=true`.
+
+1. Select **Onboarding Team** and open **Status** on the case approved in step 5. It is in *Documents pending*, and **Candidate documents** lists the checklist the candidate received, each item with its rule (the package forms, **R-CK-01**, **R-CK-02**).
+2. Press **Simulate time** three times: a reminder at 24 h and at 48 h (**R-RM-01**), then an escalation to the Onboarding Team at 72 h.
+3. Press **Candidate delivered** on each item: it shows *Pending countersign*, not verified. Press **Countersign** on each.
+4. Press **Approve payroll handoff**: the single writer sends the payroll package to Paychex (simulated) with validated data only, and the case is *Sent to payroll*. Press **Simulate a Paychex return**: the issue appears as a task and in the audit log.
+
+## 9. Onboarding knowledge (1 min)
 
 1. Select **Onboarding Team** and open **Knowledge**. Ask *Which forms does a hire in Philadelphia need?*: the answer cites **KB-005** and says it is an *unvalidated draft*.
 2. Press **Validate** on KB-005 and ask again: the same answer is now *Validated by the Onboarding Team*.
 3. Ask *Which forms does a hire in Ohio need?*: the Coworker has no validated answer and the question appears under **Pending for the Onboarding Team**.
 4. In the chat panel, ask *How do I request a laptop for my new hire?*: the Onboarding Knowledge agent answers from **KB-003**. A question about FLSA or classification is never answered: it is logged for HR without keeping the text.
 
-## 9. Close (20 s)
+## 10. Close (20 s)
 
 > "Human approval before any action, no legal decisions, synthetic data only, and the JobDiva connector only reads. The rules are data the business owns, and a model engine plugs in without changing the agents."
 

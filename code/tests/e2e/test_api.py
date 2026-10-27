@@ -538,3 +538,56 @@ def test_hr_answer_on_a_rejected_case_writes_nothing(client, app_conn) -> None:
     assert response.status_code == 409
     assert "HR" not in data.get("answered_by", {}).values()
     assert refused == 1
+
+
+def test_documents_and_payroll_through_the_api(client, monkeypatch) -> None:
+    # US-022..024 end to end through the API, as in the demo
+    monkeypatch.setenv("FEATURE_CANDIDATE_FOLLOWUP", "true")
+    monkeypatch.setenv("FEATURE_PAYROLL_PACKAGE", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    view = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()
+    items = [c["item"] for c in view["checklist"]]
+
+    refused = client.post(
+        f"/api/cases/{case_id}/followup/run",
+        json={"at_hours": 24},
+        headers=_as("recruiter"),
+    )
+    reminded = client.post(
+        f"/api/cases/{case_id}/followup/run",
+        json={"at_hours": 24},
+        headers=_as("onboarding"),
+    ).json()
+    delivered = client.post(
+        f"/api/cases/{case_id}/documents",
+        json={"items": items},
+        headers=_as("onboarding"),
+    ).json()
+    for item in items:
+        client.post(
+            f"/api/cases/{case_id}/documents/countersign",
+            json={"item": item},
+            headers=_as("onboarding"),
+        )
+    sent = client.post(
+        f"/api/cases/{case_id}/payroll-handoff",
+        json={"package_version": 1},
+        headers=_as("onboarding"),
+    ).json()
+    task = client.post(
+        f"/api/cases/{case_id}/payroll-returns",
+        json={"issue": "Bank account mismatch"},
+        headers=_as("onboarding"),
+    )
+
+    assert view["case"]["state"] == "documents_pending"
+    assert refused.status_code == 403
+    assert reminded == {"sent": [{"kind": "reminder", "at_hours": 24}]}
+    assert delivered == {"state": "in_verification", "missing": []}
+    assert sent["state"] == "sent_to_payroll"
+    assert task.status_code == 200

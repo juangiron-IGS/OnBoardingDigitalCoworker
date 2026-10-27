@@ -9,6 +9,9 @@ from services.case_service.adapters.postgres.audit_log import PostgresAuditLog
 from services.case_service.adapters.postgres.case_repository import (
     PostgresCaseRepository,
 )
+from services.case_service.adapters.postgres.followup_repository import (
+    PostgresFollowupRepository,
+)
 from services.case_service.application.decisions import authorize_action
 from services.case_service.domain.errors import ApprovalRefused, GovernanceError
 
@@ -19,6 +22,7 @@ _STORES = {
     "create_jobdiva_case": "jobdiva_cases",
     "create_task_list": "task_lists",
     "create_it_request": "it_requests",
+    "send_payroll_package": "payroll_packages",
 }
 if frozenset(_STORES) != SIMULATED_ACTIONS:
     raise RuntimeError("Every simulated action needs exactly one mock store")
@@ -34,6 +38,7 @@ class WorkflowService:
         self._conn = conn
         self._repo = PostgresCaseRepository(conn)
         self._audit = PostgresAuditLog(conn)
+        self._followup = PostgresFollowupRepository(conn)
 
     def execute_simulated_action(
         self,
@@ -60,6 +65,10 @@ class WorkflowService:
                     case_id, package_version
                 ):
                     raise GovernanceError("it_not_approved")  # BR-012, US-020 AC-002
+                if action == "send_payroll_package" and not (
+                    self._followup.payroll_handoff_approved(case_id, package_version)
+                ):
+                    raise GovernanceError("handoff_not_approved")  # US-024 AC-002
                 self._apply(action, case_id, approval_id, payload)
                 self._conn.execute(
                     "INSERT INTO action_ledger"

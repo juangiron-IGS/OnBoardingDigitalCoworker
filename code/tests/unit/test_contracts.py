@@ -27,7 +27,14 @@ def test_idempotency_key_differs_per_action() -> None:
 
 def test_simulated_actions_are_the_approved_set() -> None:
     assert (
-        frozenset({"create_jobdiva_case", "create_task_list", "create_it_request"})
+        frozenset(
+            {
+                "create_jobdiva_case",
+                "create_task_list",
+                "create_it_request",
+                "send_payroll_package",
+            }
+        )
         == SIMULATED_ACTIONS
     )
 

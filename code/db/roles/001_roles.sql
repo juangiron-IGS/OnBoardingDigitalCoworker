@@ -40,3 +40,12 @@ GRANT USAGE ON SEQUENCE mocks.inbound_mail_id_seq TO coworker_app;
 -- Onboarding knowledge: validation decisions and pending questions (US-025).
 GRANT SELECT, INSERT ON mocks.knowledge_validations, mocks.knowledge_questions TO coworker_app;
 GRANT USAGE ON SEQUENCE mocks.knowledge_validations_id_seq, mocks.knowledge_questions_id_seq TO coworker_app;
+
+-- Candidate follow-up, document check and payroll handoff (US-022..024). A checklist
+-- item only changes status; reminders, handoffs and returns are append-only.
+GRANT SELECT, INSERT ON document_checklist, followup_reminders, payroll_handoffs,
+    payroll_returns, mocks.payroll_packages TO coworker_app;
+GRANT UPDATE (status, delivered_at, verified_by, verified_at) ON document_checklist
+    TO coworker_app;
+GRANT USAGE ON SEQUENCE document_checklist_id_seq, followup_reminders_id_seq,
+    payroll_returns_id_seq, mocks.payroll_packages_id_seq TO coworker_app;

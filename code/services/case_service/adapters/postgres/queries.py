@@ -8,7 +8,7 @@ import psycopg
 
 from ...domain.timing import package_timing
 
-MOCK_STORES = ("jobdiva_cases", "task_lists", "it_requests")
+MOCK_STORES = ("jobdiva_cases", "task_lists", "it_requests", "payroll_packages")
 
 
 def _timing(
@@ -89,13 +89,13 @@ def case_detail(conn: psycopg.Connection, case_id: str) -> dict[str, Any] | None
     }
     return {
         "case": case,
-        "package": _package(conn, case_id, row[4]),
+        "package": package(conn, case_id, row[4]),
         "audit": _audit(conn, case_id),
         "records": _records(conn, case_id),
     }
 
 
-def _package(conn: psycopg.Connection, case_id: str, version: int) -> dict | None:
+def package(conn: psycopg.Connection, case_id: str, version: int) -> dict | None:
     if version == 0:
         return None
     status = conn.execute(

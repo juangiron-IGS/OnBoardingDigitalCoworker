@@ -1,0 +1,10 @@
+# Reminder cadence and send limit for outstanding checklist items (BR-010,
+# FR-CHK-002, FR-CHK-003). Read on every run, so a change applies to the next
+# reminders. Example content (status: draft).
+domain: reminder
+rules:
+  - id: R-RM-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    result: {every_hours: 24, max_reminders: 2, escalate_after_hours: 72}

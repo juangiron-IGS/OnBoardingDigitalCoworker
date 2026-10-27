@@ -45,6 +45,11 @@ export const api = {
   approveIt: (id, packageVersion) => call("POST", `/api/cases/${encodeURIComponent(id)}/it-approval`, { package_version: packageVersion }),
   hrAnswer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/hr-answer`, { field, value }),
   review: (id, field, action, values) => call("POST", `/api/cases/${encodeURIComponent(id)}/recommendation`, { field, action, values: values || [] }),
+  runFollowup: (id, atHours) => call("POST", `/api/cases/${encodeURIComponent(id)}/followup/run`, { at_hours: atHours }),
+  deliver: (id, items) => call("POST", `/api/cases/${encodeURIComponent(id)}/documents`, { items }),
+  countersign: (id, item) => call("POST", `/api/cases/${encodeURIComponent(id)}/documents/countersign`, { item }),
+  payrollHandoff: (id, packageVersion) => call("POST", `/api/cases/${encodeURIComponent(id)}/payroll-handoff`, { package_version: packageVersion }),
+  payrollReturn: (id, issue) => call("POST", `/api/cases/${encodeURIComponent(id)}/payroll-returns`, { issue }),
   chat: (message, caseId) => call("POST", "/api/chat", { message, case_id: caseId || null }),
   knowledge: () => call("GET", "/api/knowledge"),
   askKnowledge: (question) => call("POST", "/api/knowledge/ask", { question }),
@@ -71,11 +76,12 @@ export const STATE_LABELS = {
   received: "Received", blocked_duplicate: "Blocked: duplicate", validated: "Validated",
   needs_clarification: "Needs clarification", case_set_up: "Case set up",
   ready_for_review: "Ready for review", approval_gate: "Approval gate", approved: "Approved",
-  rejected: "Rejected", actions_executed: "Actions executed", closed: "Closed",
+  rejected: "Rejected", actions_executed: "Actions executed", documents_pending: "Documents pending",
+  in_verification: "In verification", sent_to_payroll: "Sent to payroll", closed: "Closed",
 };
 
 export function statePill(stateName) {
-  const tone = { actions_executed: "ok", approved: "ok", ready_for_review: "warn",
+  const tone = { actions_executed: "ok", approved: "ok", sent_to_payroll: "ok", documents_pending: "warn", in_verification: "warn", ready_for_review: "warn",
     needs_clarification: "warn", rejected: "bad", blocked_duplicate: "bad" }[stateName] || "neutral";
   return el("span", { class: `pill ${tone}` }, STATE_LABELS[stateName] || stateName);
 }

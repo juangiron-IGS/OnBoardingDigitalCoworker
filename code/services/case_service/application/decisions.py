@@ -68,6 +68,18 @@ def reject_case(
     _decide(repo, audit, "reject", case_id, package_version, approver_role, comment)
 
 
+# States in which the current version's approval still authorizes actions: right
+# after approval, and while documents and payroll follow (US-022..024).
+APPROVED_STATES = frozenset(
+    {
+        CaseState.APPROVED,
+        CaseState.ACTIONS_EXECUTED,
+        CaseState.DOCUMENTS_PENDING,
+        CaseState.IN_VERIFICATION,
+    }
+)
+
+
 def authorize_action(repo: CaseRepository, *, approval_id: str) -> Approval:
     """Return the approval only if it is for the case's current package version.
 
@@ -80,7 +92,7 @@ def authorize_action(repo: CaseRepository, *, approval_id: str) -> Approval:
         raise ApprovalRefused("no_approval")
     case = repo.lock_case(approval.case_id)
     verify(approval, case.current_package_version)
-    if case.state not in (CaseState.APPROVED, CaseState.ACTIONS_EXECUTED):
+    if case.state not in APPROVED_STATES:
         raise ApprovalRefused("case_not_approved")
     return approval
 
