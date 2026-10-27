@@ -13,6 +13,7 @@ for name in web jobdiva-read jobdiva-workflow teams-mock knowledge-mock coworker
   fi
 done
 [ "$stopped" = true ] || echo "Nothing was running."
+./scripts/stop_tray.sh
 
 if [ "${1:-}" = "--all" ]; then
   docker compose stop postgres

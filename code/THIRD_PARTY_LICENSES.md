@@ -14,6 +14,11 @@ Direct dependencies declared in `code/pyproject.toml`. The versions are those in
 | PyYAML | 6.0.3 | MIT | Rules catalog (`yaml.safe_load`) |
 | httpx | 0.28.1 | BSD-3-Clause | JobDiva sandbox client, read only |
 | anthropic | 2.3.0 | Apache-2.0 | Claude engine (`MODEL_PROVIDER=claude`), optional |
+| pystray | 0.19.5 | LGPL-3.0 | Coworker Tray icon and Windows notifications (extra `tray`), used unmodified as a library |
+| Pillow | 12.3.0 | MIT-CMU | Coworker Tray icon image (extra `tray`) |
+| pywebview | 6.2.1 | BSD-3-Clause | Coworker window the tray opens, on Windows' Edge WebView2 (extra `tray`) |
+| pythonnet | 3.2.1 | MIT | Installed by pywebview on Windows (extra `tray`) |
+| Windows-Toasts | 1.3.1 | Apache-2.0 | Coworker Tray notifications with the Coworker's name, logo and an Open case button (extra `tray`, Windows) |
 
 ## Development and test
 

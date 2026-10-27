@@ -96,6 +96,26 @@ function grow() {
   ui.input.style.height = `${Math.min(ui.input.scrollHeight, 160)}px`;
 }
 
+// Desktop window: the chat is the main view, not a floating panel.
+export async function mountChat(container, caseId) {
+  ui.panel.classList.add("embedded");
+  container.append(ui.panel);
+  await openChat(caseId);
+}
+
+// Leaving the chat view puts the panel back, closed, for the floating mode.
+export function unmountChat() {
+  if (!ui.panel.classList.contains("embedded")) return;
+  ui.panel.classList.remove("embedded");
+  document.body.append(ui.panel);
+  state.open = false;
+  ui.panel.hidden = true;
+}
+
+export function unreadCount() {
+  return state.unread;
+}
+
 export async function openChat(caseId) {
   state.open = true;
   state.unread = 0;
@@ -199,6 +219,7 @@ function draw() {
 }
 
 function drawBadge() {
+  document.dispatchEvent(new CustomEvent("chat-unread", { detail: state.unread }));
   ui.badge.hidden = state.unread === 0;
   ui.badge.textContent = state.unread > 9 ? "9+" : String(state.unread);
   ui.launcher.setAttribute("aria-label", state.unread
@@ -228,6 +249,7 @@ export async function pollAlerts() {
   if (!fresh.length) return;
   if (!state.open) state.unread += fresh.length;
   drawBadge();
+  document.dispatchEvent(new CustomEvent("chat-unread", { detail: state.unread }));
   draw();
 }
 

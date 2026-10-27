@@ -54,6 +54,17 @@ PostgreSQL must be running (`./scripts/start.sh` or `docker compose up -d postgr
 
 Then open the web app (http://127.0.0.1:3000) as the Approver to review and approve the package.
 
+## Coworker Tray (Windows notifications)
+
+The tray is an MCP client too. It starts `onboarding-coworker` over stdio with the role picked in its menu (`COWORKER_MCP_ROLE`) and calls only `my_alerts`, every 5 seconds. A new alert shows a Windows notification from *Onboarding Coworker*, with its logo, the case, the alert text and an **Open case** button (the tray registers its name and logo once for the current user, under `HKCU\Software\Classes\AppUserModelId`), and a red dot on the icon; a click on the notification opens the case; **Open latest alert** (or a click on the icon) opens the Coworker window docked above the clock, as that role. The chat is its main view, on the alert's case; Dashboard, Approval and Status are its only other tabs, with the same controls as the web app (`?mode=desktop`). The browser version keeps every view. **Open in the browser** opens it in the browser instead.
+
+```bash
+.venv/Scripts/python -m pip install -e ".[tray]"   # once
+./scripts/tray.sh                                   # after ./scripts/start.sh
+```
+
+`COWORKER_TRAY_ROLE` sets the first role (default `recruiter`). `./scripts/tray.sh` closes a tray that is already running before it starts, so after updating the code it always loads the current app; `./scripts/stop_tray.sh` (also run by `./scripts/stop.sh`) closes it.
+
 ## Microsoft Teams (pilot)
 
 Teams does not use MCP directly. In the pilot, a Copilot Studio agent in Teams can connect to this MCP server. That needs the server published over HTTPS with Entra ID authentication, which the hackathon rules exclude (everything on `127.0.0.1`, no Teams bot, TC-005).
