@@ -35,6 +35,7 @@ class CoworkerWindow:
             y=y,
             min_size=(420, 560),
             hidden=True,
+            text_select=True,  # pywebview blocks selecting and copying by default
         )
         self._window.events.closing += self._on_closing
 
