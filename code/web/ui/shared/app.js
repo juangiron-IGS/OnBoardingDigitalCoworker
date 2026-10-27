@@ -25,6 +25,9 @@ if (DESKTOP) {
   });
 }
 const DEFAULT_VIEW = DESKTOP ? "chat" : "inbox";
+// ?theme=light|dark comes from the desktop tray; without it the system decides.
+const THEME = new URLSearchParams(location.search).get("theme");
+if (THEME === "light" || THEME === "dark") document.documentElement.dataset.theme = THEME;
 // The desktop window keeps only what a person acts on from the tray.
 const DESKTOP_VIEWS = ["chat", "dashboard", "approval", "status"];
 if (DESKTOP) {

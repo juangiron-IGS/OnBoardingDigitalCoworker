@@ -44,6 +44,15 @@ class CoworkerWindow:
         self._window.show()
         self._window.restore()
 
+    def set_theme(self, theme: str) -> None:
+        """Light, dark or the system's, applied to the open page at once."""
+        script = (
+            f"document.documentElement.dataset.theme = '{theme}'"
+            if theme in ("light", "dark")
+            else "delete document.documentElement.dataset.theme"
+        )
+        self._window.evaluate_js(script)
+
     def destroy(self) -> None:
         self._quitting = True
         self._window.destroy()

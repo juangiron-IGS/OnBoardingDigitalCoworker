@@ -18,7 +18,7 @@ import webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-from .feed import ABOUT, ROLES, AlertFeed, case_url, window_url
+from .feed import ABOUT, ROLES, THEMES, AlertFeed, case_url, window_url
 from .notifier import Notifier, logo_path, use_app_identity
 from .poller import poll, server_params
 from .window import CoworkerWindow
@@ -54,6 +54,7 @@ def icon_image(unseen: int, connected: bool, size: int = 64) -> Image.Image:
 class CoworkerTray:
     def __init__(self, role: str, app_url: str, *, window: bool = True) -> None:
         self.role = role
+        self.theme = "system"
         self.app_url = app_url
         self.feed = AlertFeed()
         self.paused = False
@@ -147,6 +148,17 @@ class CoworkerTray:
                 for key, label in ROLES.items()
             )
         )
+        themes = pystray.Menu(
+            *(
+                pystray.MenuItem(
+                    label,
+                    self._theme_setter(key),
+                    checked=lambda item, key=key: self.theme == key,
+                    radio=True,
+                )
+                for key, label in THEMES.items()
+            )
+        )
         return pystray.Menu(
             pystray.MenuItem("Open latest alert", self._open_latest, default=True),
             pystray.MenuItem("Open the Coworker", self._opener(None)),
@@ -154,6 +166,7 @@ class CoworkerTray:
             pystray.MenuItem("Latest alerts", pystray.Menu(recent_items)),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Role", roles),
+            pystray.MenuItem("Theme", themes),
             pystray.MenuItem(
                 "Pause notifications",
                 self._toggle_pause,
@@ -168,7 +181,7 @@ class CoworkerTray:
         """From the menu, the icon or a click on a notification."""
         self.feed.mark_seen()
         if self.window:
-            self.window.open(window_url(self.app_url, case_id, self.role))
+            self.window.open(window_url(self.app_url, case_id, self.role, self.theme))
         else:
             webbrowser.open(case_url(self.app_url, case_id, self.role))
         self._refresh()
@@ -203,6 +216,14 @@ class CoworkerTray:
             args=(0, ABOUT, "About the Onboarding Coworker", 0x40 | 0x40000),
             daemon=True,
         ).start()
+
+    def _theme_setter(self, theme: str):  # noqa: ANN202
+        def set_theme(icon, item) -> None:  # noqa: ANN001
+            self.theme = theme
+            if self.window:
+                self.window.set_theme(theme)
+
+        return set_theme
 
     def _toggle_pause(self, icon, item) -> None:  # noqa: ANN001
         self.paused = not self.paused

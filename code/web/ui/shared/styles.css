@@ -21,8 +21,10 @@
   --chat-soft: #e8ebfa;
   --chat-other: #f0f0f0;
 }
+/* Dark tokens: the system's dark mode unless light is chosen, or dark when
+   chosen (data-theme, set from the desktop tray's Theme menu). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #12161d;
     --panel: #1a202a;
     --fg: #e6e9ef;
@@ -41,6 +43,25 @@
     --chat-other: #292929;
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d;
+  --panel: #1a202a;
+  --fg: #e6e9ef;
+  --muted: #9aa4b5;
+  --line: #2c3442;
+  --accent: #7fb0ec;
+  --accent-soft: #1f2d42;
+  --ok: #6fcf97;
+  --ok-soft: #173426;
+  --warn: #f0b45c;
+  --warn-soft: #3a2c14;
+  --bad: #f28b82;
+  --bad-soft: #3b1d1b;
+  --chat: #7f85f5;
+  --chat-soft: #2f2f4a;
+  --chat-other: #292929;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
