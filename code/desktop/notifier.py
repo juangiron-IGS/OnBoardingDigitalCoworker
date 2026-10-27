@@ -15,7 +15,7 @@ from pathlib import Path
 
 AUMID = "INSPYR.OnboardingCoworker"
 APP_NAME = "Onboarding Coworker"
-BRAND = "1F5FAE"  # the tile colour behind the logo in Windows' notification header
+BRAND = "008080"  # the tile colour behind the logo in Windows' notification header
 
 
 def logo_path() -> Path:
@@ -23,6 +23,15 @@ def logo_path() -> Path:
     base = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "OnboardingCoworker"
     base.mkdir(parents=True, exist_ok=True)
     return base / "coworker-logo.png"
+
+
+def use_app_identity() -> None:
+    """Group the tray's window under "Onboarding Coworker" on the taskbar, with
+    the registered name and logo, instead of under Python."""
+    if sys.platform == "win32":
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(AUMID)
 
 
 def register_app(logo: Path) -> None:

@@ -3,6 +3,8 @@ dashboard, status, knowledge) in a compact desktop window docked above the clock
 like a chat popup. Same pages and same controls as the browser, so every approval
 still goes through the web app's governance (BR-002)."""
 
+from pathlib import Path
+
 WIDTH, HEIGHT = 500, 800
 MARGIN, TASKBAR = 12, 48
 
@@ -52,8 +54,9 @@ class CoworkerWindow:
         return False  # keep it for the next click on the tray icon
 
     @staticmethod
-    def start() -> None:
-        """Run the window loop on the main thread until the tray quits."""
+    def start(icon: Path | None = None) -> None:
+        """Run the window loop on the main thread until the tray quits. The icon
+        (.ico) replaces Python's on the taskbar and the title bar."""
         import webview
 
-        webview.start(private_mode=False)
+        webview.start(private_mode=False, icon=str(icon) if icon else None)

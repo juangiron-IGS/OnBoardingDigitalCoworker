@@ -12,4 +12,4 @@ PY=.venv/Scripts/pythonw.exe
 [ -x "$PY" ] || PY=.venv/Scripts/python.exe
 [ -x "$PY" ] || PY=.venv/bin/python
 "$PY" -m desktop.tray > logs/tray.log 2>&1 &
-echo "Coworker Tray started: look for the blue icon next to the clock."
+echo "Coworker Tray started: look for the teal icon next to the clock."
