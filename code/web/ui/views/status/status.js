@@ -38,6 +38,15 @@ export async function render(root, show) {
   if (getCase()) await drawCase(detail, getCase(), show);
 }
 
+// A long list of rules becomes an icon; hovering or focusing it shows the list.
+function rulesCell(ruleIds) {
+  if (!ruleIds.length) return "—";
+  if (ruleIds.length <= 2) return el("span", { class: "nowrap" }, ruleIds.join(", "));
+  const list = ruleIds.join(", ");
+  return el("span", { class: "rules-tip", tabindex: "0", "aria-label": `${ruleIds.length} rules: ${list}` },
+    "📋 ", ruleIds.length, el("span", { class: "rules-tip-list", role: "tooltip" }, list));
+}
+
 // US-012: package ready within 5 minutes of the last answer, or reported as late.
 function timingLine(timing) {
   if (!timing) return null;
@@ -224,5 +233,5 @@ async function drawCase(root, caseId, show) {
         el("td", {}, a.action.replaceAll("_", " ")),
         el("td", {}, el("span", { class: `pill ${a.outcome === "completed" ? "ok" : "bad"}` }, a.outcome)),
         el("td", {}, a.package_version ? `v${a.package_version}` : "—"),
-        el("td", { class: "mono" }, a.rule_ids.join(", ") || "—"))))))));
+        el("td", { class: "mono" }, rulesCell(a.rule_ids)))))))));
 }

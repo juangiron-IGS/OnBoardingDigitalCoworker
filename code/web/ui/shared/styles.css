@@ -196,3 +196,8 @@ body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 .email-preview { border: 1px solid var(--line, #d0d7de); border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; }
 .email-preview summary { cursor: pointer; font-weight: 600; }
 .email-preview p { margin: 6px 0; }
+.nowrap { white-space: nowrap; }
+.rules-tip { position: relative; cursor: help; white-space: nowrap; border-bottom: 1px dotted var(--muted); }
+.rules-tip-list { display: none; position: absolute; right: 0; top: 1.6em; z-index: 10; width: max-content; max-width: 220px; white-space: normal;
+  background: var(--panel, #fff); color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, .2); }
+.rules-tip:hover .rules-tip-list, .rules-tip:focus .rules-tip-list { display: block; }
