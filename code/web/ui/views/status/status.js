@@ -54,6 +54,27 @@ function timingLine(timing) {
     el("span", { class: `pill ${timing.met ? "ok" : "bad"}` }, timing.met ? "Within the 5-minute target" : "Missed the 5-minute target"));
 }
 
+// The delivered document, simulated: what the candidate sent, never a real file.
+function documentPreview(view, c) {
+  const name = [view.case.person_ref, view.case.data.candidate_name].filter(Boolean).join(" · ");
+  const when = (iso) => (iso ? new Date(iso).toLocaleString() : "—");
+  return el("div", {},
+    el("div", { class: "doc-title" }, c.item),
+    el("div", { class: "meta" }, "Synthetic document for the demo"),
+    el("dl", {},
+      el("dt", {}, "Candidate"), el("dd", {}, name),
+      el("dt", {}, "Delivered"), el("dd", {}, when(c.delivered_at)),
+      el("dt", {}, "Required by"), el("dd", { class: "mono" }, c.required_by),
+      el("dt", {}, "Candidate signature"), el("dd", {}, "Signed (simulated)"),
+      el("dt", {}, "Countersign"), el("dd", {}, c.status === "verified" ? `${c.verified_by} · ${when(c.verified_at)}` : "Pending")));
+}
+
+// After an action, keep the case open and move to the next step still pending.
+function goToNextStep(root) {
+  const next = root.querySelector("[data-pending]");
+  if (next) next.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
 // US-022..024: checklist and reminders, countersign, payroll handoff and returns.
 function followupCard(view, caseId, show) {
   if (!view.checklist.length) return null;
@@ -65,7 +86,7 @@ function followupCard(view, caseId, show) {
     try {
       const result = await work();
       feedback.replaceChildren(el("div", { class: "notice ok", role: "status" }, message(result)));
-      setTimeout(() => show("status"), 1200);
+      setTimeout(show, 600);
     } catch (error) {
       feedback.replaceChildren(errorNotice(error));
     }
@@ -74,15 +95,25 @@ function followupCard(view, caseId, show) {
   const nextHour = lastHour + 24;
   const rows = view.checklist.map((c) => {
     const [tone, label] = DOC_STATUS[c.status];
-    return el("div", { class: "row" },
+    const delivered = c.status !== "outstanding";
+    const preview = el("div", { class: "doc-preview", hidden: true }, documentPreview(view, c));
+    const toggle = () => { preview.hidden = !preview.hidden; };
+    return el("div", { class: "row doc-row", "data-pending": isTeam && c.status !== "verified" },
       el("div", {}, el("div", {}, c.item), el("div", { class: "meta mono" }, c.required_by)),
       el("div", { class: "actions" },
         el("span", { class: `pill ${tone}` }, label),
+        delivered ? el("button", { class: "link", type: "button", onclick: toggle }, "View document") : null,
         isTeam && c.status === "outstanding" ? el("button", { class: "btn", type: "button",
           onclick: act(() => api.deliver(caseId, [c.item]), (r) => r.missing.length ? `Still missing: ${r.missing.join("; ")}.` : "Everything delivered. The case moves to In verification.") }, "Candidate delivered") : null,
         isTeam && c.status === "pending_countersign" ? el("button", { class: "btn primary", type: "button",
-          onclick: act(() => api.countersign(caseId, c.item), () => `${c.item} verified.`) }, "Countersign") : null));
+          onclick: act(() => api.countersign(caseId, c.item), () => `${c.item} verified.`) }, "Countersign") : null),
+      preview);
   });
+  const toSign = view.checklist.filter((c) => c.status === "pending_countersign").map((c) => c.item);
+  const signAll = async () => {
+    for (const item of toSign) await api.countersign(caseId, item);
+    return toSign.length;
+  };
   const allVerified = view.checklist.every((c) => c.status === "verified");
   const outstanding = view.checklist.filter((c) => c.status === "outstanding").map((c) => c.item);
   const mail = view.candidate_email;
@@ -98,6 +129,9 @@ function followupCard(view, caseId, show) {
         onclick: act(() => api.deliver(caseId, outstanding), (r) => r.missing.length ? `Still missing: ${r.missing.join("; ")}.` : "The candidate sent every document. Countersign each one to verify it.") },
         "Simulate: the candidate sent the documents")) : null,
     el("p", { class: "lead" }, "The checklist the candidate received. A delivered document is verified only when the Onboarding Team countersigns it."),
+    isTeam && toSign.length > 1 ? el("div", { class: "actions" },
+      el("button", { class: "btn primary", type: "button", onclick: act(signAll, (n) => `${n} documents countersigned and verified.`) },
+        `Countersign all (${toSign.length})`)) : null,
     el("div", { class: "list" }, rows),
     el("h3", {}, "Reminders"),
     view.reminders.length
@@ -111,7 +145,7 @@ function followupCard(view, caseId, show) {
         `Simulate time: ${nextHour} h after the checklist`)) : null,
     el("h3", {}, "Payroll"),
     state === "in_verification" && isTeam
-      ? el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", disabled: !allVerified,
+      ? el("div", { class: "actions", "data-pending": allVerified }, el("button", { class: "btn primary", type: "button", disabled: !allVerified,
           onclick: act(() => api.payrollHandoff(caseId, view.case.package_version), () => "Handoff approved. The payroll package was sent to Paychex (simulated).") },
           "Approve payroll handoff"),
           allVerified ? null : el("span", { class: "meta" }, "Every document must be verified first."))
@@ -140,7 +174,7 @@ function infoPackageCard(view, caseId, show) {
     try {
       await work();
       feedback.replaceChildren(el("div", { class: "notice ok", role: "status" }, message));
-      setTimeout(() => show("status"), 1200);
+      setTimeout(show, 600);
     } catch (error) {
       feedback.replaceChildren(errorNotice(error));
     }
@@ -175,7 +209,7 @@ export function igsCard(view, caseId, show) {
     try {
       const result = await work();
       feedback.replaceChildren(el("div", { class: "notice ok", role: "status" }, message(result)));
-      setTimeout(() => show("status"), 1200);
+      setTimeout(show, 600);
     } catch (error) {
       feedback.replaceChildren(errorNotice(error));
     }
@@ -213,11 +247,13 @@ async function drawCase(root, caseId, show) {
     PATH.includes(now) ? null : el("p", {}, "Current state: ", statePill(now)),
     timingLine(view.case.package_timing)));
 
-  const followup = followupCard(view, caseId, show);
+  // Actions on a card redraw this case only and move to its next pending step.
+  const refresh = async () => { root.replaceChildren(); await drawCase(root, caseId, show); goToNextStep(root); };
+  const followup = followupCard(view, caseId, refresh);
   if (followup) root.append(followup);
-  const info = infoPackageCard(view, caseId, show);
+  const info = infoPackageCard(view, caseId, refresh);
   if (info) root.append(info);
-  const igs = igsCard(view, caseId, show);
+  const igs = igsCard(view, caseId, refresh);
   if (igs) root.append(igs);
 
   root.append(el("section", { class: "card" }, el("h2", {}, "Records created after approval"),

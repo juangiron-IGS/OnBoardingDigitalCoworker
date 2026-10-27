@@ -222,3 +222,9 @@ body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 .rules-tip-list { display: none; position: absolute; right: 0; top: 1.6em; z-index: 10; width: max-content; max-width: 220px; white-space: normal;
   background: var(--panel, #fff); color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, .2); }
 .rules-tip:hover .rules-tip-list, .rules-tip:focus .rules-tip-list { display: block; }
+.doc-row { flex-wrap: wrap; }
+.doc-preview { flex-basis: 100%; margin-top: 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.doc-preview .doc-title { font-weight: 600; }
+.doc-preview dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
+.doc-preview dt { color: var(--muted); }
+.doc-preview dd { margin: 0; }
