@@ -228,3 +228,4 @@ body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 .doc-preview dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 8px 0 0; font-size: 13px; }
 .doc-preview dt { color: var(--muted); }
 .doc-preview dd { margin: 0; }
+.record-ref { font-weight: 600; white-space: nowrap; }

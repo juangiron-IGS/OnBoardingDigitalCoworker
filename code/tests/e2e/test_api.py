@@ -821,3 +821,22 @@ def test_the_welcome_kit_waits_for_the_verified_documents(client, monkeypatch) -
     assert early.json()["detail"]["refused"] == "documents_not_verified"
     assert later.status_code == 200
     assert later.json()["sent"]
+
+
+def test_each_record_has_a_readable_reference(client) -> None:
+    # A record is followed up by a short reference; it still carries the approval
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+
+    records = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()[
+        "records"
+    ]
+
+    refs = {r["system"]: r["reference"] for r in records}
+    assert refs["jobdiva_cases"].startswith("JD-CASE-")
+    assert refs["task_lists"].startswith("TASK-")
+    assert all(r["approval_id"] for r in records)
