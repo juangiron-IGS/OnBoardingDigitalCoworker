@@ -95,6 +95,12 @@ class Orchestrator:
 
         return respond(self, message, case_id, asked_by=asked_by)
 
+    def dashboard(self, *, role: str) -> list[dict]:
+        """US-030: cases by state, with pending items and risks."""
+        from .dashboard import build
+
+        return build(self, role=role)
+
     @property
     def knows(self) -> bool:
         return self._knowledge is not None

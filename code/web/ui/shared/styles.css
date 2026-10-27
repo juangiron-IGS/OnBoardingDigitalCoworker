@@ -177,3 +177,5 @@ main { padding-bottom: 96px; }
 .review-edit { display: flex; flex-direction: column; gap: 8px; }
 .review-edit textarea { width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); font: inherit; color: inherit; resize: vertical; }
 .actions input.wide { flex: 1 1 320px; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; align-items: start; }
+.board-case { align-items: flex-start; }

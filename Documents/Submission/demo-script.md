@@ -49,7 +49,7 @@ Type `How is <candidate ID> doing?`, for example `How is SYN-0873 doing?`. The r
 
 ## 6. Status and audit (1 min)
 
-Open **Status**:
+Open **Dashboard**: every case sits under its current state with what is pending (who must act) and its risks, such as a blocked package or a start date close without approval. Select the approved case to open it in **Status**:
 - the case path from *Received* to *Actions executed*;
 - the JobDiva case (mock) and the task list, each carrying the **approval ID**;
 - the audit log: Intake and Validation, Policy and Case Setup, the approver and JobDiva and Workflow on one case, with the rules used.

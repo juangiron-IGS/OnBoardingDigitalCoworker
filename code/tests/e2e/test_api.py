@@ -591,3 +591,38 @@ def test_documents_and_payroll_through_the_api(client, monkeypatch) -> None:
     assert delivered == {"state": "in_verification", "missing": []}
     assert sent["state"] == "sent_to_payroll"
     assert task.status_code == 200
+
+
+def _dashboard_case(client, role: str, case_id: str) -> tuple[str, dict]:
+    columns = client.get("/api/cases/dashboard", headers=_as(role)).json()
+    for column in columns:
+        for item in column["cases"]:
+            if item["id"] == case_id:
+                return column["state"], item
+    raise AssertionError(f"{case_id} is not on the dashboard")
+
+
+def test_dashboard_shows_each_case_under_its_state(client) -> None:
+    # US-030 AC-001
+    waiting = _process(client, "02_missing_two_fields")["case_id"]
+    ready = _process(client, "01_complete_and_consistent")["case_id"]
+    blocked = _process(client, "05_flsa_conflict")["case_id"]
+
+    state, waiting_item = _dashboard_case(client, "onboarding", waiting)
+    ready_state, ready_item = _dashboard_case(client, "onboarding", ready)
+    _, blocked_item = _dashboard_case(client, "onboarding", blocked)
+
+    assert state == "needs_clarification"
+    assert waiting_item["pending"][0].startswith("Recruiter to answer: Bill rate")
+    assert ready_state == "ready_for_review"
+    assert "Approver to decide on package v1" in ready_item["pending"]
+    assert any(r.startswith("Package blocked") for r in blocked_item["risks"])
+
+
+def test_dashboard_never_shows_restricted_values(client) -> None:
+    blocked = _process(client, "05_flsa_conflict")["case_id"]
+
+    _, item = _dashboard_case(client, "it", blocked)
+
+    text = " ".join(item["pending"] + item["risks"]).lower()
+    assert "exempt" not in text

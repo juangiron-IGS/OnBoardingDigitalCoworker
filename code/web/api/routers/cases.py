@@ -43,6 +43,12 @@ def list_cases(cases: Cases, role: Role) -> list[dict]:
     return cases.list_cases()
 
 
+@router.get("/dashboard")
+def dashboard(coworker: Coworker, role: Role) -> list[dict]:
+    """The status dashboard (US-030): cases by state, pending items and risks."""
+    return coworker.dashboard(role=role)
+
+
 @router.get("/{case_id}")
 def get_case(case_id: str, cases: Cases, coworker: Coworker, role: Role) -> dict:
     view = cases.case_view(case_id, role=role)

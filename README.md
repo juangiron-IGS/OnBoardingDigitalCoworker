@@ -48,6 +48,7 @@ The Coworker never decides worker classification, compensation or legal employme
 - answers from a knowledge base the Onboarding Team validates (US-025);
 - the Onboarding Team confirms or changes the recommended path and paperwork (US-026);
 - HR's answer to an escalated FLSA or classification conflict (US-027);
+- a status dashboard with every case under its state, what is pending and its risks (US-030, Could);
 - a simulated mailbox where new start emails arrive, and a Teams-like chat panel;
 - an optional Claude engine that reads start details written as free text;
 - the Coworker as an MCP server for other chat apps.
@@ -196,7 +197,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 │   ├── services/case_service/   Case states, approval gate, audit, privacy, rules catalog
 │   ├── mcp_servers/             jobdiva_read, jobdiva_workflow (single writer), coworker, mocks (outlook, teams, knowledge)
 │   ├── contracts/               Interfaces shared by both lanes
-│   ├── web/                     FastAPI app, five views and the chat panel
+│   ├── web/                     FastAPI app, six views and the chat panel
 │   ├── rules/                   Business rules, intake labels and knowledge records (YAML)
 │   ├── db/                      Migrations, roles, synthetic seed data
 │   ├── scripts/                 start, stop, reset, apply_db, health_check

@@ -5,8 +5,9 @@ import { render as approval } from "../views/approval/approval.js";
 import { render as alerts } from "../views/alerts/alerts.js";
 import { render as status } from "../views/status/status.js";
 import { render as knowledge } from "../views/knowledge/knowledge.js";
+import { render as dashboard } from "../views/dashboard/dashboard.js";
 
-const VIEWS = { inbox, approval, alerts, status, knowledge };
+const VIEWS = { inbox, dashboard, approval, alerts, status, knowledge };
 const main = document.getElementById("view");
 const tabs = [...document.querySelectorAll(".tabs button")];
 const roleSelect = document.getElementById("role");

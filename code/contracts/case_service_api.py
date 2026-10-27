@@ -115,6 +115,14 @@ class CaseServiceClient(Protocol):
         """A person assigns the follow-up owner (US-032); the audit records who."""
         ...
 
+    def list_cases(self) -> list[dict[str, Any]]:
+        """The latest cases with state, version and package timing."""
+        ...
+
+    def case_view(self, case_id: str, *, role: str) -> dict[str, Any] | None:
+        """The case as this role may see it: restricted values hidden (US-040)."""
+        ...
+
     def find_case(self, ref: str) -> str | None:
         """A case by its ID or candidate reference, or None."""
         ...
