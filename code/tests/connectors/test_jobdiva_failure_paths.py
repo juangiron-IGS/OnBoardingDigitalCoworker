@@ -46,11 +46,6 @@ def _authenticated(read_response):
     return handler
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEF-002: the sign-in call sends the API password in the query string, "
-    "so the error from raise_for_status carries it (QC-SEC-N-001, NFR-SEC-005)",
-)
 def test_failed_authentication_does_not_expose_the_password(caplog) -> None:
     # QC-SEC-N-001 step 1-2: the error path of the sign-in call
     caplog.set_level(logging.DEBUG)
@@ -61,6 +56,9 @@ def test_failed_authentication_does_not_expose_the_password(caplog) -> None:
 
     assert SECRET_PASSWORD not in str(failure.value)
     assert SECRET_PASSWORD not in caplog.text
+    # DEF-002: not in the error's request, and no chained error that holds it
+    assert SECRET_PASSWORD not in str(failure.value.request.url)
+    assert failure.value.__suppress_context__
 
 
 def test_failed_read_does_not_expose_the_token(caplog) -> None:
@@ -74,6 +72,18 @@ def test_failed_read_does_not_expose_the_token(caplog) -> None:
     for text in (str(failure.value), caplog.text, repr(jobdiva)):
         assert SECRET_TOKEN not in text
         assert SECRET_PASSWORD not in text
+
+
+def test_unreachable_sign_in_names_no_password() -> None:
+    # DEF-002: a connection error at sign-in keeps its type, without the password
+    def down(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(f"cannot reach {request.url}", request=request)
+
+    with pytest.raises(httpx.ConnectError) as failure:
+        _sandbox(down).read_start("JD-1")
+
+    assert SECRET_PASSWORD not in str(failure.value)
+    assert SECRET_PASSWORD not in str(failure.value.request.url)
 
 
 def test_unreachable_jobdiva_fails_visibly_and_never_falls_back_to_mock() -> None:
