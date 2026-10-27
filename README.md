@@ -32,7 +32,7 @@ Measured on the MVP (synthetic seed emails; details and the command to rerun in 
 
 | Metric | Target | Measured |
 | --- | --- | --- |
-| Time from the last answer to a package ready for approval | 5 minutes or less | 47 to 79 ms with the rules engine (5 seed emails); 3.1 to 4.3 s with Claude (3 live runs) |
+| Time from the last answer to a package ready for approval | 5 minutes or less | 94 to 158 ms with the rules engine (5 seed emails); 3.1 to 4.3 s with Claude (3 live runs) |
 | Questions asked compared with fields really missing or in conflict | Equal | 3 asked for 3 missing or conflicting fields, none extra, none missed |
 | Actions executed without human approval | 0 | 0. Both simulated records carry the approval ID; approving the blocked FLSA package is refused (HTTP 409) |
 | Duplicate start (same person and start date) | Blocked | Blocked at Received |

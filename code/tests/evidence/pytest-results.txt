@@ -1,242 +1,398 @@
-# pytest — 2026-10-26T22:44Z — commit 3f5214e (main)
+# pytest — 2026-10-27T23:27Z — commit c5ce1c4 (main)
 # PostgreSQL 16 in Docker, separate test database, MODEL_PROVIDER=rules (the suite never calls a real model)
-tests/connectors/test_coworker_mcp.py::test_no_tool_can_approve_or_act_on_a_system PASSED
-tests/connectors/test_coworker_mcp.py::test_start_answer_and_status_over_mcp PASSED
-tests/connectors/test_coworker_mcp.py::test_recruiter_alerts_reach_the_mcp_client PASSED
-tests/connectors/test_coworker_mcp.py::test_unknown_case_is_answered_from_the_record_only PASSED
-tests/connectors/test_coworker_mcp.py::test_oversized_text_is_refused PASSED
-tests/connectors/test_coworker_mcp.py::test_unknown_role_stops_the_server PASSED
-tests/connectors/test_jobdiva_read.py::test_mock_is_the_default_mode PASSED
-tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[sandbox] PASSED
-tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[mock] PASSED
-tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[production] PASSED
-tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[write] PASSED
-tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[MOCK ] PASSED
-tests/connectors/test_jobdiva_read.py::test_mock_reads_a_start_and_its_notes PASSED
-tests/connectors/test_jobdiva_read.py::test_mock_duplicate_search_finds_an_onboarding_in_jobdiva PASSED
-tests/connectors/test_jobdiva_read.py::test_mock_duplicate_search_is_negative_for_a_new_person PASSED
-tests/connectors/test_jobdiva_read.py::test_both_adapters_fulfil_the_read_contract PASSED
-tests/connectors/test_jobdiva_read.py::test_sandbox_reads_with_a_token_kept_in_memory PASSED
-tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[POST] PASSED
-tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PUT] PASSED
-tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PATCH] PASSED
-tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[DELETE] PASSED
-tests/connectors/test_mcp_transport.py::test_adapters_fulfil_the_contracts PASSED
-tests/connectors/test_mcp_transport.py::test_approved_action_runs_over_mcp PASSED
-tests/connectors/test_mcp_transport.py::test_refusal_over_mcp_keeps_its_reason PASSED
-tests/connectors/test_mcp_transport.py::test_unknown_approval_over_mcp_is_refused PASSED
-tests/connectors/test_mcp_transport.py::test_jobdiva_reads_over_mcp PASSED
-tests/connectors/test_mcp_transport.py::test_alert_posted_over_mcp PASSED
-tests/connectors/test_mcp_transport.py::test_unreachable_server_fails_visibly PASSED
-tests/e2e/test_api.py::test_inbox_lists_the_seed_emails PASSED
-tests/e2e/test_api.py::test_processed_email_shows_its_case_and_package PASSED
-tests/e2e/test_api.py::test_it_role_does_not_see_restricted_fields PASSED
-tests/e2e/test_api.py::test_answers_complete_the_demo_case PASSED
-tests/e2e/test_api.py::test_approval_runs_the_actions PASSED
-tests/e2e/test_api.py::test_stale_version_returns_409_with_current_version PASSED
-tests/e2e/test_api.py::test_only_the_approver_can_decide PASSED
-tests/e2e/test_api.py::test_bad_input_returns_400_naming_the_field PASSED
-tests/e2e/test_api.py::test_unknown_role_is_refused PASSED
-tests/e2e/test_api.py::test_unknown_message_returns_404 PASSED
-tests/e2e/test_api.py::test_path_traversal_reads_nothing PASSED
-tests/e2e/test_api.py::test_case_view_lists_the_open_questions PASSED
-tests/e2e/test_api.py::test_chat_endpoint_starts_and_continues_a_case PASSED
-tests/e2e/test_api.py::test_chat_endpoint_refuses_an_empty_message PASSED
-tests/e2e/test_api.py::test_health_reports_the_database PASSED
-tests/e2e/test_api.py::test_health_reports_mcp_servers_that_are_down PASSED
-tests/e2e/test_api.py::test_approver_assigns_the_follow_up_owner PASSED
-tests/e2e/test_api.py::test_only_the_approver_assigns_the_owner PASSED
-tests/e2e/test_api.py::test_case_reports_the_package_timing PASSED
-tests/e2e/test_api.py::test_it_approves_the_laptop_request PASSED
-tests/e2e/test_api.py::test_new_email_arrives_and_the_coworker_processes_it PASSED
-tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad0] PASSED
-tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad1] PASSED
-tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad2] PASSED
-tests/e2e/test_api.py::test_claude_engine_without_a_key_is_a_clear_503 PASSED
-tests/e2e/test_over_mcp.py::test_j1_and_j2_run_with_every_system_call_over_mcp PASSED
-tests/e2e/test_over_mcp.py::test_duplicate_in_jobdiva_is_found_over_mcp PASSED
-tests/e2e/test_over_mcp.py::test_flsa_conflict_is_escalated_from_notes_read_over_mcp PASSED
-tests/governance/test_chat.py::test_chat_starts_a_case_and_asks_one_question_at_a_time PASSED
-tests/governance/test_chat.py::test_chat_package_lines_cite_the_chat PASSED
-tests/governance/test_chat.py::test_status_question_names_state_and_who_acts PASSED
-tests/governance/test_chat.py::test_status_of_a_case_waiting_names_the_open_fields PASSED
-tests/governance/test_chat.py::test_status_of_an_unknown_case_is_not_guessed PASSED
-tests/governance/test_chat.py::test_chat_without_start_data_says_what_is_needed PASSED
-tests/governance/test_chat.py::test_duplicate_start_in_chat_is_blocked PASSED
-tests/governance/test_chat.py::test_empty_message_is_refused PASSED
-tests/governance/test_duplicates_blocked.py::test_new_start_creates_case_in_received_and_is_audited PASSED
-tests/governance/test_duplicates_blocked.py::test_second_start_same_person_and_date_is_blocked_at_received PASSED
-tests/governance/test_duplicates_blocked.py::test_block_message_names_existing_case PASSED
-tests/governance/test_duplicates_blocked.py::test_duplicate_found_in_jobdiva_also_blocks PASSED
-tests/governance/test_duplicates_blocked.py::test_refusal_is_committed_on_its_own PASSED
-tests/governance/test_escalation.py::test_flsa_conflict_is_escalated_and_no_value_is_chosen PASSED
-tests/governance/test_escalation.py::test_escalation_alerts_onboarding_and_hr_without_values PASSED
-tests/governance/test_escalation.py::test_escalated_package_cannot_be_approved PASSED
-tests/governance/test_escalation.py::test_matching_values_are_not_escalated PASSED
-tests/governance/test_escalation.py::test_duplicate_already_onboarding_in_jobdiva_is_blocked PASSED
-tests/governance/test_every_action_is_audited.py::test_completed_action_has_agent_rules_and_data PASSED
-tests/governance/test_every_action_is_audited.py::test_refused_action_is_audited PASSED
-tests/governance/test_every_action_is_audited.py::test_unknown_outcome_is_rejected PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_audit_entries[UPDATE audit_log SET outcome = 'completed' WHERE case_id = %s] PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_audit_entries[DELETE FROM audit_log WHERE case_id = %s] PASSED
-tests/governance/test_every_action_is_audited.py::test_audit_writer_role_is_insert_only[UPDATE audit_log SET outcome = 'completed' WHERE case_id = %s] PASSED
-tests/governance/test_every_action_is_audited.py::test_audit_writer_role_is_insert_only[DELETE FROM audit_log WHERE case_id = %s] PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE approvals SET comment = comment] PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE action_ledger SET action = action] PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE package_lines SET value = value] PASSED
-tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[DELETE FROM approvals] PASSED
-tests/governance/test_inbound_mail.py::test_delivered_email_is_listed_first_and_readable PASSED
-tests/governance/test_inbound_mail.py::test_outcome_is_kept_with_the_email PASSED
-tests/governance/test_inbound_mail.py::test_unknown_delivered_id_is_refused PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_request_waits_for_it_after_the_approver_approves PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_request_is_sent_once_both_have_approved PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_it_first_then_approver_sends_the_request PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_writer_refuses_the_request_without_it_approval PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_it_approval_of_an_old_version_is_refused PASSED
-tests/governance/test_it_request_needs_it_approval.py::test_feature_off_adds_no_equipment_lines PASSED
-tests/governance/test_local_case_service.py::test_local_service_fulfils_the_contract PASSED
-tests/governance/test_local_case_service.py::test_local_service_runs_intake_to_approval PASSED
-tests/governance/test_no_action_without_approval.py::test_unknown_approval_id_is_refused PASSED
-tests/governance/test_no_action_without_approval.py::test_ready_package_without_decision_has_no_approval PASSED
-tests/governance/test_no_action_without_approval.py::test_approval_authorizes_action_for_current_version PASSED
-tests/governance/test_no_action_without_approval.py::test_action_refused_when_package_changed_after_approval PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_only_workflow_server_registers_write_tools PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_workflow_service_fulfils_the_contract PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_action_without_approval_is_refused_and_audited PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_action_carries_the_approval_id PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_action_for_another_version_is_blocked PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_retry_with_same_key_does_not_duplicate PASSED
-tests/governance/test_only_workflow_agent_writes.py::test_unknown_action_is_refused PASSED
-tests/governance/test_owner_assignment.py::test_supervisor_is_notified_with_the_recommended_owner PASSED
-tests/governance/test_owner_assignment.py::test_owner_is_recommended_until_a_person_assigns_it PASSED
-tests/governance/test_owner_assignment.py::test_supervisor_assignment_is_shown_and_audited PASSED
-tests/governance/test_owner_assignment.py::test_supervisor_assignment_replaces_recommendation_and_is_logged PASSED
-tests/governance/test_owner_assignment.py::test_owner_cannot_be_assigned_before_a_recommendation PASSED
-tests/governance/test_package_flow.py::test_transition_is_audited_with_agent PASSED
-tests/governance/test_package_flow.py::test_no_package_for_failing_case PASSED
-tests/governance/test_package_flow.py::test_package_built_and_case_ready_for_review PASSED
-tests/governance/test_package_flow.py::test_change_creates_new_version_and_keeps_old PASSED
-tests/governance/test_package_flow.py::test_approval_records_approver_time_version_and_id PASSED
-tests/governance/test_package_flow.py::test_return_or_reject_issues_no_approval_id[return_package-return_package] PASSED
-tests/governance/test_package_flow.py::test_return_or_reject_issues_no_approval_id[reject_case-reject_case] PASSED
-tests/governance/test_package_flow.py::test_blocked_package_cannot_be_approved PASSED
-tests/governance/test_package_flow.py::test_audit_rule_ids_hold_only_catalog_rules PASSED
-tests/governance/test_rejected_case_stays_stopped.py::test_rejected_case_cannot_be_approved_or_acted_on PASSED
-tests/governance/test_returned_package_needs_new_approval.py::test_returned_package_goes_back_to_validated_and_old_approval_is_refused PASSED
-tests/governance/test_version_mismatch_blocked.py::test_approval_for_old_package_version_is_refused_and_audited PASSED
-tests/governance/test_vertical_slice.py::test_complete_email_produces_a_ready_package_with_rule_ids PASSED
-tests/governance/test_vertical_slice.py::test_missing_fields_alert_names_exact_fields_and_is_audited PASSED
-tests/governance/test_vertical_slice.py::test_answers_complete_the_case_and_build_the_package PASSED
-tests/governance/test_vertical_slice.py::test_unknown_answer_field_is_refused PASSED
-tests/governance/test_vertical_slice.py::test_duplicate_email_is_blocked_and_names_the_case PASSED
-tests/governance/test_vertical_slice.py::test_contradiction_asks_for_one_work_arrangement PASSED
-tests/governance/test_vertical_slice.py::test_approval_runs_the_actions_through_the_single_writer PASSED
-tests/governance/test_vertical_slice.py::test_returned_package_goes_back_for_correction PASSED
-tests/governance/test_vertical_slice.py::test_answered_fields_cite_the_recruiter_as_their_source PASSED
-tests/test_smoke.py::test_package_imports[contracts] PASSED
-tests/test_smoke.py::test_package_imports[services.case_service.domain] PASSED
-tests/test_smoke.py::test_package_imports[services.case_service.application] PASSED
-tests/test_smoke.py::test_package_imports[services.case_service.ports] PASSED
-tests/test_smoke.py::test_package_imports[services.case_service.adapters] PASSED
-tests/test_smoke.py::test_package_imports[web.api] PASSED
-tests/test_smoke.py::test_package_imports[agents.common] PASSED
-tests/test_smoke.py::test_package_imports[mcp_servers.common] PASSED
-tests/unit/test_access_equipment.py::test_request_names_provider_and_hardware_tier PASSED
-tests/unit/test_access_equipment.py::test_inspyr_equipment_gets_two_percent_overhead PASSED
-tests/unit/test_access_equipment.py::test_apple_direct_equipment_gets_five_percent_overhead PASSED
-tests/unit/test_access_equipment.py::test_client_without_bill_back_rule_is_an_exception PASSED
-tests/unit/test_access_equipment.py::test_client_with_bill_back_rule_cites_it PASSED
-tests/unit/test_access_equipment.py::test_no_equipment_means_no_request PASSED
-tests/unit/test_access_equipment.py::test_it_request_payload_carries_no_restricted_fields PASSED
-tests/unit/test_access_equipment.py::test_free_text_equipment_finds_the_provider PASSED
-tests/unit/test_case_states.py::test_allowed_transition_returns_new_state PASSED
-tests/unit/test_case_states.py::test_action_refused_before_approval_gate PASSED
-tests/unit/test_case_states.py::test_returned_package_goes_back_to_validated PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[received] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[blocked_duplicate] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[validated] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[needs_clarification] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[case_set_up] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[ready_for_review] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[approval_gate] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[approved] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[rejected] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[actions_executed] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[documents_pending] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[in_verification] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[sent_to_payroll] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[handoff_to_igs] PASSED
-tests/unit/test_case_states.py::test_rejected_case_cannot_move[closed] PASSED
-tests/unit/test_case_states.py::test_duplicate_blocks_at_received PASSED
-tests/unit/test_case_states.py::test_blocked_duplicate_cannot_move PASSED
-tests/unit/test_case_states.py::test_invalid_transition_is_a_governance_error PASSED
-tests/unit/test_claude_engine.py::test_labelled_text_needs_no_model_call PASSED
-tests/unit/test_claude_engine.py::test_free_text_fills_the_missing_fields PASSED
-tests/unit/test_claude_engine.py::test_labelled_values_win_over_the_model PASSED
-tests/unit/test_claude_engine.py::test_restricted_values_never_reach_the_prompt PASSED
-tests/unit/test_claude_engine.py::test_text_reaches_the_model_only_as_delimited_data PASSED
-tests/unit/test_claude_engine.py::test_ambiguous_field_is_asked_not_guessed PASSED
-tests/unit/test_claude_engine.py::test_api_failure_falls_back_to_the_labelled_values PASSED
-tests/unit/test_claude_engine.py::test_refusal_falls_back_to_the_labelled_values PASSED
-tests/unit/test_claude_engine.py::test_model_calls_count_against_the_cap PASSED
-tests/unit/test_claude_engine.py::test_redaction_keeps_the_other_sentences_of_the_line PASSED
-tests/unit/test_claude_engine.py::test_workspace_id_is_sent_with_every_request PASSED
-tests/unit/test_contracts.py::test_idempotency_key_is_stable PASSED
-tests/unit/test_contracts.py::test_idempotency_key_differs_per_action PASSED
-tests/unit/test_contracts.py::test_simulated_actions_are_the_approved_set PASSED
-tests/unit/test_contracts.py::test_jobdiva_read_contract_serves_the_duplicate_port PASSED
-tests/unit/test_contracts.py::test_jobdiva_read_contract_has_no_write_tool PASSED
-tests/unit/test_contracts.py::test_workflow_contract_is_runtime_checkable PASSED
-tests/unit/test_contracts.py::test_case_service_client_lists_the_governance_operations PASSED
-tests/unit/test_mailbox.py::test_mailbox_lists_the_seed_emails PASSED
-tests/unit/test_mailbox.py::test_read_message_returns_headers_and_body PASSED
-tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[../../.env] PASSED
-tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[nope] PASSED
-tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[01_complete_and_consistent.eml] PASSED
-tests/unit/test_mailbox.py::test_mailbox_fulfils_the_contract PASSED
-tests/unit/test_model_client.py::test_extracts_labelled_fields_by_any_alias PASSED
-tests/unit/test_model_client.py::test_conflicting_values_are_ambiguous_not_confirmed PASSED
-tests/unit/test_model_client.py::test_text_is_data_not_instructions PASSED
-tests/unit/test_model_client.py::test_every_call_goes_through_the_meter PASSED
-tests/unit/test_model_client.py::test_model_call_refused_after_cap PASSED
-tests/unit/test_model_client.py::test_cap_is_per_run PASSED
-tests/unit/test_model_client.py::test_factory_defaults_to_rules PASSED
-tests/unit/test_model_client.py::test_factory_refuses_an_unconfigured_provider PASSED
-tests/unit/test_model_client.py::test_label_catalog_covers_every_mandatory_field PASSED
-tests/unit/test_package.py::test_package_line_requires_label_and_source PASSED
-tests/unit/test_package.py::test_package_status_blocked_when_escalated PASSED
-tests/unit/test_package.py::test_package_status_needs_clarification_when_waiting PASSED
-tests/unit/test_package.py::test_package_status_ready PASSED
-tests/unit/test_package.py::test_verify_refuses_missing_approval PASSED
-tests/unit/test_package.py::test_verify_refuses_other_version PASSED
-tests/unit/test_package.py::test_verify_accepts_current_version PASSED
-tests/unit/test_package.py::test_only_catalog_ids_count_as_rules PASSED
-tests/unit/test_package_timing.py::test_package_within_five_minutes_meets_the_target PASSED
-tests/unit/test_package_timing.py::test_late_package_is_reported_as_missing_the_target PASSED
-tests/unit/test_package_timing.py::test_target_is_five_minutes PASSED
-tests/unit/test_rule_lookup.py::test_lookup_returns_rule_with_its_id PASSED
-tests/unit/test_rule_lookup.py::test_rule_shows_owner_and_version PASSED
-tests/unit/test_rule_lookup.py::test_texas_has_no_state_forms PASSED
-tests/unit/test_rule_lookup.py::test_philadelphia_adds_the_city_form PASSED
-tests/unit/test_rule_lookup.py::test_flsa_selects_the_agreement PASSED
-tests/unit/test_rule_lookup.py::test_kit_matches_contract_type PASSED
-tests/unit/test_rule_lookup.py::test_no_kit_rule_returns_nothing PASSED
-tests/unit/test_rule_lookup.py::test_owner_recommended_by_client_type_and_role PASSED
-tests/unit/test_rule_lookup.py::test_overhead_is_two_or_five_percent PASSED
-tests/unit/test_rule_lookup.py::test_rule_ids_are_unique_and_well_formed PASSED
-tests/unit/test_rule_lookup.py::test_matching_ignores_case_and_spaces PASSED
-tests/unit/test_seed_mailbox.py::test_complete_scenario_has_every_mandatory_field PASSED
-tests/unit/test_seed_mailbox.py::test_demo_scenario_misses_exactly_two_fields PASSED
-tests/unit/test_seed_mailbox.py::test_duplicate_scenario_repeats_person_and_start_date PASSED
-tests/unit/test_seed_mailbox.py::test_contradiction_scenario_flags_work_arrangement PASSED
-tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[01_complete_and_consistent.eml] PASSED
-tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[02_missing_two_fields.eml] PASSED
-tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[03_duplicate.eml] PASSED
-tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[04_work_arrangement_contradiction.eml] PASSED
-tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[05_flsa_conflict.eml] PASSED
-tests/unit/test_transport.py::test_transport_defaults_to_in_process PASSED
-tests/unit/test_transport.py::test_unknown_transport_is_refused PASSED
-tests/unit/test_transport.py::test_in_process_uses_the_services_directly PASSED
-tests/unit/test_transport.py::test_mcp_uses_the_adapters PASSED
-tests/unit/test_transport.py::test_mcp_urls_come_from_the_environment PASSED
-============================ 239 passed in 19.77s =============================
+tests/connectors/test_coworker_mcp.py::test_no_tool_can_approve_or_act_on_a_system PASSED [  0%]
+tests/connectors/test_coworker_mcp.py::test_start_answer_and_status_over_mcp PASSED [  0%]
+tests/connectors/test_coworker_mcp.py::test_recruiter_alerts_reach_the_mcp_client PASSED [  0%]
+tests/connectors/test_coworker_mcp.py::test_unknown_case_is_answered_from_the_record_only PASSED [  1%]
+tests/connectors/test_coworker_mcp.py::test_oversized_text_is_refused PASSED [  1%]
+tests/connectors/test_coworker_mcp.py::test_unknown_role_stops_the_server PASSED [  1%]
+tests/connectors/test_coworker_mcp.py::test_knowledge_question_over_mcp PASSED [  1%]
+tests/connectors/test_jobdiva_failure_paths.py::test_failed_authentication_does_not_expose_the_password PASSED [  2%]
+tests/connectors/test_jobdiva_failure_paths.py::test_failed_read_does_not_expose_the_token PASSED [  2%]
+tests/connectors/test_jobdiva_failure_paths.py::test_unreachable_sign_in_names_no_password PASSED [  2%]
+tests/connectors/test_jobdiva_failure_paths.py::test_unreachable_jobdiva_fails_visibly_and_never_falls_back_to_mock PASSED [  2%]
+tests/connectors/test_jobdiva_failure_paths.py::test_mock_mode_never_opens_a_network_connection PASSED [  3%]
+tests/connectors/test_jobdiva_failure_paths.py::test_server_process_stops_on_an_invalid_mode[production] PASSED [  3%]
+tests/connectors/test_jobdiva_failure_paths.py::test_server_process_stops_on_an_invalid_mode[write] PASSED [  3%]
+tests/connectors/test_jobdiva_failure_paths.py::test_server_process_stops_on_an_invalid_mode[Mock] PASSED [  3%]
+tests/connectors/test_jobdiva_failure_paths.py::test_server_process_stops_on_an_invalid_mode[] PASSED [  4%]
+tests/connectors/test_jobdiva_failure_paths.py::test_production_url_is_refused_and_nothing_is_sent XFAIL [  4%]
+tests/connectors/test_jobdiva_read.py::test_mock_is_the_default_mode PASSED [  4%]
+tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[sandbox] PASSED [  4%]
+tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[mock] PASSED [  5%]
+tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[production] PASSED [  5%]
+tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[write] PASSED [  5%]
+tests/connectors/test_jobdiva_read.py::test_any_other_mode_stops_the_process[MOCK ] PASSED [  5%]
+tests/connectors/test_jobdiva_read.py::test_mock_reads_a_start_and_its_notes PASSED [  6%]
+tests/connectors/test_jobdiva_read.py::test_mock_duplicate_search_finds_an_onboarding_in_jobdiva PASSED [  6%]
+tests/connectors/test_jobdiva_read.py::test_mock_duplicate_search_is_negative_for_a_new_person PASSED [  6%]
+tests/connectors/test_jobdiva_read.py::test_both_adapters_fulfil_the_read_contract PASSED [  6%]
+tests/connectors/test_jobdiva_read.py::test_sandbox_reads_with_a_token_kept_in_memory PASSED [  7%]
+tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[POST] PASSED [  7%]
+tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PUT] PASSED [  7%]
+tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[PATCH] PASSED [  7%]
+tests/connectors/test_jobdiva_read.py::test_sandbox_refuses_every_write[DELETE] PASSED [  8%]
+tests/connectors/test_mcp_transport.py::test_adapters_fulfil_the_contracts PASSED [  8%]
+tests/connectors/test_mcp_transport.py::test_approved_action_runs_over_mcp PASSED [  8%]
+tests/connectors/test_mcp_transport.py::test_refusal_over_mcp_keeps_its_reason PASSED [  8%]
+tests/connectors/test_mcp_transport.py::test_unknown_approval_over_mcp_is_refused PASSED [  9%]
+tests/connectors/test_mcp_transport.py::test_jobdiva_reads_over_mcp PASSED [  9%]
+tests/connectors/test_mcp_transport.py::test_alert_posted_over_mcp PASSED [  9%]
+tests/connectors/test_mcp_transport.py::test_unreachable_server_fails_visibly PASSED [  9%]
+tests/connectors/test_mcp_transport.py::test_knowledge_answer_over_mcp PASSED [ 10%]
+tests/connectors/test_mcp_transport.py::test_unknown_record_over_mcp_is_refused PASSED [ 10%]
+tests/connectors/test_tray_poller.py::test_tray_gets_only_its_role_alerts PASSED [ 10%]
+tests/connectors/test_tray_poller.py::test_the_tray_starts_the_server_with_its_role PASSED [ 10%]
+tests/e2e/test_api.py::test_inbox_lists_the_seed_emails PASSED           [ 11%]
+tests/e2e/test_api.py::test_processed_email_shows_its_case_and_package PASSED [ 11%]
+tests/e2e/test_api.py::test_it_role_does_not_see_restricted_fields PASSED [ 11%]
+tests/e2e/test_api.py::test_answers_complete_the_demo_case PASSED        [ 11%]
+tests/e2e/test_api.py::test_approval_runs_the_actions PASSED             [ 12%]
+tests/e2e/test_api.py::test_stale_version_returns_409_with_current_version PASSED [ 12%]
+tests/e2e/test_api.py::test_only_the_approver_can_decide PASSED          [ 12%]
+tests/e2e/test_api.py::test_bad_input_returns_400_naming_the_field PASSED [ 12%]
+tests/e2e/test_api.py::test_unknown_role_is_refused PASSED               [ 13%]
+tests/e2e/test_api.py::test_unknown_message_returns_404 PASSED           [ 13%]
+tests/e2e/test_api.py::test_path_traversal_reads_nothing PASSED          [ 13%]
+tests/e2e/test_api.py::test_case_view_lists_the_open_questions PASSED    [ 13%]
+tests/e2e/test_api.py::test_chat_endpoint_starts_and_continues_a_case PASSED [ 14%]
+tests/e2e/test_api.py::test_chat_endpoint_refuses_an_empty_message PASSED [ 14%]
+tests/e2e/test_api.py::test_health_reports_the_database PASSED           [ 14%]
+tests/e2e/test_api.py::test_health_reports_mcp_servers_that_are_down PASSED [ 14%]
+tests/e2e/test_api.py::test_approver_assigns_the_follow_up_owner PASSED  [ 15%]
+tests/e2e/test_api.py::test_only_the_approver_assigns_the_owner PASSED   [ 15%]
+tests/e2e/test_api.py::test_case_reports_the_package_timing PASSED       [ 15%]
+tests/e2e/test_api.py::test_it_approves_the_laptop_request PASSED        [ 15%]
+tests/e2e/test_api.py::test_new_email_arrives_and_the_coworker_processes_it PASSED [ 16%]
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad0] PASSED [ 16%]
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad1] PASSED [ 16%]
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad2] PASSED [ 16%]
+tests/e2e/test_api.py::test_claude_engine_without_a_key_is_a_clear_503 PASSED [ 17%]
+tests/e2e/test_api.py::test_onboarding_team_records_hr_answer PASSED     [ 17%]
+tests/e2e/test_api.py::test_onboarding_team_changes_the_paperwork PASSED [ 17%]
+tests/e2e/test_api.py::test_chat_answers_a_process_question_from_knowledge PASSED [ 17%]
+tests/e2e/test_api.py::test_chat_with_a_case_still_answers_status PASSED [ 18%]
+tests/e2e/test_api.py::test_knowledge_view_lists_records_and_pending_questions PASSED [ 18%]
+tests/e2e/test_api.py::test_only_the_onboarding_team_validates_knowledge PASSED [ 18%]
+tests/e2e/test_api.py::test_a_question_is_never_stored_as_a_case_answer PASSED [ 18%]
+tests/e2e/test_api.py::test_unknown_case_is_a_404_not_a_500[it-approval-it-body0] PASSED [ 19%]
+tests/e2e/test_api.py::test_unknown_case_is_a_404_not_a_500[recommendation-onboarding-body1] PASSED [ 19%]
+tests/e2e/test_api.py::test_unknown_case_is_a_404_not_a_500[decision-approver-body2] PASSED [ 19%]
+tests/e2e/test_api.py::test_unknown_case_is_a_404_not_a_500[hr-answer-onboarding-body3] PASSED [ 20%]
+tests/e2e/test_api.py::test_new_email_with_an_unreadable_date_asks_the_sender PASSED [ 20%]
+tests/e2e/test_api.py::test_hr_answer_must_be_a_known_value PASSED       [ 20%]
+tests/e2e/test_api.py::test_hr_answer_on_a_rejected_case_writes_nothing PASSED [ 20%]
+tests/e2e/test_api.py::test_documents_and_payroll_through_the_api PASSED [ 21%]
+tests/e2e/test_api.py::test_dashboard_shows_each_case_under_its_state PASSED [ 21%]
+tests/e2e/test_api.py::test_dashboard_never_shows_restricted_values PASSED [ 21%]
+tests/e2e/test_api.py::test_info_package_through_the_api PASSED          [ 21%]
+tests/e2e/test_api.py::test_package_lists_client_forms_with_their_rule PASSED [ 22%]
+tests/e2e/test_api.py::test_a_cited_rule_shows_its_owner_and_version PASSED [ 22%]
+tests/e2e/test_api.py::test_a_form_named_after_the_flsa_status_is_hidden[recruiter] PASSED [ 22%]
+tests/e2e/test_api.py::test_a_form_named_after_the_flsa_status_is_hidden[it] PASSED [ 22%]
+tests/e2e/test_api.py::test_a_form_named_after_the_flsa_status_is_hidden[ldc] PASSED [ 23%]
+tests/e2e/test_api.py::test_the_owner_can_be_any_onboarding_team_member PASSED [ 23%]
+tests/e2e/test_api.py::test_a_reviewed_recommendation_leaves_the_pending_list PASSED [ 23%]
+tests/e2e/test_api.py::test_the_candidate_email_lists_the_checklist PASSED [ 23%]
+tests/e2e/test_api.py::test_the_dashboard_shows_ldc_steps PASSED         [ 24%]
+tests/e2e/test_api.py::test_case_lists_show_the_candidate_name_and_role PASSED [ 24%]
+tests/e2e/test_api.py::test_the_welcome_kit_waits_for_the_verified_documents PASSED [ 24%]
+tests/e2e/test_api.py::test_each_record_has_a_readable_reference PASSED  [ 24%]
+tests/e2e/test_measured_metrics.py::test_measured_metrics PASSED         [ 25%]
+tests/e2e/test_over_mcp.py::test_j1_and_j2_run_with_every_system_call_over_mcp PASSED [ 25%]
+tests/e2e/test_over_mcp.py::test_duplicate_in_jobdiva_is_found_over_mcp PASSED [ 25%]
+tests/e2e/test_over_mcp.py::test_flsa_conflict_is_escalated_from_notes_read_over_mcp PASSED [ 25%]
+tests/governance/test_action_fault_injection.py::test_fault_before_the_audit_entry_leaves_no_action_behind PASSED [ 26%]
+tests/governance/test_action_fault_injection.py::test_fault_after_the_state_write_leaves_no_audit_entry_behind PASSED [ 26%]
+tests/governance/test_action_fault_injection.py::test_retry_after_a_failed_second_action_duplicates_nothing PASSED [ 26%]
+tests/governance/test_candidate_followup.py::test_approved_case_sends_the_checklist PASSED [ 26%]
+tests/governance/test_candidate_followup.py::test_checklist_never_names_an_flsa_status PASSED [ 27%]
+tests/governance/test_candidate_followup.py::test_reminders_at_24_and_48_hours_then_escalation PASSED [ 27%]
+tests/governance/test_candidate_followup.py::test_no_reminder_once_everything_is_delivered PASSED [ 27%]
+tests/governance/test_candidate_followup.py::test_new_cadence_applies_to_the_next_reminders PASSED [ 27%]
+tests/governance/test_candidate_followup.py::test_partial_delivery_lists_the_missing_items PASSED [ 28%]
+tests/governance/test_candidate_followup.py::test_delivered_document_is_not_verified_until_countersigned PASSED [ 28%]
+tests/governance/test_candidate_followup.py::test_countersign_of_an_undelivered_document_is_refused_and_audited PASSED [ 28%]
+tests/governance/test_candidate_followup.py::test_unknown_item_is_a_bad_request PASSED [ 28%]
+tests/governance/test_candidate_followup.py::test_full_delivery_moves_to_verification PASSED [ 29%]
+tests/governance/test_candidate_followup.py::test_payroll_package_holds_validated_data_only PASSED [ 29%]
+tests/governance/test_candidate_followup.py::test_handoff_needs_every_document_verified PASSED [ 29%]
+tests/governance/test_candidate_followup.py::test_writer_refuses_the_package_without_handoff_approval PASSED [ 29%]
+tests/governance/test_candidate_followup.py::test_approved_handoff_sends_the_package PASSED [ 30%]
+tests/governance/test_candidate_followup.py::test_payroll_return_becomes_a_task_in_the_audit PASSED [ 30%]
+tests/governance/test_candidate_followup.py::test_payroll_record_hides_flsa_from_unauthorized_roles PASSED [ 30%]
+tests/governance/test_chat.py::test_chat_starts_a_case_and_asks_one_question_at_a_time PASSED [ 30%]
+tests/governance/test_chat.py::test_chat_package_lines_cite_the_chat PASSED [ 31%]
+tests/governance/test_chat.py::test_status_question_names_state_and_who_acts PASSED [ 31%]
+tests/governance/test_chat.py::test_status_of_a_case_waiting_names_the_open_fields PASSED [ 31%]
+tests/governance/test_chat.py::test_status_of_an_unknown_case_is_not_guessed PASSED [ 31%]
+tests/governance/test_chat.py::test_chat_without_start_data_says_what_is_needed PASSED [ 32%]
+tests/governance/test_chat.py::test_duplicate_start_in_chat_is_blocked PASSED [ 32%]
+tests/governance/test_chat.py::test_empty_message_is_refused PASSED      [ 32%]
+tests/governance/test_chat.py::test_a_placeholder_client_is_asked_of_the_recruiter PASSED [ 32%]
+tests/governance/test_chat.py::test_a_placeholder_answer_keeps_the_question_open PASSED [ 33%]
+tests/governance/test_chat.py::test_status_lists_each_pending_item_with_its_team PASSED [ 33%]
+tests/governance/test_chat.py::test_only_the_recruiter_answers_the_start_questions PASSED [ 33%]
+tests/governance/test_chat_assistant.py::test_claude_answers_from_the_tools PASSED [ 33%]
+tests/governance/test_chat_assistant.py::test_the_tools_only_read PASSED [ 34%]
+tests/governance/test_chat_assistant.py::test_a_known_process_question_is_answered_by_its_record PASSED [ 34%]
+tests/governance/test_chat_assistant.py::test_restricted_sentences_never_reach_claude PASSED [ 34%]
+tests/governance/test_chat_assistant.py::test_an_answer_to_a_case_question_is_still_stored PASSED [ 34%]
+tests/governance/test_chat_assistant.py::test_without_claude_the_chat_keeps_its_help PASSED [ 35%]
+tests/governance/test_chat_assistant.py::test_a_claude_failure_falls_back_to_the_help PASSED [ 35%]
+tests/governance/test_chat_assistant.py::test_an_flsa_question_goes_to_hr_without_claude PASSED [ 35%]
+tests/governance/test_culture_belonging.py::test_approved_w2_hire_reaches_the_ldc_tracker PASSED [ 35%]
+tests/governance/test_culture_belonging.py::test_kit_is_not_sent_without_ldc_approval PASSED [ 36%]
+tests/governance/test_culture_belonging.py::test_ldc_approval_ships_the_kit PASSED [ 36%]
+tests/governance/test_culture_belonging.py::test_kit_approval_of_an_unapproved_case_is_refused PASSED [ 36%]
+tests/governance/test_culture_belonging.py::test_two_months_drafts_the_leader_messages PASSED [ 36%]
+tests/governance/test_culture_belonging.py::test_message_is_not_sent_before_ldc_approves_it PASSED [ 37%]
+tests/governance/test_culture_belonging.py::test_approved_message_is_sent PASSED [ 37%]
+tests/governance/test_culture_belonging.py::test_leader_messages_never_carry_restricted_data PASSED [ 37%]
+tests/governance/test_culture_belonging.py::test_a_template_asking_for_flsa_is_refused PASSED [ 37%]
+tests/governance/test_culture_belonging.py::test_a_draft_with_restricted_words_is_not_produced PASSED [ 38%]
+tests/governance/test_culture_belonging.py::test_the_congratulation_goes_to_the_candidate PASSED [ 38%]
+tests/governance/test_duplicates_blocked.py::test_new_start_creates_case_in_received_and_is_audited PASSED [ 38%]
+tests/governance/test_duplicates_blocked.py::test_second_start_same_person_and_date_is_blocked_at_received PASSED [ 38%]
+tests/governance/test_duplicates_blocked.py::test_block_message_names_existing_case PASSED [ 39%]
+tests/governance/test_duplicates_blocked.py::test_duplicate_found_in_jobdiva_also_blocks PASSED [ 39%]
+tests/governance/test_duplicates_blocked.py::test_refusal_is_committed_on_its_own PASSED [ 39%]
+tests/governance/test_escalation.py::test_flsa_conflict_is_escalated_and_no_value_is_chosen PASSED [ 40%]
+tests/governance/test_escalation.py::test_escalation_alerts_onboarding_and_hr_without_values PASSED [ 40%]
+tests/governance/test_escalation.py::test_escalated_package_cannot_be_approved PASSED [ 40%]
+tests/governance/test_escalation.py::test_matching_values_are_not_escalated PASSED [ 40%]
+tests/governance/test_escalation.py::test_duplicate_already_onboarding_in_jobdiva_is_blocked PASSED [ 41%]
+tests/governance/test_escalation.py::test_hr_answer_resolves_the_conflict_in_a_new_version PASSED [ 41%]
+tests/governance/test_escalation.py::test_hr_answer_is_audited_by_field_name_only PASSED [ 41%]
+tests/governance/test_escalation.py::test_new_version_can_be_approved_after_the_hr_answer PASSED [ 41%]
+tests/governance/test_escalation.py::test_hr_answer_needs_an_open_conflict PASSED [ 42%]
+tests/governance/test_every_action_is_audited.py::test_completed_action_has_agent_rules_and_data PASSED [ 42%]
+tests/governance/test_every_action_is_audited.py::test_refused_action_is_audited PASSED [ 42%]
+tests/governance/test_every_action_is_audited.py::test_unknown_outcome_is_rejected PASSED [ 42%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_audit_entries[UPDATE audit_log SET outcome = 'completed' WHERE case_id = %s] PASSED [ 43%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_audit_entries[DELETE FROM audit_log WHERE case_id = %s] PASSED [ 43%]
+tests/governance/test_every_action_is_audited.py::test_audit_writer_role_is_insert_only[UPDATE audit_log SET outcome = 'completed' WHERE case_id = %s] PASSED [ 43%]
+tests/governance/test_every_action_is_audited.py::test_audit_writer_role_is_insert_only[DELETE FROM audit_log WHERE case_id = %s] PASSED [ 43%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE approvals SET comment = comment] PASSED [ 44%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE action_ledger SET action = action] PASSED [ 44%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE package_lines SET value = value] PASSED [ 44%]
+tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[DELETE FROM approvals] PASSED [ 44%]
+tests/governance/test_inbound_mail.py::test_delivered_email_is_listed_first_and_readable PASSED [ 45%]
+tests/governance/test_inbound_mail.py::test_outcome_is_kept_with_the_email PASSED [ 45%]
+tests/governance/test_inbound_mail.py::test_unknown_delivered_id_is_refused PASSED [ 45%]
+tests/governance/test_it_request_needs_it_approval.py::test_request_waits_for_it_after_the_approver_approves PASSED [ 45%]
+tests/governance/test_it_request_needs_it_approval.py::test_request_is_sent_once_both_have_approved PASSED [ 46%]
+tests/governance/test_it_request_needs_it_approval.py::test_it_first_then_approver_sends_the_request PASSED [ 46%]
+tests/governance/test_it_request_needs_it_approval.py::test_writer_refuses_the_request_without_it_approval PASSED [ 46%]
+tests/governance/test_it_request_needs_it_approval.py::test_it_approval_of_an_old_version_is_refused PASSED [ 46%]
+tests/governance/test_it_request_needs_it_approval.py::test_feature_off_adds_no_equipment_lines PASSED [ 47%]
+tests/governance/test_it_request_needs_it_approval.py::test_exception_line_is_never_sent_to_it PASSED [ 47%]
+tests/governance/test_local_case_service.py::test_local_service_fulfils_the_contract PASSED [ 47%]
+tests/governance/test_local_case_service.py::test_local_service_runs_intake_to_approval PASSED [ 47%]
+tests/governance/test_new_hire_package.py::test_package_holds_validated_company_client_and_role_information PASSED [ 48%]
+tests/governance/test_new_hire_package.py::test_unvalidated_knowledge_never_enters_the_package PASSED [ 48%]
+tests/governance/test_new_hire_package.py::test_package_is_sent_only_after_the_team_reviews_it PASSED [ 48%]
+tests/governance/test_new_hire_package.py::test_no_package_before_approval PASSED [ 48%]
+tests/governance/test_new_hire_package.py::test_package_never_carries_restricted_data PASSED [ 49%]
+tests/governance/test_new_hire_package.py::test_a_record_mentioning_a_visa_is_left_out PASSED [ 49%]
+tests/governance/test_no_action_without_approval.py::test_unknown_approval_id_is_refused PASSED [ 49%]
+tests/governance/test_no_action_without_approval.py::test_ready_package_without_decision_has_no_approval PASSED [ 49%]
+tests/governance/test_no_action_without_approval.py::test_approval_authorizes_action_for_current_version PASSED [ 50%]
+tests/governance/test_no_action_without_approval.py::test_action_refused_when_package_changed_after_approval PASSED [ 50%]
+tests/governance/test_onboarding_knowledge.py::test_answer_cites_the_matching_record PASSED [ 50%]
+tests/governance/test_onboarding_knowledge.py::test_unvalidated_record_is_labelled PASSED [ 50%]
+tests/governance/test_onboarding_knowledge.py::test_validated_record_is_then_presented_as_confirmed PASSED [ 51%]
+tests/governance/test_onboarding_knowledge.py::test_rejected_record_is_never_used PASSED [ 51%]
+tests/governance/test_onboarding_knowledge.py::test_unanswered_question_is_pending_for_the_team PASSED [ 51%]
+tests/governance/test_onboarding_knowledge.py::test_flsa_question_goes_to_hr_without_keeping_the_text PASSED [ 51%]
+tests/governance/test_onboarding_knowledge.py::test_unknown_record_cannot_be_validated PASSED [ 52%]
+tests/governance/test_onboarding_knowledge.py::test_visa_question_is_not_kept_as_text[Does an H-1B transfer need a new I-9?] PASSED [ 52%]
+tests/governance/test_onboarding_knowledge.py::test_visa_question_is_not_kept_as_text[Can a hire on OPT start early?] PASSED [ 52%]
+tests/governance/test_only_workflow_agent_writes.py::test_only_workflow_server_registers_write_tools PASSED [ 52%]
+tests/governance/test_only_workflow_agent_writes.py::test_workflow_service_fulfils_the_contract PASSED [ 53%]
+tests/governance/test_only_workflow_agent_writes.py::test_action_without_approval_is_refused_and_audited PASSED [ 53%]
+tests/governance/test_only_workflow_agent_writes.py::test_action_carries_the_approval_id PASSED [ 53%]
+tests/governance/test_only_workflow_agent_writes.py::test_action_for_another_version_is_blocked PASSED [ 53%]
+tests/governance/test_only_workflow_agent_writes.py::test_retry_with_same_key_does_not_duplicate PASSED [ 54%]
+tests/governance/test_only_workflow_agent_writes.py::test_unknown_action_is_refused PASSED [ 54%]
+tests/governance/test_owner_assignment.py::test_supervisor_is_notified_with_the_recommended_owner PASSED [ 54%]
+tests/governance/test_owner_assignment.py::test_owner_is_recommended_until_a_person_assigns_it PASSED [ 54%]
+tests/governance/test_owner_assignment.py::test_supervisor_assignment_is_shown_and_audited PASSED [ 55%]
+tests/governance/test_owner_assignment.py::test_supervisor_assignment_replaces_recommendation_and_is_logged PASSED [ 55%]
+tests/governance/test_owner_assignment.py::test_owner_cannot_be_assigned_before_a_recommendation PASSED [ 55%]
+tests/governance/test_owner_assignment.py::test_refused_assignment_is_audited PASSED [ 55%]
+tests/governance/test_package_flow.py::test_transition_is_audited_with_agent PASSED [ 56%]
+tests/governance/test_package_flow.py::test_no_package_for_failing_case PASSED [ 56%]
+tests/governance/test_package_flow.py::test_package_built_and_case_ready_for_review PASSED [ 56%]
+tests/governance/test_package_flow.py::test_change_creates_new_version_and_keeps_old PASSED [ 56%]
+tests/governance/test_package_flow.py::test_approval_records_approver_time_version_and_id PASSED [ 57%]
+tests/governance/test_package_flow.py::test_return_or_reject_issues_no_approval_id[return_package-return_package] PASSED [ 57%]
+tests/governance/test_package_flow.py::test_return_or_reject_issues_no_approval_id[reject_case-reject_case] PASSED [ 57%]
+tests/governance/test_package_flow.py::test_blocked_package_cannot_be_approved PASSED [ 57%]
+tests/governance/test_package_flow.py::test_audit_rule_ids_hold_only_catalog_rules PASSED [ 58%]
+tests/governance/test_rejected_case_stays_stopped.py::test_rejected_case_cannot_be_approved_or_acted_on PASSED [ 58%]
+tests/governance/test_returned_package_needs_new_approval.py::test_returned_package_goes_back_to_validated_and_old_approval_is_refused PASSED [ 58%]
+tests/governance/test_team_recommendation.py::test_team_confirms_the_recommendation PASSED [ 58%]
+tests/governance/test_team_recommendation.py::test_team_change_makes_a_new_version PASSED [ 59%]
+tests/governance/test_team_recommendation.py::test_approval_of_the_old_version_is_refused_after_a_change PASSED [ 59%]
+tests/governance/test_team_recommendation.py::test_only_path_and_paperwork_can_be_reviewed PASSED [ 59%]
+tests/governance/test_team_recommendation.py::test_no_review_after_approval PASSED [ 60%]
+tests/governance/test_version_mismatch_blocked.py::test_approval_for_old_package_version_is_refused_and_audited PASSED [ 60%]
+tests/governance/test_vertical_slice.py::test_complete_email_produces_a_ready_package_with_rule_ids PASSED [ 60%]
+tests/governance/test_vertical_slice.py::test_missing_fields_alert_names_exact_fields_and_is_audited PASSED [ 60%]
+tests/governance/test_vertical_slice.py::test_answers_complete_the_case_and_build_the_package PASSED [ 61%]
+tests/governance/test_vertical_slice.py::test_unknown_answer_field_is_refused PASSED [ 61%]
+tests/governance/test_vertical_slice.py::test_duplicate_email_is_blocked_and_names_the_case PASSED [ 61%]
+tests/governance/test_vertical_slice.py::test_contradiction_asks_for_one_work_arrangement PASSED [ 61%]
+tests/governance/test_vertical_slice.py::test_approval_runs_the_actions_through_the_single_writer PASSED [ 62%]
+tests/governance/test_vertical_slice.py::test_returned_package_goes_back_for_correction PASSED [ 62%]
+tests/governance/test_vertical_slice.py::test_answered_fields_cite_the_recruiter_as_their_source PASSED [ 62%]
+tests/test_smoke.py::test_package_imports[contracts] PASSED              [ 62%]
+tests/test_smoke.py::test_package_imports[services.case_service.domain] PASSED [ 63%]
+tests/test_smoke.py::test_package_imports[services.case_service.application] PASSED [ 63%]
+tests/test_smoke.py::test_package_imports[services.case_service.ports] PASSED [ 63%]
+tests/test_smoke.py::test_package_imports[services.case_service.adapters] PASSED [ 63%]
+tests/test_smoke.py::test_package_imports[web.api] PASSED                [ 64%]
+tests/test_smoke.py::test_package_imports[agents.common] PASSED          [ 64%]
+tests/test_smoke.py::test_package_imports[mcp_servers.common] PASSED     [ 64%]
+tests/unit/test_access_equipment.py::test_request_names_provider_and_hardware_tier PASSED [ 64%]
+tests/unit/test_access_equipment.py::test_inspyr_equipment_gets_two_percent_overhead PASSED [ 65%]
+tests/unit/test_access_equipment.py::test_apple_direct_equipment_gets_five_percent_overhead PASSED [ 65%]
+tests/unit/test_access_equipment.py::test_client_without_bill_back_rule_is_an_exception PASSED [ 65%]
+tests/unit/test_access_equipment.py::test_client_with_bill_back_rule_cites_it PASSED [ 65%]
+tests/unit/test_access_equipment.py::test_no_equipment_means_no_request PASSED [ 66%]
+tests/unit/test_access_equipment.py::test_it_request_payload_carries_no_restricted_fields PASSED [ 66%]
+tests/unit/test_access_equipment.py::test_free_text_equipment_finds_the_provider PASSED [ 66%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[] PASSED [ 66%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[   ] PASSED [ 67%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[N/A] PASSED [ 67%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[n/a] PASSED [ 67%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[-] PASSED [ 67%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[TBD] PASSED [ 68%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[pending] PASSED [ 68%]
+tests/unit/test_blank_values.py::test_placeholders_count_as_missing[\u200b] PASSED [ 68%]
+tests/unit/test_blank_values.py::test_a_real_value_is_kept_trimmed PASSED [ 68%]
+tests/unit/test_blank_values.py::test_a_labelled_placeholder_is_not_read_as_the_value PASSED [ 69%]
+tests/unit/test_case_states.py::test_allowed_transition_returns_new_state PASSED [ 69%]
+tests/unit/test_case_states.py::test_action_refused_before_approval_gate PASSED [ 69%]
+tests/unit/test_case_states.py::test_returned_package_goes_back_to_validated PASSED [ 69%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[received] PASSED [ 70%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[blocked_duplicate] PASSED [ 70%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[validated] PASSED [ 70%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[needs_clarification] PASSED [ 70%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[case_set_up] PASSED [ 71%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[ready_for_review] PASSED [ 71%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[approval_gate] PASSED [ 71%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[approved] PASSED [ 71%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[rejected] PASSED [ 72%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[actions_executed] PASSED [ 72%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[documents_pending] PASSED [ 72%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[in_verification] PASSED [ 72%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[sent_to_payroll] PASSED [ 73%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[handoff_to_igs] PASSED [ 73%]
+tests/unit/test_case_states.py::test_rejected_case_cannot_move[closed] PASSED [ 73%]
+tests/unit/test_case_states.py::test_duplicate_blocks_at_received PASSED [ 73%]
+tests/unit/test_case_states.py::test_blocked_duplicate_cannot_move PASSED [ 74%]
+tests/unit/test_case_states.py::test_invalid_transition_is_a_governance_error PASSED [ 74%]
+tests/unit/test_claude_engine.py::test_labelled_text_needs_no_model_call PASSED [ 74%]
+tests/unit/test_claude_engine.py::test_free_text_fills_the_missing_fields PASSED [ 74%]
+tests/unit/test_claude_engine.py::test_labelled_values_win_over_the_model PASSED [ 75%]
+tests/unit/test_claude_engine.py::test_restricted_values_never_reach_the_prompt PASSED [ 75%]
+tests/unit/test_claude_engine.py::test_text_reaches_the_model_only_as_delimited_data PASSED [ 75%]
+tests/unit/test_claude_engine.py::test_ambiguous_field_is_asked_not_guessed PASSED [ 75%]
+tests/unit/test_claude_engine.py::test_api_failure_falls_back_to_the_labelled_values PASSED [ 76%]
+tests/unit/test_claude_engine.py::test_refusal_falls_back_to_the_labelled_values PASSED [ 76%]
+tests/unit/test_claude_engine.py::test_model_calls_count_against_the_cap PASSED [ 76%]
+tests/unit/test_claude_engine.py::test_redaction_keeps_the_other_sentences_of_the_line PASSED [ 76%]
+tests/unit/test_claude_engine.py::test_workspace_id_is_sent_with_every_request PASSED [ 77%]
+tests/unit/test_claude_engine.py::test_work_authorization_never_reaches_the_model[Candidate is on OPT, EAD pending.] PASSED [ 77%]
+tests/unit/test_claude_engine.py::test_work_authorization_never_reaches_the_model[Holds an H1-B today.] PASSED [ 77%]
+tests/unit/test_claude_engine.py::test_work_authorization_never_reaches_the_model[Has a green-card application in progress.] PASSED [ 77%]
+tests/unit/test_claude_engine.py::test_work_authorization_never_reaches_the_model[Work authorization ends in May.] PASSED [ 78%]
+tests/unit/test_claude_engine.py::test_work_authorization_never_reaches_the_model[She is a permanent resident.] PASSED [ 78%]
+tests/unit/test_contracts.py::test_idempotency_key_is_stable PASSED      [ 78%]
+tests/unit/test_contracts.py::test_idempotency_key_differs_per_action PASSED [ 78%]
+tests/unit/test_contracts.py::test_simulated_actions_are_the_approved_set PASSED [ 79%]
+tests/unit/test_contracts.py::test_jobdiva_read_contract_serves_the_duplicate_port PASSED [ 79%]
+tests/unit/test_contracts.py::test_jobdiva_read_contract_has_no_write_tool PASSED [ 79%]
+tests/unit/test_contracts.py::test_workflow_contract_is_runtime_checkable PASSED [ 80%]
+tests/unit/test_contracts.py::test_case_service_client_lists_the_governance_operations PASSED [ 80%]
+tests/unit/test_dashboard_risks.py::test_risks_name_a_close_start_and_a_missed_target PASSED [ 80%]
+tests/unit/test_dashboard_risks.py::test_escalated_documents_are_a_risk_while_they_are_pending PASSED [ 80%]
+tests/unit/test_dashboard_risks.py::test_an_approved_case_is_not_at_risk_for_its_start_date PASSED [ 81%]
+tests/unit/test_knowledge_match.py::test_a_paraphrase_finds_the_record PASSED [ 81%]
+tests/unit/test_knowledge_match.py::test_one_shared_word_is_not_enough PASSED [ 81%]
+tests/unit/test_knowledge_match.py::test_an_empty_question_matches_nothing PASSED [ 81%]
+tests/unit/test_knowledge_match.py::test_answer_lists_the_steps_and_cites_the_record PASSED [ 82%]
+tests/unit/test_knowledge_model.py::test_the_model_finds_a_paraphrase_the_words_miss PASSED [ 82%]
+tests/unit/test_knowledge_model.py::test_the_answer_is_the_record_text_not_the_model_text PASSED [ 82%]
+tests/unit/test_knowledge_model.py::test_no_record_from_the_model_leaves_the_question_pending PASSED [ 82%]
+tests/unit/test_knowledge_model.py::test_an_id_outside_the_records_is_never_used PASSED [ 83%]
+tests/unit/test_knowledge_model.py::test_if_claude_fails_the_words_are_matched PASSED [ 83%]
+tests/unit/test_knowledge_model.py::test_an_hr_question_never_reaches_the_model PASSED [ 83%]
+tests/unit/test_knowledge_model.py::test_the_question_is_data_inside_delimiters PASSED [ 83%]
+tests/unit/test_mailbox.py::test_mailbox_lists_the_seed_emails PASSED    [ 84%]
+tests/unit/test_mailbox.py::test_read_message_returns_headers_and_body PASSED [ 84%]
+tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[../../.env] PASSED [ 84%]
+tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[nope] PASSED [ 84%]
+tests/unit/test_mailbox.py::test_read_message_refuses_unknown_ids[01_complete_and_consistent.eml] PASSED [ 85%]
+tests/unit/test_mailbox.py::test_mailbox_fulfils_the_contract PASSED     [ 85%]
+tests/unit/test_model_client.py::test_extracts_labelled_fields_by_any_alias PASSED [ 85%]
+tests/unit/test_model_client.py::test_conflicting_values_are_ambiguous_not_confirmed PASSED [ 85%]
+tests/unit/test_model_client.py::test_text_is_data_not_instructions PASSED [ 86%]
+tests/unit/test_model_client.py::test_every_call_goes_through_the_meter PASSED [ 86%]
+tests/unit/test_model_client.py::test_model_call_refused_after_cap PASSED [ 86%]
+tests/unit/test_model_client.py::test_cap_is_per_run PASSED              [ 86%]
+tests/unit/test_model_client.py::test_factory_defaults_to_rules PASSED   [ 87%]
+tests/unit/test_model_client.py::test_factory_refuses_an_unconfigured_provider PASSED [ 87%]
+tests/unit/test_model_client.py::test_label_catalog_covers_every_mandatory_field PASSED [ 87%]
+tests/unit/test_package.py::test_package_line_requires_label_and_source PASSED [ 87%]
+tests/unit/test_package.py::test_package_status_blocked_when_escalated PASSED [ 88%]
+tests/unit/test_package.py::test_package_status_needs_clarification_when_waiting PASSED [ 88%]
+tests/unit/test_package.py::test_package_status_ready PASSED             [ 88%]
+tests/unit/test_package.py::test_verify_refuses_missing_approval PASSED  [ 88%]
+tests/unit/test_package.py::test_verify_refuses_other_version PASSED     [ 89%]
+tests/unit/test_package.py::test_verify_accepts_current_version PASSED   [ 89%]
+tests/unit/test_package.py::test_only_catalog_ids_count_as_rules PASSED  [ 89%]
+tests/unit/test_package_timing.py::test_package_within_five_minutes_meets_the_target PASSED [ 89%]
+tests/unit/test_package_timing.py::test_late_package_is_reported_as_missing_the_target PASSED [ 90%]
+tests/unit/test_package_timing.py::test_target_is_five_minutes PASSED    [ 90%]
+tests/unit/test_rule_lookup.py::test_lookup_returns_rule_with_its_id PASSED [ 90%]
+tests/unit/test_rule_lookup.py::test_rule_shows_owner_and_version PASSED [ 90%]
+tests/unit/test_rule_lookup.py::test_texas_has_no_state_forms PASSED     [ 91%]
+tests/unit/test_rule_lookup.py::test_philadelphia_adds_the_city_form PASSED [ 91%]
+tests/unit/test_rule_lookup.py::test_flsa_selects_the_agreement PASSED   [ 91%]
+tests/unit/test_rule_lookup.py::test_kit_matches_contract_type PASSED    [ 91%]
+tests/unit/test_rule_lookup.py::test_no_kit_rule_returns_nothing PASSED  [ 92%]
+tests/unit/test_rule_lookup.py::test_owner_recommended_by_client_type_and_role PASSED [ 92%]
+tests/unit/test_rule_lookup.py::test_overhead_is_two_or_five_percent PASSED [ 92%]
+tests/unit/test_rule_lookup.py::test_rule_ids_are_unique_and_well_formed PASSED [ 92%]
+tests/unit/test_rule_lookup.py::test_matching_ignores_case_and_spaces PASSED [ 93%]
+tests/unit/test_seed_mailbox.py::test_complete_scenario_has_every_mandatory_field PASSED [ 93%]
+tests/unit/test_seed_mailbox.py::test_demo_scenario_misses_exactly_two_fields PASSED [ 93%]
+tests/unit/test_seed_mailbox.py::test_duplicate_scenario_repeats_person_and_start_date PASSED [ 93%]
+tests/unit/test_seed_mailbox.py::test_contradiction_scenario_flags_work_arrangement PASSED [ 94%]
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[01_complete_and_consistent.eml] PASSED [ 94%]
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[02_missing_two_fields.eml] PASSED [ 94%]
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[03_duplicate.eml] PASSED [ 94%]
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[04_work_arrangement_contradiction.eml] PASSED [ 95%]
+tests/unit/test_seed_mailbox.py::test_every_seed_email_is_synthetic[05_flsa_conflict.eml] PASSED [ 95%]
+tests/unit/test_transport.py::test_transport_defaults_to_in_process PASSED [ 95%]
+tests/unit/test_transport.py::test_unknown_transport_is_refused PASSED   [ 95%]
+tests/unit/test_transport.py::test_in_process_uses_the_services_directly PASSED [ 96%]
+tests/unit/test_transport.py::test_mcp_uses_the_adapters PASSED          [ 96%]
+tests/unit/test_transport.py::test_mcp_urls_come_from_the_environment PASSED [ 96%]
+tests/unit/test_tray_feed.py::test_first_poll_shows_nothing_old PASSED   [ 96%]
+tests/unit/test_tray_feed.py::test_only_new_alerts_are_returned_oldest_first PASSED [ 97%]
+tests/unit/test_tray_feed.py::test_recent_keeps_the_five_latest PASSED   [ 97%]
+tests/unit/test_tray_feed.py::test_a_new_role_starts_fresh PASSED        [ 97%]
+tests/unit/test_tray_feed.py::test_link_opens_the_case_as_the_tray_role PASSED [ 97%]
+tests/unit/test_tray_feed.py::test_icon_shows_a_red_dot_for_new_alerts PASSED [ 98%]
+tests/unit/test_tray_feed.py::test_the_window_docks_above_the_clock PASSED [ 98%]
+tests/unit/test_tray_feed.py::test_the_window_opens_the_chat_on_the_case PASSED [ 98%]
+tests/unit/test_tray_feed.py::test_notification_names_the_case_and_counts_the_rest PASSED [ 98%]
+tests/unit/test_tray_feed.py::test_without_toasts_the_plain_notification_is_used PASSED [ 99%]
+tests/unit/test_tray_feed.py::test_the_logo_is_drawn_large_and_sharp PASSED [ 99%]
+tests/unit/test_tray_feed.py::test_about_describes_the_coworker_by_inspyr_velocity PASSED [ 99%]
+tests/unit/test_tray_feed.py::test_the_window_opens_in_the_chosen_theme PASSED [100%]
+================= 394 passed, 1 xfailed in 176.38s (0:02:56) ==================
