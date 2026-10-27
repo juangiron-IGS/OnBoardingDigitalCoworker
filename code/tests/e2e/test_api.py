@@ -648,3 +648,51 @@ def test_info_package_through_the_api(client) -> None:
     assert refused.status_code == 403
     assert len(prepared["content"]["sections"]) == 3
     assert sent == {"status": "sent", "sections": 3}
+
+
+def test_package_lists_client_forms_with_their_rule(client) -> None:
+    # US-007 AC-002: forms by client, each with the rule that required it
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    lines = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()[
+        "package"
+    ]["lines"]
+
+    assert {
+        "field": "paperwork",
+        "value": "Acme Synthetic confidentiality agreement",
+        "label": "recommended",
+        "source_or_rule_id": "R-PA-10",
+    } in lines
+
+
+def test_a_cited_rule_shows_its_owner_and_version(client) -> None:
+    # US-007 AC-003
+    rule = client.get("/api/rules/R-PA-10", headers=_as("onboarding")).json()
+    unknown = client.get("/api/rules/R-PA-99", headers=_as("onboarding"))
+
+    assert (rule["owner"], rule["version"], rule["status"]) == (
+        "Onboarding",
+        1,
+        "draft",
+    )
+    assert rule["when"] == {"client": "Acme Synthetic"}
+    assert unknown.status_code == 404
+
+
+@pytest.mark.parametrize("role", ["recruiter", "it", "ldc"])
+def test_a_form_named_after_the_flsa_status_is_hidden(client, role) -> None:
+    # BR-011: "Non-exempt employee agreement" and its rule R-PA-05 reveal FLSA
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    lines = client.get(f"/api/cases/{case_id}", headers=_as(role)).json()["package"][
+        "lines"
+    ]
+    approver = client.get(f"/api/cases/{case_id}", headers=_as("approver")).json()
+
+    text = " ".join(f"{line['value']} {line['source_or_rule_id']}" for line in lines)
+    assert "exempt" not in text.lower()
+    assert "R-PA-05" not in text
+    assert any(
+        line["source_or_rule_id"] == "R-PA-05" for line in approver["package"]["lines"]
+    )
