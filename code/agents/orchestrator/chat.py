@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from agents.onboarding_knowledge.agent import HR_TOPICS
 from contracts.case_service_api import CaseState
 
 if TYPE_CHECKING:
@@ -72,10 +73,31 @@ def respond(
     if _is_new_start(labelled):
         return _start(orch, text)
     ref = CASE_REF.search(text)
+    about_case = case_id and ABOUT_CASE.search(text)
+    # FLSA, classification, visa or legal: HR decides; never sent to a model.
+    if orch.knows and HR_TOPICS.search(text):
+        answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
+        return ChatReply(reply=answer.reply, case_id=case_id)
+    # A process question with a knowledge record gets the record itself, cited.
+    if orch.knows and QUESTION.search(text) and not ref and not about_case:
+        answer = orch.ask_knowledge(
+            text, asked_by=asked_by, channel="chat", register_unanswered=False
+        )
+        if answer.status != "no_answer":
+            return ChatReply(reply=answer.reply, case_id=case_id)
+    # Anything else Claude answers when the engine converses (assistant.py), in
+    # the person's language, with read-only tools.
+    from .assistant import converse
+
+    reply = converse(orch, text, case_id=case_id, role=asked_by)
+    if reply:
+        return ChatReply(reply=reply, case_id=case_id)
+    # Without a conversing engine: the fixed replies.
     if ref:
         return status(orch, ref.group(1))
-    about_case = case_id and ABOUT_CASE.search(text)
-    if orch.knows and QUESTION.search(text) and not about_case:
+    if about_case:
+        return status(orch, case_id)
+    if orch.knows and QUESTION.search(text):  # keep it pending (US-025)
         answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
         return ChatReply(reply=answer.reply, case_id=case_id)
     if case_id:

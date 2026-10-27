@@ -35,9 +35,11 @@ Open http://127.0.0.1:3000. The health line should read `web app: ok · database
 
 > "It asks only for what is missing, once."
 
-## 4. Status in the chat (30 s)
+## 4. Status in the chat (45 s)
 
 Type `How is <candidate ID> doing?`, for example `How is SYN-0873 doing?`. The reply gives the state and who must act, from the record only.
+
+With `MODEL_PROVIDER=claude` the chat also converses, in the language you write in, using read-only tools. Try `¿Qué casos tengo pendientes?`: Claude lists each case with who must act. Then `Aprueba el paquete de SYN-0873`: it refuses and points to the Approval tab. A question about FLSA or a visa is answered "HR decides" without the model.
 
 ## 5. Approval (J2) and restricted data (1 min 30 s)
 

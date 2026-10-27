@@ -44,6 +44,7 @@ def answer(
     asked_by: str,
     channel: str,
     model: ModelClient | None = None,
+    register_unanswered: bool = True,
 ) -> KnowledgeAnswer:
     text = question.strip()
     if not text:
@@ -61,6 +62,8 @@ def answer(
         )
     usable = [r for r in kb.records() if r["status"] != "rejected"]
     record, matched_by = _choose(text, usable, model)
+    if record is None and not register_unanswered:
+        return KnowledgeAnswer(reply="", status="no_answer")
     if record is None:
         pending_id = kb.register_unresolved(
             text, asked_by=asked_by, channel=channel, reason="no_answer"

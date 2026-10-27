@@ -52,7 +52,7 @@ The Coworker never decides worker classification, compensation or legal employme
 - the new-hire information package: company, client and role information from validated knowledge only, sent after the Onboarding Team reviews it (US-031, Could);
 - Culture and Belonging (Could): the LDC tracker handoff with accelerated timing, the welcome kit shipped only after LDC approves it (US-028), and the two-month leader feedback request and congratulation, sent only after LDC approves them and never with restricted data (US-029);
 - a simulated mailbox where new start emails arrive, and a Teams-like chat panel;
-- an optional Claude engine that reads start details written as free text;
+- an optional Claude engine that reads start details written as free text and makes the chat conversational: anything the chat does not route to a start, an answer, a status or a knowledge record, Claude answers in the person's language with read-only tools (my cases, case status, open questions, knowledge), never approving or acting;
 - the Coworker as an MCP server for other chat apps, and the Coworker Tray: Windows notifications for your role's alerts, read over MCP.
 
 ## Agent architecture and orchestration
@@ -166,7 +166,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **Secrets:** no credentials in the repository; the JobDiva token lives in memory and is never logged.
 - **JobDiva:** the Coworker never writes to JobDiva, not even in the sandbox.
 - **Duplicates:** a request or case with the same person and start date is blocked.
-- **Model use:** the Claude engine is optional and reads only start details. FLSA, visa and sponsorship are never sent to the model, and the message is passed as data, never as instructions.
+- **Model use:** the Claude engine is optional. It reads start details, chooses knowledge records and converses in the chat with read-only tools only; it cannot approve, return, reject, assign or act on a system. FLSA, visa and sponsorship questions are answered "HR decides" without the model, restricted sentences are removed before any text reaches it, and messages and tool results are passed as data, never as instructions.
 - **Cost:** model usage stays within the assigned budget and is logged per run.
 - **MCP for other apps:** the Coworker's MCP server can start cases, answer questions and report status, but has no tool to approve, return, reject, assign or act on a system.
 
