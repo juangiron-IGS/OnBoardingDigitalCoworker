@@ -111,8 +111,17 @@ class Orchestrator:
     def knows(self) -> bool:
         return self._knowledge is not None
 
+    @property
+    def model(self) -> ModelClient:
+        return self._model
+
     def ask_knowledge(
-        self, question: str, *, asked_by: str, channel: str
+        self,
+        question: str,
+        *,
+        asked_by: str,
+        channel: str,
+        register_unanswered: bool = True,
     ) -> knowledge_agent.KnowledgeAnswer:
         """Route a process question to the Onboarding Knowledge agent (US-025)."""
         if self._knowledge is None:
@@ -123,6 +132,7 @@ class Orchestrator:
             asked_by=asked_by,
             channel=channel,
             model=self._model,
+            register_unanswered=register_unanswered,
         )
 
     def read_labelled(self, text: str) -> dict[str, str]:

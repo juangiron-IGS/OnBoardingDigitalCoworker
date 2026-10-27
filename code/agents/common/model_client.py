@@ -9,6 +9,7 @@ runtime). MODEL_PROVIDER picks the engine; agents only see ModelClient.
 
 import os
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
@@ -58,6 +59,19 @@ class ModelClient(Protocol):
         words). It only chooses: the answer is always the record's own text."""
         ...
 
+    def converse(
+        self,
+        system: str,
+        message: str,
+        tools: list[dict],
+        run_tool: Callable[[str, dict], str],
+        *,
+        run_id: str,
+    ) -> str | None:
+        """A conversational reply that may call the given read-only tools, or None
+        when this engine does not converse (the chat then shows its help)."""
+        ...
+
 
 class RulesModelClient:
     """Deterministic engine for the synthetic, labelled emails and chat messages."""
@@ -82,6 +96,17 @@ class RulesModelClient:
         self, question: str, records: list[dict], *, run_id: str
     ) -> str | None:
         return None  # no model: the knowledge agent matches words
+
+    def converse(
+        self,
+        system: str,
+        message: str,
+        tools: list[dict],
+        run_tool: Callable[[str, dict], str],
+        *,
+        run_id: str,
+    ) -> str | None:
+        return None  # no model: the chat keeps its fixed replies
 
 
 def read_labelled(text: str, fields: list[str], by_label: dict[str, str]) -> Extraction:
