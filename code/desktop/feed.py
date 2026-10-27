@@ -44,9 +44,15 @@ class AlertFeed:
 
 
 def case_url(base: str, case_id: str | None, role: str) -> str:
-    """The web app opened as the tray's role, on the alert's case in Status."""
+    """The web app in the browser, as the tray's role, on the case in Status."""
     base = f"{base.rstrip('/')}/?role={role}"
     return f"{base}#status/{case_id}" if case_id else f"{base}#dashboard"
+
+
+def window_url(base: str, case_id: str | None, role: str) -> str:
+    """The Coworker window: the chat as its main view, on the alert's case."""
+    base = f"{base.rstrip('/')}/?role={role}&mode=desktop"
+    return f"{base}#chat/{case_id}" if case_id else f"{base}#chat"
 
 
 def title(alert: dict) -> str:

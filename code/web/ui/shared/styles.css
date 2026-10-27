@@ -180,3 +180,14 @@ main { padding-bottom: 96px; }
 .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; align-items: start; }
 .board-case { align-items: flex-start; }
 .link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* Desktop window (?mode=desktop): the chat fills the window; tabs reach the other views. */
+body.desktop { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+body.desktop .top { padding: 8px 12px; gap: 8px; }
+body.desktop .brand span, body.desktop .chat-launcher { display: none; }
+body.desktop .tabs { padding: 0 8px; flex: none; }
+body.desktop .tabs button { padding: 10px 10px; }
+body.desktop main { flex: 1; overflow-y: auto; width: 100%; box-sizing: border-box; padding: 16px 12px 24px; }
+body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
+.chat-window.embedded { position: static; width: 100%; height: 100%; border-radius: 0; box-shadow: none; border: 0; }
+.chat-window.embedded .chat-head .icon-btn { display: none; }

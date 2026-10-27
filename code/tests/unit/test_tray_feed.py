@@ -1,6 +1,6 @@
 """Coworker Tray: only alerts not shown yet are notified, and each opens its case."""
 
-from desktop.feed import AlertFeed, case_url
+from desktop.feed import AlertFeed, case_url, window_url
 
 
 def _alerts(*ids: int) -> list[dict]:
@@ -70,3 +70,11 @@ def test_the_window_docks_above_the_clock() -> None:
 
     assert (x + WIDTH, y + HEIGHT) == (1920 - 12, 1080 - 48 - 12)
     assert docked(400, 300) == (0, 0)  # a small screen keeps it on screen
+
+
+def test_the_window_opens_the_chat_on_the_case() -> None:
+    assert (
+        window_url("http://127.0.0.1:3000", "case-abc", "approver")
+        == "http://127.0.0.1:3000/?role=approver&mode=desktop#chat/case-abc"
+    )
+    assert window_url("http://127.0.0.1:3000", None, "it").endswith("#chat")

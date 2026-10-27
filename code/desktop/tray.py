@@ -17,7 +17,7 @@ import webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-from .feed import ROLES, AlertFeed, case_url, title
+from .feed import ROLES, AlertFeed, case_url, title, window_url
 from .poller import poll, server_params
 from .window import CoworkerWindow
 
@@ -53,7 +53,9 @@ class CoworkerTray:
             self._tooltip(),
             menu=self._menu(),
         )
-        self.window = CoworkerWindow(case_url(app_url, None, role)) if window else None
+        self.window = (
+            CoworkerWindow(window_url(app_url, None, role)) if window else None
+        )
 
     # --- MCP polling, on its own thread with its own event loop ---
 
@@ -145,11 +147,10 @@ class CoworkerTray:
     def _opener(self, case_id: str | None):  # noqa: ANN202
         def open_case(icon, item) -> None:  # noqa: ANN001
             self.feed.mark_seen()
-            url = case_url(self.app_url, case_id, self.role)
             if self.window:
-                self.window.open(url)
+                self.window.open(window_url(self.app_url, case_id, self.role))
             else:
-                webbrowser.open(url)
+                webbrowser.open(case_url(self.app_url, case_id, self.role))
             self._refresh()
 
         return open_case

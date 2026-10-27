@@ -1,5 +1,5 @@
 import { getRole, setCase, setRole } from "./api-client.js";
-import { initChatPanel, openChat, resetAlerts } from "./chat-panel.js";
+import { initChatPanel, mountChat, openChat, resetAlerts, unmountChat } from "./chat-panel.js";
 import { render as inbox } from "../views/inbox/inbox.js";
 import { render as approval } from "../views/approval/approval.js";
 import { render as alerts } from "../views/alerts/alerts.js";
@@ -9,24 +9,44 @@ import { render as dashboard } from "../views/dashboard/dashboard.js";
 
 const VIEWS = { inbox, dashboard, approval, alerts, status, knowledge };
 const main = document.getElementById("view");
+// ?mode=desktop is the Coworker window the desktop tray opens: the chat is its
+// main view, with the other views one tab away.
+const DESKTOP = new URLSearchParams(location.search).get("mode") === "desktop";
+if (DESKTOP) {
+  document.body.classList.add("desktop");
+  const chatTab = document.createElement("button");
+  chatTab.setAttribute("role", "tab");
+  chatTab.dataset.view = "chat";
+  chatTab.textContent = "Chat";
+  document.querySelector(".tabs").prepend(chatTab);
+  VIEWS.chat = (root, _show, caseId) => mountChat(root, caseId);
+  document.addEventListener("chat-unread", (event) => {
+    chatTab.textContent = event.detail ? `Chat (${event.detail})` : "Chat";
+  });
+}
+const DEFAULT_VIEW = DESKTOP ? "chat" : "inbox";
 const tabs = [...document.querySelectorAll(".tabs button")];
 const roleSelect = document.getElementById("role");
 
 export async function show(name) {
-  // The chat is a panel over every view; #chat opens it over the inbox.
-  if (name === "chat") {
-    openChat();
+  // #status/<case id> or #chat/<case id> opens a case directly (desktop tray links).
+  const [viewName, rawCase] = (name || DEFAULT_VIEW).split("/");
+  const caseId = rawCase ? decodeURIComponent(rawCase) : undefined;
+  if (caseId) setCase(caseId);
+  // Outside the desktop window the chat is a panel over every view.
+  if (viewName === "chat" && !DESKTOP) {
+    openChat(caseId);
     name = "inbox";
+  } else {
+    name = viewName;
   }
-  // #status/<case id> opens a case directly, as the desktop tray's links do.
-  const [viewName, caseId] = name.split("/");
-  if (caseId) setCase(decodeURIComponent(caseId));
-  name = viewName;
-  const view = VIEWS[name] ? name : "inbox";
+  const view = VIEWS[name] ? name : DEFAULT_VIEW;
   tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.view === view)));
   if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
+  unmountChat();
   main.replaceChildren();
-  await VIEWS[view](main, show);
+  main.classList.toggle("chat-main", view === "chat");
+  await VIEWS[view](main, show, caseId);
 }
 
 tabs.forEach((tab) => tab.addEventListener("click", () => show(tab.dataset.view)));
