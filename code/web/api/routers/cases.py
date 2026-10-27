@@ -87,6 +87,28 @@ def approve_it_request(
         ) from None
 
 
+class HrAnswer(BaseModel):
+    field: Literal["flsa", "employment_type"]
+    value: str = Field(min_length=1, max_length=60)
+
+
+@router.post("/{case_id}/hr-answer")
+def record_hr_answer(
+    case_id: str, body: HrAnswer, coworker: Coworker, role: Role
+) -> dict:
+    """The Onboarding Team records HR's answer to an escalated conflict (US-027)."""
+    if role != "onboarding":
+        raise HTTPException(403, detail="Only the Onboarding Team records HR's answer")
+    try:
+        return coworker.record_hr_answer(
+            case_id, body.field, body.value.strip(), recorded_by=role
+        )
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc)) from None
+    except GovernanceError as refusal:
+        raise HTTPException(409, detail={"refused": refusal.reason}) from None
+
+
 @router.post("/{case_id}/decision")
 def decide(
     case_id: str, body: Decision, coworker: Coworker, cases: Cases, role: Role

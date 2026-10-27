@@ -39,6 +39,37 @@ export async function render(root, show) {
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
+// US-027: HR decides FLSA and classification; the Onboarding Team records the answer.
+const HR_FIELDS = { flsa: ["Exempt", "Non-exempt"], employment_type: null };
+
+function hrCard(lines, caseId, show) {
+  const feedback = el("div");
+  const forms = lines.map((line) => {
+    const choices = HR_FIELDS[line.field];
+    const input = choices
+      ? el("select", { "aria-label": `HR's answer for ${FIELD_NAMES[line.field]}` }, choices.map((c) => el("option", { value: c }, c)))
+      : el("input", { type: "text", maxlength: "60", "aria-label": `HR's answer for ${FIELD_NAMES[line.field]}` });
+    const save = async () => {
+      feedback.replaceChildren();
+      try {
+        const outcome = await api.hrAnswer(caseId, line.field, input.value);
+        feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
+          `HR's answer recorded. Package v${outcome.package_version} was rebuilt and is ready for the approver.`));
+        setTimeout(() => show("approval"), 1500);
+      } catch (error) {
+        feedback.replaceChildren(errorNotice(error));
+      }
+    };
+    return el("div", { class: "actions" }, el("span", {}, FIELD_NAMES[line.field] || line.field), input,
+      el("button", { class: "btn primary", type: "button", onclick: save }, "Record HR's answer"));
+  });
+  return el("div", {},
+    el("h3", {}, "Escalated to HR"),
+    el("p", { class: "lead" }, "The Coworker does not decide FLSA or classification. Record HR's decision to rebuild the package."),
+    getRole() === "onboarding" ? forms : el("p", { class: "lead" }, "Switch to the Onboarding Team role to record HR's answer."),
+    feedback);
+}
+
 // US-020 AC-002: the laptop request goes to Chelsea Tech only after IT and the approver approve.
 function itCard(view, pkg, caseId, show) {
   const feedback = el("div");
@@ -108,6 +139,8 @@ async function drawPackage(root, caseId, show) {
         el("td", { class: "mono" }, line.source_or_rule_id))))))
   ].filter(Boolean));
 
+  const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
+  if (escalated.length) root.append(hrCard(escalated, caseId, show));
   root.append(ownerCard(view, caseId, show));
   if (lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
 

@@ -59,7 +59,7 @@ Open **Status**:
 ## 7. Guardrails (1 min)
 
 1. **Duplicate:** in the inbox, simulate *SYN-0042 - Data Analyst*, then *Start confirmation - SYN-0042*. The second one is blocked and names the existing case.
-2. **FLSA conflict:** simulate *SYN-0045* (`05_flsa_conflict`). The start email says Non-exempt and JobDiva says Exempt. The Coworker selects no value, escalates to the Onboarding Team and HR, and the package is **blocked**: *Approve* stays disabled.
+2. **FLSA conflict:** simulate *SYN-0045* (`05_flsa_conflict`). The start email says Non-exempt and JobDiva says Exempt. The Coworker selects no value, escalates to the Onboarding Team and HR, and the package is **blocked**: *Approve* stays disabled. Then select **Onboarding Team**, choose HR's answer under **Escalated to HR** and press **Record HR's answer**: the package is rebuilt as v2, the FLSA line cites **HR**, and v2 can be approved.
 3. **Already in JobDiva:** in the chat, send `Candidate ID: SYN-0040` and `Start date: 2026-11-02` on two lines. It is blocked: that person is already onboarding in JobDiva.
 
 ## 8. Close (20 s)

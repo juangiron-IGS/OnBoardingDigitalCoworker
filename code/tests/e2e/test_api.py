@@ -343,3 +343,22 @@ def test_claude_engine_without_a_key_is_a_clear_503(client, monkeypatch) -> None
 
     assert response.status_code == 503
     assert "ANTHROPIC_API_KEY" in response.json()["detail"]
+
+
+def test_onboarding_team_records_hr_answer(client) -> None:
+    # US-027, through the API
+    case_id = _process(client, "05_flsa_conflict")["case_id"]
+
+    refused = client.post(
+        f"/api/cases/{case_id}/hr-answer",
+        json={"field": "flsa", "value": "Exempt"},
+        headers=_as("recruiter"),
+    )
+    recorded = client.post(
+        f"/api/cases/{case_id}/hr-answer",
+        json={"field": "flsa", "value": "Exempt"},
+        headers=_as("onboarding"),
+    )
+
+    assert refused.status_code == 403
+    assert recorded.json() == {"state": "ready_for_review", "package_version": 2}

@@ -113,3 +113,73 @@ def test_duplicate_already_onboarding_in_jobdiva_is_blocked(coworker) -> None:
 
     assert reply.state == "blocked_duplicate"
     assert "jobdiva:JD-START-1040" in reply.reply
+
+
+def _lines_of(app_conn, case_id: str, version: int) -> dict:
+    return {
+        field: (value, label, source)
+        for field, value, label, source in app_conn.execute(
+            "SELECT field, value, label, source_or_rule_id FROM package_lines"
+            " WHERE case_id = %s AND version = %s",
+            (case_id, version),
+        ).fetchall()
+    }
+
+
+def test_hr_answer_resolves_the_conflict_in_a_new_version(app_conn, coworker) -> None:
+    # US-027 AC-001: HR's answer is recorded and the recommendations are refreshed
+    result = _start(coworker, "05_flsa_conflict")
+
+    outcome = coworker.record_hr_answer(
+        result.case_id, "flsa", "Exempt", recorded_by="onboarding"
+    )
+
+    lines = _lines_of(app_conn, result.case_id, 2)
+    status = app_conn.execute(
+        "SELECT status FROM package_versions WHERE case_id = %s AND version = 2",
+        (result.case_id,),
+    ).fetchone()[0]
+    assert outcome == {"state": "ready_for_review", "package_version": 2}
+    assert lines["flsa"] == ("Exempt", "source", "HR")
+    assert status == "ready"
+    assert not any(label == "exception" for _, label, _ in lines.values())
+
+
+def test_hr_answer_is_audited_by_field_name_only(app_conn, coworker) -> None:
+    # BR-011: the audit names the field, never the FLSA value
+    result = _start(coworker, "05_flsa_conflict")
+
+    coworker.record_hr_answer(
+        result.case_id, "flsa", "Exempt", recorded_by="onboarding"
+    )
+
+    agent, data_refs = app_conn.execute(
+        "SELECT agent, data_refs FROM audit_log"
+        " WHERE case_id = %s AND action = 'record_answers' ORDER BY id DESC",
+        (result.case_id,),
+    ).fetchone()
+    assert agent == "onboarding"
+    assert data_refs["flsa"] == "HR"
+    assert "Exempt" not in str(data_refs)
+
+
+def test_new_version_can_be_approved_after_the_hr_answer(coworker) -> None:
+    result = _start(coworker, "05_flsa_conflict")
+    coworker.record_hr_answer(
+        result.case_id, "flsa", "Exempt", recorded_by="onboarding"
+    )
+
+    outcome = coworker.decide(
+        result.case_id, package_version=2, decision="approve", approver_role="approver"
+    )
+
+    assert outcome["state"] == "actions_executed"
+
+
+def test_hr_answer_needs_an_open_conflict(coworker) -> None:
+    result = _start(coworker, "05_flsa_conflict")
+
+    with pytest.raises(ValueError, match="no open conflict"):
+        coworker.record_hr_answer(
+            result.case_id, "employment_type", "W-2", recorded_by="onboarding"
+        )
