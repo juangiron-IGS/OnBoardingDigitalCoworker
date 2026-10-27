@@ -111,7 +111,6 @@ def status(orch: "Orchestrator", ref: str) -> ChatReply:
     if case_id is None:
         return ChatReply(reply=f"Information not available: I have no case for {ref}.")
     state = orch.cases.case_state(case_id)
-    person = orch.cases.case_data(case_id).get("person_ref", case_id)
     orch.cases.log_action(
         case_id,
         agent="orchestrator",
@@ -119,7 +118,7 @@ def status(orch: "Orchestrator", ref: str) -> ChatReply:
         data_refs={"state": "case record"},
     )
     return ChatReply(
-        reply=f"{person} ({case_id}) is {STATE_LABELS.get(state, state.value)}: "
+        reply=f"{orch.label(case_id)} is {STATE_LABELS.get(state, state.value)}: "
         f"{_who_acts(orch, case_id, state)}.",
         case_id=case_id,
         state=state.value,
@@ -152,11 +151,14 @@ def _start(orch: "Orchestrator", text: str) -> ChatReply:
     if result.state == "blocked_duplicate":
         return ChatReply(
             reply="I did not create a new case: one already exists for this person "
-            f"and start date ({result.blocked_by}).",
+            f"and start date ({result.label}).",
             state=result.state,
         )
     return _next_step(
-        orch, result.case_id, result.state, prefix=f"I created case {result.case_id}. "
+        orch,
+        result.case_id,
+        result.state,
+        prefix=f"I created the case for {result.label}. ",
     )
 
 
