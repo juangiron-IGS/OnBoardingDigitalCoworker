@@ -194,7 +194,7 @@ function itCard(view, pkg, caseId, show) {
   };
   return el("div", { "data-pending": getRole() === "it" && !view.case.it_approved },
     el("h3", {}, "IT approval of the laptop and access request"),
-    el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}.`),
+    el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}. The request goes to Chelsea Tech once IT and the package are both approved.`),
     getRole() === "it" && !view.case.it_approved
       ? el("div", { class: "actions" }, el("button", { class: "btn primary", onclick: approve }, `Approve request for v${pkg.version}`))
       : null,
@@ -293,7 +293,9 @@ async function drawPackage(root, caseId, show) {
   if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, refresh));
   if (role === "approver") root.append(ownerCard(view, caseId, refresh, (await api.team().catch(() => ({ members: [] }))).members));
   if (role === "onboarding") root.append(reviewCard(view, lines, caseId, refresh));
-  if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
+  // The approver sees IT's step only while it is still open; once IT approved,
+  // the package approval is all that is left.
+  if ((role === "it" || (role === "approver" && !view.case.it_approved)) && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
   if (role === "ldc" && view.records.some((r) => r.system === "ldc_tracker")) root.append(igsCard(view, caseId, refresh));
   if (role !== "approver") return;
 
@@ -316,7 +318,7 @@ async function drawPackage(root, caseId, show) {
   };
   root.append(...[
     el("div", { class: "actions" },
-      el("button", { class: "btn primary decision", disabled: !canDecide, onclick: decide("approve") }, `Approve v${pkg.version}`),
+      el("button", { class: "btn primary decision", disabled: !canDecide, onclick: decide("approve") }, `Approve package v${pkg.version}`),
       el("button", { class: "btn decision", disabled: !canDecide, onclick: decide("return") }, "Return for correction"),
       el("button", { class: "btn danger decision", disabled: !canDecide, onclick: decide("reject") }, "Reject")),
     feedback,
