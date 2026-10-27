@@ -158,7 +158,10 @@ async function pickCase(caseId) {
     const view = await api.case(caseId);
     const next = view.questions[0];
     const name = view.case.person_ref;
-    if (next) {
+    if (next && getRole() !== "recruiter") {
+      // Only the recruiter who sent the email answers the start-data questions.
+      push("bot", `Back to ${name}. It is waiting for the recruiter to answer: ${view.questions.map((q) => q.label).join(", ")}.`);
+    } else if (next) {
       const ask = next.kind === "missing"
         ? `What is the ${next.label}?`
         : `Two different values were given for ${next.label}. Which one is right?`;

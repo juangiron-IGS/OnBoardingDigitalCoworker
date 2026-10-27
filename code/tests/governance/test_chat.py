@@ -176,3 +176,14 @@ def test_status_lists_each_pending_item_with_its_team(coworker) -> None:
         answer.reply
     )
     assert "Approver to decide on package v1" in answer.reply
+
+
+def test_only_the_recruiter_answers_the_start_questions(coworker) -> None:
+    # US-004: another role is told the recruiter must answer; nothing is stored
+    case_id = coworker.chat(START).case_id
+
+    reply = coworker.chat("61.00 USD/h", case_id=case_id, asked_by="ldc")
+
+    assert "waiting for the recruiter to answer" in reply.reply
+    assert "Bill rate" in reply.reply
+    assert "bill_rate" not in coworker.cases.case_data(case_id)
