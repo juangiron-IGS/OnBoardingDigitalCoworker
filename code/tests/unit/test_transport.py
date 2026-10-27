@@ -2,9 +2,15 @@
 
 import pytest
 
-from agents.common.mcp_adapters import McpAlerts, McpJobDivaRead, McpJobDivaWorkflow
+from agents.common.mcp_adapters import (
+    McpAlerts,
+    McpJobDivaRead,
+    McpJobDivaWorkflow,
+    McpKnowledge,
+)
 from mcp_servers.jobdiva_read.adapters.mock import MockJobDiva
 from mcp_servers.jobdiva_workflow.service import WorkflowService
+from mcp_servers.mocks.knowledge.service import KnowledgeService
 from mcp_servers.mocks.teams.service import AlertsService
 from web.api.transport import load_transport, mcp_urls, systems
 
@@ -24,6 +30,7 @@ def test_in_process_uses_the_services_directly() -> None:
     assert isinstance(wired.jobdiva, MockJobDiva)
     assert isinstance(wired.alerts, AlertsService)
     assert isinstance(wired.workflow, WorkflowService)
+    assert isinstance(wired.knowledge, KnowledgeService)
 
 
 def test_mcp_uses_the_adapters() -> None:
@@ -32,6 +39,7 @@ def test_mcp_uses_the_adapters() -> None:
     assert isinstance(wired.jobdiva, McpJobDivaRead)
     assert isinstance(wired.alerts, McpAlerts)
     assert isinstance(wired.workflow, McpJobDivaWorkflow)
+    assert isinstance(wired.knowledge, McpKnowledge)
 
 
 def test_mcp_urls_come_from_the_environment() -> None:
@@ -40,3 +48,4 @@ def test_mcp_urls_come_from_the_environment() -> None:
     assert urls["jobdiva-read"] == "http://127.0.0.1:9101/mcp"
     assert urls["jobdiva-workflow"] == "http://127.0.0.1:8106/mcp"
     assert urls["teams-mock"] == "http://127.0.0.1:8108/mcp"
+    assert urls["knowledge-mock"] == "http://127.0.0.1:8109/mcp"

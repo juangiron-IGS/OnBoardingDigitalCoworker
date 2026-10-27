@@ -11,7 +11,7 @@ From `code/` in Git Bash:
 ./scripts/start.sh     # starts the MCP servers and the web app, then runs the health check
 ```
 
-Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp`, `JOBDIVA_MODE=mock` and `FEATURE_ACCESS_EQUIPMENT=true`.
+Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok, knowledge-mock ok, onboarding-coworker ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp`, `JOBDIVA_MODE=mock` and `FEATURE_ACCESS_EQUIPMENT=true`.
 
 ## 1. The problem in one sentence (20 s)
 
@@ -62,7 +62,14 @@ Open **Status**:
 2. **FLSA conflict:** simulate *SYN-0045* (`05_flsa_conflict`). The start email says Non-exempt and JobDiva says Exempt. The Coworker selects no value, escalates to the Onboarding Team and HR, and the package is **blocked**: *Approve* stays disabled. Then select **Onboarding Team**, choose HR's answer under **Escalated to HR** and press **Record HR's answer**: the package is rebuilt as v2, the FLSA line cites **HR**, and v2 can be approved.
 3. **Already in JobDiva:** in the chat, send `Candidate ID: SYN-0040` and `Start date: 2026-11-02` on two lines. It is blocked: that person is already onboarding in JobDiva.
 
-## 8. Close (20 s)
+## 8. Onboarding knowledge (1 min)
+
+1. Select **Onboarding Team** and open **Knowledge**. Ask *Which forms does a hire in Philadelphia need?*: the answer cites **KB-005** and says it is an *unvalidated draft*.
+2. Press **Validate** on KB-005 and ask again: the same answer is now *Validated by the Onboarding Team*.
+3. Ask *Which forms does a hire in Ohio need?*: the Coworker has no validated answer and the question appears under **Pending for the Onboarding Team**.
+4. In the chat panel, ask *How do I request a laptop for my new hire?*: the Onboarding Knowledge agent answers from **KB-003**. A question about FLSA or classification is never answered: it is logged for HR without keeping the text.
+
+## 9. Close (20 s)
 
 > "Human approval before any action, no legal decisions, synthetic data only, and the JobDiva connector only reads. The rules are data the business owns, and a model engine plugs in without changing the agents."
 

@@ -8,11 +8,17 @@ from urllib.parse import urlsplit
 
 import psycopg
 
-from agents.common.mcp_adapters import McpAlerts, McpJobDivaRead, McpJobDivaWorkflow
+from agents.common.mcp_adapters import (
+    McpAlerts,
+    McpJobDivaRead,
+    McpJobDivaWorkflow,
+    McpKnowledge,
+)
 from agents.common.mcp_client import McpToolClient
-from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
+from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow, KnowledgeBase
 from mcp_servers.jobdiva_read.adapters.mock import MockJobDiva
 from mcp_servers.jobdiva_workflow.service import WorkflowService
+from mcp_servers.mocks.knowledge.service import KnowledgeService
 from mcp_servers.mocks.teams.service import AlertsService
 
 TRANSPORTS = frozenset({"in_process", "mcp"})
@@ -22,6 +28,7 @@ _SERVERS = {
     "jobdiva-read": ("JOBDIVA_MOCK_URL", "http://127.0.0.1:8101"),
     "jobdiva-workflow": ("JOBDIVA_WORKFLOW_URL", "http://127.0.0.1:8106"),
     "teams-mock": ("TEAMS_MOCK_URL", "http://127.0.0.1:8108"),
+    "knowledge-mock": ("KNOWLEDGE_BASE_MOCK_URL", "http://127.0.0.1:8109"),
     # The Coworker itself, for other chat apps; checked by the health endpoint only.
     "onboarding-coworker": ("COWORKER_MCP_URL", "http://127.0.0.1:8110"),
 }
@@ -35,6 +42,7 @@ class Systems:
     jobdiva: JobDivaRead
     alerts: Alerts
     workflow: JobDivaWorkflow
+    knowledge: KnowledgeBase
 
 
 def load_transport(env: Mapping[str, str]) -> str:
@@ -57,6 +65,7 @@ def systems(env: Mapping[str, str], conn: psycopg.Connection | None) -> Systems:
             jobdiva=_mock_jobdiva,
             alerts=AlertsService(conn),
             workflow=WorkflowService(conn),
+            knowledge=KnowledgeService(conn),
         )
     clients = {
         name: McpToolClient(url, name=name) for name, url in mcp_urls(env).items()
@@ -65,6 +74,7 @@ def systems(env: Mapping[str, str], conn: psycopg.Connection | None) -> Systems:
         jobdiva=McpJobDivaRead(clients["jobdiva-read"]),
         alerts=McpAlerts(clients["teams-mock"]),
         workflow=McpJobDivaWorkflow(clients["jobdiva-workflow"]),
+        knowledge=McpKnowledge(clients["knowledge-mock"]),
     )
 
 

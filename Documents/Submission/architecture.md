@@ -14,26 +14,30 @@ flowchart LR
             Policy["Policy and Case Setup"]
             WF["JobDiva and Workflow"]
             Access["Access and Equipment (Should)<br/>FEATURE_ACCESS_EQUIPMENT"]
+            Know["Onboarding Knowledge (Should)<br/>cites the record · drafts labelled"]
             Model["Model client<br/>engine: rules (no model)<br/>usage meter"]
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
-        Rules[("Rules catalog<br/>YAML: paperwork, path, kit,<br/>owner, overhead, intake labels")]
+        Rules[("Rules catalog<br/>YAML: paperwork, path, kit,<br/>owner, overhead, intake labels,<br/>knowledge records")]
         Mail["Outlook mock<br/>synthetic .eml"]
         Client["MCP client<br/>refusals keep their reason"]
     end
 
-    DB[("PostgreSQL 16 (Docker)<br/>cases · package versions · approvals<br/>audit_log (insert-only) · action_ledger<br/>mocks: jobdiva_cases · task_lists · alerts")]
+    DB[("PostgreSQL 16 (Docker)<br/>cases · package versions · approvals<br/>audit_log (insert-only) · action_ledger<br/>mocks: jobdiva_cases · task_lists · alerts ·<br/>knowledge_validations · knowledge_questions")]
 
     subgraph MCP["MCP servers (one process each, streamable HTTP on 127.0.0.1)"]
         S1["jobdiva-read :8101<br/>mock or read-only sandbox<br/>no write tools"]
         S2["jobdiva-workflow :8106<br/>single writer: re-verifies<br/>approval + version"]
         S3["teams-mock :8108<br/>alerts"]
+        S4["knowledge-mock :8109<br/>records · validations ·<br/>pending questions"]
     end
 
     Browser --> API --> Orch
     Orch --> Intake --> Model
     Orch --> Policy --> Rules
     Orch --> Access --> Rules
+    Orch --> Know
+    Know --> Client
     Orch --> Case
     WF --> Client
     Orch --> WF
@@ -41,6 +45,8 @@ flowchart LR
     Client -- MCP --> S1
     Client -- MCP --> S2
     Client -- MCP --> S3
+    Client -- MCP --> S4
+    S4 --> Rules
     API --> Mail
     Case --> DB
     S2 --> DB

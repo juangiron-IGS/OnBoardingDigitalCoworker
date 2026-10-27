@@ -1,5 +1,6 @@
 """The chat channel of the Orchestrator: start a case (US-002), ask one question at a
-time (US-003) and answer status questions from the case record only (US-019)."""
+time (US-003), answer status questions from the case record only (US-019) and route
+process questions to the Onboarding Knowledge agent (US-025)."""
 
 import re
 from dataclasses import dataclass
@@ -11,12 +12,18 @@ if TYPE_CHECKING:
     from .orchestrator import Orchestrator
 
 CASE_REF = re.compile(r"\b(SYN-\d+|case-[0-9a-f]{12})\b", re.IGNORECASE)
+QUESTION = re.compile(
+    r"\?\s*$|^(how|what|which|where|when|who|why|can|do|does|is|are|should)\b",
+    re.IGNORECASE,
+)
+ABOUT_CASE = re.compile(r"\b(status|doing|going|stuck)\b|\bthis case\b", re.IGNORECASE)
 
 HELP = (
     "I can start an onboarding case or tell you how one is going. To start one, send "
     "the start details with at least the Candidate ID and the Start date (YYYY-MM-DD); "
     "'Label: value' lines always work. To ask about a case, include its candidate ID, "
-    "for example: How is SYN-0043 doing?"
+    "for example: How is SYN-0043 doing? You can also ask an onboarding process "
+    "question, for example: Which forms does a W-2 hire in Texas need?"
 )
 
 STATE_LABELS = {
@@ -41,7 +48,13 @@ class ChatReply:
     asking: str | None = None
 
 
-def respond(orch: "Orchestrator", message: str, case_id: str | None) -> ChatReply:
+def respond(
+    orch: "Orchestrator",
+    message: str,
+    case_id: str | None,
+    *,
+    asked_by: str = "recruiter",
+) -> ChatReply:
     text = message.strip()
     if not text:
         raise ValueError("message is empty")
@@ -54,6 +67,10 @@ def respond(orch: "Orchestrator", message: str, case_id: str | None) -> ChatRepl
     ref = CASE_REF.search(text)
     if ref:
         return status(orch, ref.group(1))
+    about_case = case_id and ABOUT_CASE.search(text)
+    if orch.knows and QUESTION.search(text) and not about_case:
+        answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
+        return ChatReply(reply=answer.reply, case_id=case_id)
     if case_id:
         return status(orch, case_id)
     return ChatReply(reply=HELP)

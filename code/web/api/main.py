@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from agents.common.model_client import ModelNotConfigured
 
-from .routers import alerts, cases, health, inbox
+from .routers import alerts, cases, health, inbox, knowledge
 
 UI = Path(__file__).resolve().parents[1] / "ui"
 
@@ -19,6 +19,7 @@ app.include_router(inbox.router)
 app.include_router(cases.router)
 app.include_router(alerts.router)
 app.include_router(health.router)
+app.include_router(knowledge.router)
 app.include_router(cases.chat_router)
 
 

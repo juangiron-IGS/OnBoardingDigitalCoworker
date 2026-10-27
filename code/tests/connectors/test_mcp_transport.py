@@ -11,11 +11,18 @@ from datetime import date
 import psycopg
 import pytest
 
-from agents.common.mcp_adapters import McpAlerts, McpJobDivaRead, McpJobDivaWorkflow
+from agents.common.mcp_adapters import (
+    McpAlerts,
+    McpJobDivaRead,
+    McpJobDivaWorkflow,
+    McpKnowledge,
+)
 from agents.common.mcp_client import McpCallFailed, McpToolClient
-from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
+from agents.onboarding_knowledge import agent as knowledge_agent
+from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow, KnowledgeBase
 from mcp_servers.jobdiva_read import server as jobdiva_read_server
 from mcp_servers.jobdiva_workflow import server as workflow_server
+from mcp_servers.mocks.knowledge import server as knowledge_server
 from mcp_servers.mocks.teams import server as teams_server
 from services.case_service.application.create_case import CaseIntake
 from services.case_service.domain.case import CaseState
@@ -76,6 +83,7 @@ def test_adapters_fulfil_the_contracts() -> None:
         McpJobDivaRead(McpToolClient(jobdiva_read_server.server)), JobDivaRead
     )
     assert isinstance(McpAlerts(McpToolClient(teams_server.server)), Alerts)
+    assert isinstance(_knowledge(), KnowledgeBase)
 
 
 def test_approved_action_runs_over_mcp(committed_conn, approved) -> None:
@@ -135,3 +143,25 @@ def test_unreachable_server_fails_visibly() -> None:
 
     with pytest.raises(McpCallFailed, match="nowhere"):
         client.call("search_duplicate", {"person_ref": "x", "start_date": "2026-11-02"})
+
+
+def _knowledge() -> McpKnowledge:
+    return McpKnowledge(McpToolClient(knowledge_server.server))
+
+
+def test_knowledge_answer_over_mcp() -> None:
+    # US-025 over the knowledge-mock server: the record is cited
+    answer = knowledge_agent.answer(
+        "Who approves the onboarding package?",
+        _knowledge(),
+        asked_by="recruiter",
+        channel="mcp",
+    )
+
+    assert answer.record_id == "KB-004"
+    assert answer.status == "validated"
+
+
+def test_unknown_record_over_mcp_is_refused() -> None:
+    with pytest.raises(KeyError):
+        _knowledge().validate("KB-999", "validated", decided_by="onboarding")

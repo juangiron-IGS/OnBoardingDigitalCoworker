@@ -46,6 +46,9 @@ export const api = {
   hrAnswer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/hr-answer`, { field, value }),
   review: (id, field, action, values) => call("POST", `/api/cases/${encodeURIComponent(id)}/recommendation`, { field, action, values: values || [] }),
   chat: (message, caseId) => call("POST", "/api/chat", { message, case_id: caseId || null }),
+  knowledge: () => call("GET", "/api/knowledge"),
+  askKnowledge: (question) => call("POST", "/api/knowledge/ask", { question }),
+  validateKnowledge: (id, decision) => call("POST", `/api/knowledge/${encodeURIComponent(id)}/validation`, { decision }),
   alerts: (caseId) => call("GET", `/api/alerts${caseId ? `?case_id=${encodeURIComponent(caseId)}` : ""}`),
 };
 

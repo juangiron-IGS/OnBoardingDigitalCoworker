@@ -378,3 +378,68 @@ def test_onboarding_team_changes_the_paperwork(client) -> None:
 
     assert refused.status_code == 403
     assert changed.json() == {"state": "ready_for_review", "package_version": 2}
+
+
+def test_chat_answers_a_process_question_from_knowledge(client) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "How do I request a laptop for a new hire?"},
+        headers=_as("recruiter"),
+    )
+
+    assert response.status_code == 200
+    assert "Source: KB-003" in response.json()["reply"]
+
+
+def test_chat_with_a_case_still_answers_status(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    reply = client.post(
+        "/api/chat",
+        json={"message": "How is it going?", "case_id": case_id},
+        headers=_as("recruiter"),
+    ).json()["reply"]
+
+    assert "Ready for review" in reply
+
+
+def test_knowledge_view_lists_records_and_pending_questions(client) -> None:
+    asked = client.post(
+        "/api/knowledge/ask",
+        json={"question": "Which forms does a hire in Ohio need?"},
+        headers=_as("recruiter"),
+    ).json()
+
+    view = client.get("/api/knowledge", headers=_as("recruiter")).json()
+
+    assert asked["status"] == "no_answer"
+    assert {r["id"] for r in view["records"]} >= {"KB-001", "KB-005"}
+    assert view["pending"][0]["id"] == asked["pending_id"]
+
+
+def test_only_the_onboarding_team_validates_knowledge(client) -> None:
+    refused = client.post(
+        "/api/knowledge/KB-005/validation",
+        json={"decision": "validated"},
+        headers=_as("recruiter"),
+    )
+    validated = client.post(
+        "/api/knowledge/KB-005/validation",
+        json={"decision": "validated"},
+        headers=_as("onboarding"),
+    )
+    unknown = client.post(
+        "/api/knowledge/KB-999/validation",
+        json={"decision": "validated"},
+        headers=_as("onboarding"),
+    )
+    bad = client.post(
+        "/api/knowledge/KB-005/validation",
+        json={"decision": "maybe"},
+        headers=_as("onboarding"),
+    )
+
+    assert refused.status_code == 403
+    assert validated.json() == {"record_id": "KB-005", "status": "validated"}
+    assert unknown.status_code == 404
+    assert bad.status_code == 400
