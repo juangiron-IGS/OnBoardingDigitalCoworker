@@ -7,6 +7,21 @@ Documents/HackatonDocuments/*.pptx
 .claude/*
 !.claude/rules/
 !.claude/settings.json
+# QA skills written for this project (the rest of the installed toolkit stays local)
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/api-testing/
+!.claude/skills/bug-reporting/
+!.claude/skills/ci-github-actions/
+!.claude/skills/perf-timing/
+!.claude/skills/pytest-coworker-testing/
+!.claude/skills/run-coworker-locally/
+!.claude/skills/secret-scan/
+!.claude/skills/security-accessibility/
+!.claude/skills/test-cases-maintenance/
+!.claude/skills/test-data/
+!.claude/skills/traceability-check/
+!.claude/skills/ui-manual-walkthrough/
 
 # Secrets
 .env
