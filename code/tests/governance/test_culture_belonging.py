@@ -180,3 +180,23 @@ def test_a_draft_with_restricted_words_is_not_produced() -> None:
     drafts = igs_agent.drafts({"role": "Exempt analyst"}, RulesCatalog([leaky]))
 
     assert drafts == []
+
+
+def test_the_congratulation_goes_to_the_candidate(app_conn, coworker, case_id) -> None:
+    # R-IG-03: the congratulation is addressed and sent to the new hire, the
+    # feedback request to the hiring manager
+    coworker.run_igs_schedule(case_id, at_days=60)
+    messages = {m["kind"]: m for m in coworker.cases.leader_messages(case_id)}
+    congratulation = messages["congratulation"]
+
+    coworker.approve_leader_message(case_id, congratulation["id"], approved_by="ldc")
+    to_candidate = app_conn.execute(
+        "SELECT count(*) FROM mocks.alerts"
+        " WHERE case_id = %s AND recipient = 'Candidate' AND text = %s",
+        (case_id, congratulation["text"]),
+    ).fetchone()[0]
+
+    assert messages["feedback_request"]["recipient"] == "Pat Example"
+    assert congratulation["recipient"] == "Jordan Synthetic"
+    assert congratulation["text"].startswith("Congratulations, Jordan Synthetic,")
+    assert to_candidate == 1

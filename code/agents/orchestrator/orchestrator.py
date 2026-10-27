@@ -533,9 +533,8 @@ class Orchestrator:
         rule = self._catalog.get(entry["rule_id"])
         if at_days < int(rule.result["feedback_after_days"]):
             return []
-        leader = str(data.get("manager") or "Hiring manager")
         drafts = [
-            (kind, leader, text, rule_id)
+            (kind, self._message_recipient(data, rule_id), text, rule_id)
             for kind, text, rule_id in igs_agent.drafts(data, self._catalog)
         ]
         if not drafts:
@@ -561,8 +560,22 @@ class Orchestrator:
         message = self._cases.mark_leader_message_sent(
             case_id, message_id, agent=igs_agent.AGENT
         )
-        notifications.notify(self._alerts, case_id, LEADER, message["text"])
+        to = CANDIDATE if self._goes_to_candidate(message["kind"]) else LEADER
+        notifications.notify(self._alerts, case_id, to, message["text"])
         return {"message_id": message_id, "status": "sent"}
+
+    def _goes_to_candidate(self, kind: str) -> bool:
+        """The IGS rule of this message kind says who receives it (R-IG-02, R-IG-03)."""
+        return any(
+            r.result.get("kind") == kind and r.result.get("to") == "candidate"
+            for r in self._catalog.rules("igs")
+        )
+
+    def _message_recipient(self, data: dict, rule_id: str) -> str:
+        """The leader for a feedback request; the candidate for a congratulation."""
+        if self._catalog.get(rule_id).result.get("to") == "candidate":
+            return str(data.get("candidate_name") or data.get("person_ref"))
+        return str(data.get("manager") or "Hiring manager")
 
     def _equipment_lines(self, data: dict) -> list:
         """S1 lines; a failing Should agent adds an exception and never stops J1."""
