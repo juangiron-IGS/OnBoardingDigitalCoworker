@@ -59,3 +59,10 @@ rules:
     status: draft
     when: {employment_type: Corp-to-corp}
     result: {form: "Vendor services agreement"}
+  - id: R-PA-10
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {client: Acme Synthetic}
+    result: {form: "Acme Synthetic confidentiality agreement"}
+    note: Client form. Acme Synthetic asks every placed consultant to sign it.

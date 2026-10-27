@@ -16,7 +16,13 @@ from .application.it_approval import record_it_approval
 from .application.move_case import move_case
 from .domain.case import CaseState
 from .domain.package import PackageLine
-from .domain.privacy import HIDDEN, RESTRICTED_FIELDS, can_see_restricted, redact
+from .domain.privacy import (
+    HIDDEN,
+    RESTRICTED_FIELDS,
+    can_see_restricted,
+    redact,
+    reveals_restricted,
+)
 from .ports.duplicate_search import DuplicateSearch
 
 
@@ -316,6 +322,10 @@ class LocalCaseService:
             for line in view["package"]["lines"]:
                 if line["field"] in RESTRICTED_FIELDS:
                     line["value"] = HIDDEN
+                elif reveals_restricted(line["value"]):
+                    # The form and its rule would reveal the FLSA status.
+                    line["value"] = HIDDEN
+                    line["source_or_rule_id"] = HIDDEN
         for record in view["records"]:  # the payroll package carries FLSA
             record["data"] = redact(record["data"], role)
         view["checklist"] = self._followup.checklist(case_id)
