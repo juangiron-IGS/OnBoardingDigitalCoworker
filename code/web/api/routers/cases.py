@@ -180,7 +180,7 @@ class ChatMessage(BaseModel):
 def chat(body: ChatMessage, coworker: Coworker, role: Role) -> dict:
     """The chat view (US-002, US-003, US-019)."""
     try:
-        reply = coworker.chat(body.message, case_id=body.case_id)
+        reply = coworker.chat(body.message, case_id=body.case_id, asked_by=role)
     except ValueError as exc:
         raise HTTPException(400, detail=str(exc)) from None
     except GovernanceError as refusal:

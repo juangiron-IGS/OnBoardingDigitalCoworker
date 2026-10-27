@@ -47,7 +47,7 @@ To users it is one Coworker. Inside, an Onboarding Orchestrator owns the case an
 
 ![Agent architecture](Documents/CheckPoint/14October/images/08-architecture.png)
 
-The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the Access and Equipment agent (Should, behind `FEATURE_ACCESS_EQUIPMENT`), the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The other Should and Could agents are not built yet.
+The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the Access and Equipment agent (Should, behind `FEATURE_ACCESS_EQUIPMENT`), the Onboarding Knowledge agent (Should: answers from `rules/knowledge/records.yaml`, citing the record; drafts labelled until the Onboarding Team validates them; unanswered questions pending for the team), the shared notifications tool and the mocks for JobDiva, Outlook and Teams. Candidate Follow-up and Culture and Belonging are not built yet.
 
 | Agent | Priority | Responsibility |
 | --- | --- | --- |
@@ -151,7 +151,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **Free text needs the `claude` engine.** With `rules`, a new start must be sent as `Label: value` lines. With `claude`, labelled lines are still read first at no cost, and Claude reads only the fields still missing. FLSA, sponsorship and visa are never sent to the model: they come from labelled lines or from the recruiter's answers.
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** the Should and Could agents Candidate Follow-up, Onboarding Knowledge and Culture and Belonging.
+- **Not built yet:** the Should and Could agents Candidate Follow-up and Culture and Belonging.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components

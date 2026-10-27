@@ -18,9 +18,11 @@ from urllib.parse import urlparse
 from mcp.server.mcpserver import MCPServer
 
 from agents.common.model_client import ModelNotConfigured, get_model_client
+from agents.onboarding_knowledge import agent as knowledge_agent
 from agents.orchestrator.chat import status
 from agents.orchestrator.orchestrator import Orchestrator
 from mcp_servers.common.db import connect
+from mcp_servers.mocks.knowledge.service import KnowledgeService
 from mcp_servers.mocks.teams.service import AlertsService
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import GovernanceError
@@ -44,9 +46,10 @@ server = MCPServer(
     "onboarding-coworker",
     instructions=(
         "The INSPYR Onboarding Coworker. Start an onboarding case from a start email "
-        "or message, answer the Coworker's questions about a case, and ask how a case "
-        "is going. Approvals and actions on systems are done by people in the "
-        "Coworker's web app, not here. Synthetic data only."
+        "or message, answer the Coworker's questions about a case, ask how a case is "
+        "going, or ask an onboarding process question. Approvals and actions on "
+        "systems are done by people in the Coworker's web app, not here. Synthetic "
+        "data only."
     ),
 )
 
@@ -157,6 +160,24 @@ def my_alerts(limit: int = 20) -> list[dict] | dict:
         return [a for a in alerts if a["recipient"] in recipients][
             : max(1, min(limit, 100))
         ]
+
+    return _run(work)
+
+
+@server.tool()
+def ask_onboarding_knowledge(question: str) -> dict:
+    """Ask an onboarding process question. The answer cites its knowledge record and
+    says when the record is not yet validated; an unanswered question is logged as
+    pending for the Onboarding Team. FLSA, classification and legal questions are
+    left to HR."""
+    if len(question) > MAX_TEXT:
+        return _refused("input_too_long")
+
+    def work(_coworker, conn) -> dict:  # noqa: ANN001
+        result = knowledge_agent.answer(
+            question, KnowledgeService(conn), asked_by=load_role(), channel="mcp"
+        )
+        return asdict(result)
 
     return _run(work)
 

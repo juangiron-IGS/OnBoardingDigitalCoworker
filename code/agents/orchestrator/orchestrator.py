@@ -11,6 +11,7 @@ from agents.common import notifications
 from agents.common.model_client import ModelClient, load_labels, load_required
 from agents.intake_validation import agent as intake
 from agents.jobdiva_workflow import agent as workflow_agent
+from agents.onboarding_knowledge import agent as knowledge_agent
 from agents.policy_case_setup import agent as policy
 from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
 from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
@@ -46,6 +47,7 @@ class Orchestrator:
         workflow: JobDivaWorkflow,
         jobdiva: JobDivaRead | None = None,
         access_equipment: bool | None = None,
+        knowledge: knowledge_agent.KnowledgeBase | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
@@ -53,6 +55,7 @@ class Orchestrator:
         self._alerts = alerts
         self._workflow = workflow
         self._jobdiva = jobdiva
+        self._knowledge = knowledge  # Should agent S3 (US-025)
         # Should agent S1, behind its feature flag (checkpoint scope priority)
         self._access = (
             os.environ.get("FEATURE_ACCESS_EQUIPMENT", "false").lower() == "true"
@@ -66,11 +69,27 @@ class Orchestrator:
     def cases(self) -> CaseServiceClient:
         return self._cases
 
-    def chat(self, message: str, *, case_id: str | None = None) -> "ChatReply":
+    def chat(
+        self, message: str, *, case_id: str | None = None, asked_by: str = "recruiter"
+    ) -> "ChatReply":
         """One chat message from the recruiter or the Onboarding Team."""
         from .chat import respond
 
-        return respond(self, message, case_id)
+        return respond(self, message, case_id, asked_by=asked_by)
+
+    @property
+    def knows(self) -> bool:
+        return self._knowledge is not None
+
+    def ask_knowledge(
+        self, question: str, *, asked_by: str, channel: str
+    ) -> knowledge_agent.KnowledgeAnswer:
+        """Route a process question to the Onboarding Knowledge agent (US-025)."""
+        if self._knowledge is None:
+            raise ValueError("the knowledge base is not available")
+        return knowledge_agent.answer(
+            question, self._knowledge, asked_by=asked_by, channel=channel
+        )
 
     def read_labelled(self, text: str) -> dict[str, str]:
         """Fields stated in a message, through the metered model client."""

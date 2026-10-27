@@ -14,10 +14,11 @@ flowchart LR
             Policy["Policy and Case Setup"]
             WF["JobDiva and Workflow"]
             Access["Access and Equipment (Should)<br/>FEATURE_ACCESS_EQUIPMENT"]
+            Know["Onboarding Knowledge (Should)<br/>cites the record · drafts labelled"]
             Model["Model client<br/>engine: rules (no model)<br/>usage meter"]
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
-        Rules[("Rules catalog<br/>YAML: paperwork, path, kit,<br/>owner, overhead, intake labels")]
+        Rules[("Rules catalog<br/>YAML: paperwork, path, kit,<br/>owner, overhead, intake labels,<br/>knowledge records")]
         Mail["Outlook mock<br/>synthetic .eml"]
         Client["MCP client<br/>refusals keep their reason"]
     end
@@ -34,6 +35,7 @@ flowchart LR
     Orch --> Intake --> Model
     Orch --> Policy --> Rules
     Orch --> Access --> Rules
+    Orch --> Know --> Rules
     Orch --> Case
     WF --> Client
     Orch --> WF

@@ -1,0 +1,113 @@
+# Onboarding knowledge records (checkpoint "Knowledge record", US-025, BR-013).
+# Example content for the demo: the Onboarding Team maintains these records and
+# decides which ones are validated. A record marked unvalidated is a draft: the
+# Coworker labels it as such until a team member validates it in the web app.
+# Never put FLSA, classification, compensation or legal answers here: HR decides them.
+domain: knowledge
+records:
+  - id: KB-001
+    type: procedure
+    title: Forms for a W-2 hire in Texas
+    question: Which forms does a W-2 hire in Texas need?
+    answer: >-
+      Texas has no state withholding form, so a W-2 hire in Texas gets the federal
+      set only: the federal withholding form (W-4) and the I-9. Client forms are
+      added by the paperwork rules.
+    steps: []
+    category: paperwork
+    tags: [texas, w-2, forms, paperwork, w-4, state form]
+    status: validated
+    source: Onboarding Team paperwork procedure
+    owner: Onboarding Team
+    date: 2026-10-14
+  - id: KB-002
+    type: question
+    title: When the I-9 is completed
+    question: When must the I-9 be completed?
+    answer: >-
+      Section 1 by the first day of work; Section 2 within three business days of
+      the start date. The Onboarding Team checks it during document verification.
+    steps: []
+    category: documents
+    tags: [i-9, i9, deadline, verification, documents]
+    status: validated
+    source: Onboarding Team document checklist
+    owner: Onboarding Team
+    date: 2026-10-14
+  - id: KB-003
+    type: procedure
+    title: Requesting a laptop and access
+    question: How do I request a laptop and access for a new hire?
+    answer: >-
+      You do not order it yourself. The Coworker adds the laptop and access request
+      to the case package; IT approves the request and the Consultant Onboarding
+      Supervisor approves the package, and only then is it sent to Chelsea Tech
+      (simulated in this demo).
+    steps:
+      - Make sure the start email says the laptop or equipment needed.
+      - IT approves the request in the Approval view.
+      - The approver approves the package version.
+    category: equipment
+    tags: [laptop, equipment, access, chelsea tech, computer]
+    status: validated
+    source: IT and Onboarding Team equipment procedure
+    owner: IT
+    date: 2026-10-14
+  - id: KB-004
+    type: question
+    title: Who approves the onboarding package
+    question: Who approves the onboarding package?
+    answer: >-
+      The Consultant Onboarding Supervisor approves, returns or rejects each package
+      version. Nothing runs on any system before that approval, and a changed
+      package needs a new approval.
+    steps: []
+    category: approval
+    tags: [approve, approval, approver, package, supervisor]
+    status: validated
+    source: Onboarding process (checkpoint, BR-002)
+    owner: Onboarding Team
+    date: 2026-10-14
+  - id: KB-005
+    type: question
+    title: Forms for a hire in Philadelphia
+    question: Which forms does a hire working in Philadelphia need?
+    answer: >-
+      Besides the federal W-4 and the I-9, a W-2 hire working in Philadelphia gets
+      the Philadelphia city wage tax notice.
+    steps: []
+    category: paperwork
+    tags: [philadelphia, city, forms, wage tax, paperwork]
+    status: unvalidated
+    source: Draft proposed by the Coworker from rule R-PA-03
+    owner: Onboarding Team
+    date: 2026-10-26
+  - id: KB-006
+    type: question
+    title: Welcome kit for a corp-to-corp contractor
+    question: What welcome kit does a corp-to-corp contractor get?
+    answer: >-
+      A corp-to-corp contractor gets the digital welcome kit only; the physical kit
+      is for W-2 hires.
+    steps: []
+    category: welcome kit
+    tags: [welcome kit, kit, corp-to-corp, c2c, contractor]
+    status: unvalidated
+    source: Draft from an LDC conversation
+    owner: LDC
+    date: 2026-10-26
+  - id: KB-007
+    type: solution
+    title: Start email with missing data
+    question: What happens when a start email is missing data?
+    answer: >-
+      The Coworker opens the case in Needs clarification and asks the recruiter one
+      question at a time, naming the exact field. The package is built only when
+      every mandatory field is answered.
+    steps: []
+    category: intake
+    tags: [missing, data, clarification, recruiter, start email, incomplete]
+    status: validated
+    source: Onboarding process (checkpoint, US-004)
+    owner: Onboarding Team
+    date: 2026-10-14

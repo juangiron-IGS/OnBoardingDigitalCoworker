@@ -51,6 +51,7 @@ def test_no_tool_can_approve_or_act_on_a_system() -> None:
         "case_status",
         "open_questions",
         "my_alerts",
+        "ask_onboarding_knowledge",
     }
     assert not any(word in name for name in names for word in WRITE_OR_DECIDE)
 
@@ -99,3 +100,13 @@ def test_unknown_role_stops_the_server(monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="COWORKER_MCP_ROLE"):
         coworker_server.load_role()
+
+
+def test_knowledge_question_over_mcp(coworker) -> None:
+    answer = coworker.call(
+        "ask_onboarding_knowledge",
+        {"question": "Which forms does a W-2 hire in Texas need?"},
+    )
+
+    assert answer["record_id"] == "KB-001"
+    assert answer["status"] == "validated"

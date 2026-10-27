@@ -36,3 +36,7 @@ GRANT USAGE ON SEQUENCE mocks.alerts_id_seq TO coworker_app;
 GRANT SELECT, INSERT ON mocks.inbound_mail TO coworker_app;
 GRANT UPDATE (case_id, outcome) ON mocks.inbound_mail TO coworker_app;
 GRANT USAGE ON SEQUENCE mocks.inbound_mail_id_seq TO coworker_app;
+
+-- Onboarding knowledge: validation decisions and pending questions (US-025).
+GRANT SELECT, INSERT ON mocks.knowledge_validations, mocks.knowledge_questions TO coworker_app;
+GRANT USAGE ON SEQUENCE mocks.knowledge_validations_id_seq, mocks.knowledge_questions_id_seq TO coworker_app;
