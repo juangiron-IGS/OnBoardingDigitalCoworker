@@ -20,16 +20,14 @@ from typing import Any
 
 import anthropic
 
-from .model_client import Extraction, read_labelled
+from .model_client import RESTRICTED_TERMS, Extraction, read_labelled
 from .usage_meter import UsageMeter
 
 logger = logging.getLogger(__name__)
 
 PROVIDER = "claude"
 RESTRICTED = frozenset({"flsa", "sponsorship_visa"})  # BR-011
-_RESTRICTED_WORDS = re.compile(
-    r"flsa|exempt|sponsor|visa|h-?1b|green card|work permit", re.IGNORECASE
-)
+_RESTRICTED_WORDS = re.compile(RESTRICTED_TERMS, re.IGNORECASE)
 _SENTENCE = re.compile(r"(?<=[.!?;])\s+")
 MAX_TEXT = 8000
 

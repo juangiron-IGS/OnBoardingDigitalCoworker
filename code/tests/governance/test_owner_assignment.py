@@ -1,6 +1,8 @@
 """US-032: the supervisor is told of each new hire and assigns the follow-up owner.
 US-010 AC-002: the Coworker only recommends; a person assigns."""
 
+import uuid
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -8,6 +10,7 @@ import pytest
 from agents.common.model_client import RulesModelClient, load_labels
 from agents.common.usage_meter import UsageMeter
 from agents.orchestrator.orchestrator import Orchestrator
+from contracts.case_service_api import CaseIntake
 from mcp_servers.jobdiva_workflow.service import WorkflowService
 from mcp_servers.mocks.outlook.service import MailboxService
 from mcp_servers.mocks.teams.service import AlertsService
@@ -80,7 +83,7 @@ def test_supervisor_assignment_is_shown_and_audited(app_conn, cases, set_up_case
     ).fetchone()
     assert view["case"]["assigned_owner"] == "Enterprise onboarding specialist"
     assert (agent, outcome) == ("approver", "completed")
-    assert data_refs == {"assigned_owner": "approver", "recommended_owner": "kept"}
+    assert data_refs == {"assigned_by": "approver", "recommended_owner": "kept"}
 
 
 def test_supervisor_assignment_replaces_recommendation_and_is_logged(
@@ -114,3 +117,22 @@ def test_owner_cannot_be_assigned_before_a_recommendation(app_conn, cases):
     with pytest.raises(GovernanceError) as refusal:
         cases.assign_owner(case_id, "Dana Synthetic", assigned_by="approver")
     assert refusal.value.reason == "no_recommendation"
+
+
+def test_refused_assignment_is_audited(app_conn, cases) -> None:
+    case_id = cases.create_case(
+        CaseIntake(
+            person_ref=f"SYN-{uuid.uuid4().int % 10**6:06d}",
+            start_date=date(2026, 12, 7),
+        ),
+        agent="intake_validation",
+    )
+
+    with pytest.raises(GovernanceError):
+        cases.assign_owner(case_id, "Someone", assigned_by="approver")
+
+    outcome = app_conn.execute(
+        "SELECT outcome FROM audit_log WHERE case_id = %s AND action = 'assign_owner'",
+        (case_id,),
+    ).fetchone()
+    assert outcome == ("refused",)

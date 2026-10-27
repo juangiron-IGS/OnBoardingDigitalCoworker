@@ -95,3 +95,14 @@ def test_flsa_question_goes_to_hr_without_keeping_the_text(app_conn, kb) -> None
 def test_unknown_record_cannot_be_validated(kb) -> None:
     with pytest.raises(KeyError):
         kb.validate("KB-999", "validated", decided_by="onboarding")
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Does an H-1B transfer need a new I-9?", "Can a hire on OPT start early?"],
+)
+def test_visa_question_is_not_kept_as_text(kb, question) -> None:
+    answer = _ask(kb, question)
+
+    assert answer.status == "hr_decision"
+    assert kb.pending()[0]["question"] == knowledge.HR_PLACEHOLDER

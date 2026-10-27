@@ -128,9 +128,10 @@ class PostgresCaseRepository:
         )
 
     def has_line(self, case_id: str, version: int, field: str) -> bool:
+        """A usable line: an exception line is something to resolve, not to act on."""
         row = self._conn.execute(
-            "SELECT 1 FROM package_lines"
-            " WHERE case_id = %s AND version = %s AND field = %s LIMIT 1",
+            "SELECT 1 FROM package_lines WHERE case_id = %s AND version = %s"
+            " AND field = %s AND label <> 'exception' LIMIT 1",
             (case_id, version, field),
         ).fetchone()
         return row is not None

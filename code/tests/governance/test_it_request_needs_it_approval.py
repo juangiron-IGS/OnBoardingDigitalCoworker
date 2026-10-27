@@ -131,3 +131,25 @@ def test_feature_off_adds_no_equipment_lines(app_conn) -> None:
         ).fetchall()
     }
     assert "equipment_request" not in fields
+
+
+def test_exception_line_is_never_sent_to_it(app_conn, monkeypatch) -> None:
+    # A failed Access and Equipment agent leaves an exception, not a request
+    from agents.access_equipment import agent as access
+
+    def broken(*_args):
+        raise RuntimeError("rules unavailable")
+
+    monkeypatch.setattr(access, "recommend", broken)
+    coworker = _coworker(app_conn, access_equipment=True)
+    message = MailboxService(MAILBOX).read_message("01_complete_and_consistent")
+    case_id = coworker.process_start(message["body"], source=message["from"]).case_id
+
+    with pytest.raises(GovernanceError) as refusal:
+        coworker.approve_it_request(case_id, package_version=1, approver_role="it")
+    coworker.decide(
+        case_id, package_version=1, decision="approve", approver_role="approver"
+    )
+
+    assert refusal.value.reason == "no_it_request"
+    assert _it_requests(app_conn, case_id) == 0

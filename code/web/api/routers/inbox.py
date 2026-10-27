@@ -28,7 +28,11 @@ def receive_email(
     """A start email arrives in the onboarding mailbox; the Coworker processes it at
     once (US-001). Synthetic data only: nothing reaches a real mailbox."""
     message_id = mailbox.deliver(email.sender, email.subject, email.body)
-    outcome = asdict(coworker.process_start(email.body, source=email.sender))
+    try:
+        outcome = asdict(coworker.process_start(email.body, source=email.sender))
+    except ValueError as exc:
+        mailbox.record_outcome(message_id, None, "failed")
+        raise HTTPException(400, detail=str(exc)) from None
     mailbox.record_outcome(message_id, outcome["case_id"], outcome["state"])
     return {"message_id": message_id, **outcome}
 
