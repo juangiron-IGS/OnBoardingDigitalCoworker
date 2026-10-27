@@ -1,5 +1,7 @@
 import psycopg
 
+from . import webhook
+
 
 class AlertsService:
     """The Teams mock: alerts go to the simulated alerts view (TC-005, no bot).
@@ -16,6 +18,7 @@ class AlertsService:
             " RETURNING id",
             (case_id, recipient, text),
         ).fetchone()
+        webhook.mirror(recipient, text)  # optional copy to a real channel
         return {"id": row[0], "status": "posted"}
 
     def list_alerts(self, case_id: str | None = None) -> list[dict]:

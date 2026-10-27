@@ -125,6 +125,7 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `FEATURE_IGS_HANDOFF` | `false` (`.env.example`: `true`) | Culture and Belonging agent: LDC tracker, welcome kit and leader messages, each approved by LDC |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, Teams and knowledge base MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
 | `JOBDIVA_MOCK_URL`, `JOBDIVA_WORKFLOW_URL`, `TEAMS_MOCK_URL`, `KNOWLEDGE_BASE_MOCK_URL` | `127.0.0.1` ports 8101, 8106, 8108, 8109 | Addresses of the MCP servers |
+| `TEAMS_WEBHOOK_URL` | none (off) | Optional: also posts each alert to one Teams channel through a Teams Workflows webhook. One way only; nothing is approved from Teams. Leave empty to keep alerts in the app only |
 | `COWORKER_MCP_URL`, `COWORKER_MCP_ROLE` | `127.0.0.1:8110`, `recruiter` | The Coworker's own MCP server for other chat apps, and the role it acts as |
 | `JOBDIVA_MODE` | `mock` | `mock`, or read-only `sandbox` for the JobDiva READ server |
 | `JOBDIVA_BASE_URL`, `JOBDIVA_CLIENT_ID`, `JOBDIVA_API_USER`, `JOBDIVA_API_PASSWORD` | none | Sandbox mode only: Client ID from JobDiva support and a dedicated API user |

@@ -51,6 +51,8 @@ os.environ["FEATURE_IGS_HANDOFF"] = "false"
 # The suite never calls a real model or holds its key, whatever code/.env says.
 os.environ["MODEL_PROVIDER"] = "rules"
 os.environ.pop("ANTHROPIC_API_KEY", None)
+# ...and never posts to a real Teams channel.
+os.environ.pop("TEAMS_WEBHOOK_URL", None)
 
 
 def _connect(url_var: str) -> psycopg.Connection:
