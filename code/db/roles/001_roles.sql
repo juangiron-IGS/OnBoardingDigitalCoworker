@@ -56,3 +56,7 @@ GRANT SELECT, INSERT ON ldc_kit_approvals, leader_messages, mocks.ldc_tracker,
 GRANT UPDATE (status, approved_by, sent_at) ON leader_messages TO coworker_app;
 GRANT USAGE ON SEQUENCE leader_messages_id_seq, mocks.ldc_tracker_id_seq,
     mocks.welcome_kits_id_seq TO coworker_app;
+
+-- New-hire information package (US-031): only its status changes after it is prepared.
+GRANT SELECT, INSERT ON new_hire_packages TO coworker_app;
+GRANT UPDATE (status, reviewed_by, sent_at) ON new_hire_packages TO coworker_app;

@@ -109,6 +109,37 @@ function followupCard(view, caseId, show) {
     feedback);
 }
 
+// US-031: information package from validated knowledge, sent after the team reviews it.
+function infoPackageCard(view, caseId, show) {
+  if (!["approved", "actions_executed", "documents_pending", "in_verification", "sent_to_payroll"].includes(view.case.state)) return null;
+  const isTeam = getRole() === "onboarding";
+  const feedback = el("div");
+  const act = (work, message) => async () => {
+    feedback.replaceChildren();
+    try {
+      await work();
+      feedback.replaceChildren(el("div", { class: "notice ok", role: "status" }, message));
+      setTimeout(() => show("status"), 1200);
+    } catch (error) {
+      feedback.replaceChildren(errorNotice(error));
+    }
+  };
+  const pkg = view.info_package;
+  return el("section", { class: "card" },
+    el("h2", {}, "New-hire information package"),
+    el("p", { class: "lead" }, "Company, client and role information from validated knowledge only. It goes to the new hire after the Onboarding Team reviews it."),
+    pkg ? el("div", { class: "list" },
+      pkg.content.sections.length ? pkg.content.sections.map((s) => el("div", { class: "row" },
+        el("div", {}, el("div", {}, `${s.heading} · ${s.title}`), el("div", { class: "meta" }, s.text)),
+        el("span", { class: "meta mono" }, s.record_id)))
+        : el("p", { class: "empty" }, "No validated information for this company, client or role yet."),
+      el("span", { class: `pill ${pkg.status === "sent" ? "ok" : "warn"}` }, pkg.status === "sent" ? "Reviewed and sent" : "Waiting for the team's review"))
+      : null,
+    isTeam && !pkg ? el("button", { class: "btn", type: "button", onclick: act(() => api.prepareInfoPackage(caseId), "Package prepared for your review.") }, "Prepare the package") : null,
+    isTeam && pkg && pkg.status === "draft" ? el("button", { class: "btn primary", type: "button", onclick: act(() => api.sendInfoPackage(caseId), "Sent to the new hire.") }, "Reviewed: send to the new hire") : null,
+    feedback);
+}
+
 // US-028, US-029: LDC tracker, welcome kit and leader messages, all approved by LDC.
 function igsCard(view, caseId, show) {
   const entry = view.records.find((r) => r.system === "ldc_tracker");
@@ -160,6 +191,8 @@ async function drawCase(root, caseId, show) {
 
   const followup = followupCard(view, caseId, show);
   if (followup) root.append(followup);
+  const info = infoPackageCard(view, caseId, show);
+  if (info) root.append(info);
   const igs = igsCard(view, caseId, show);
   if (igs) root.append(igs);
 

@@ -69,6 +69,41 @@ def answer(
     )
 
 
+# US-031: the sections of the new-hire information package, in order.
+PACKAGE_SECTIONS = [("company", "Company"), ("client", "Client"), ("role", "Role")]
+
+
+def new_hire_package(data: dict, records: list[dict]) -> dict:
+    """FR-NHP-001/002: company, client and role information from validated records
+    only (BR-013), each citing its record; nothing restricted (BR-011)."""
+    sections = []
+    for category, heading in PACKAGE_SECTIONS:
+        for record in records:
+            if (
+                record.get("audience") == "new_hire"
+                and record["category"] == category
+                and record["status"] == "validated"
+                and _applies(record, data)
+                and not HR_TOPICS.search(record["answer"])
+            ):
+                sections.append(
+                    {
+                        "heading": heading,
+                        "title": record["title"],
+                        "text": record["answer"],
+                        "record_id": record["id"],
+                    }
+                )
+    return {"person_ref": str(data.get("person_ref", "")), "sections": sections}
+
+
+def _applies(record: dict, data: dict) -> bool:
+    return all(
+        str(data.get(field, "")).strip().casefold() == value.strip().casefold()
+        for field, value in (record.get("applies_to") or {}).items()
+    )
+
+
 def best_match(question: str, records: list[dict]) -> dict | None:
     asked = _words(question)
     if not asked:

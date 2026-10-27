@@ -29,6 +29,9 @@ class Record(BaseModel):
     source: str = Field(min_length=1, max_length=200)
     owner: str = Field(min_length=1, max_length=60)
     date: date
+    # US-031: records written for new hires, optionally for one client or role
+    audience: Literal["team", "new_hire"] = "team"
+    applies_to: dict[str, str] = Field(default_factory=dict)
 
 
 def load_records(path: Path = RECORDS_FILE) -> list[Record]:

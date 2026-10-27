@@ -49,6 +49,7 @@ The Coworker never decides worker classification, compensation or legal employme
 - the Onboarding Team confirms or changes the recommended path and paperwork (US-026);
 - HR's answer to an escalated FLSA or classification conflict (US-027);
 - a status dashboard with every case under its state, what is pending and its risks (US-030, Could);
+- the new-hire information package: company, client and role information from validated knowledge only, sent after the Onboarding Team reviews it (US-031, Could);
 - Culture and Belonging (Could): the LDC tracker handoff with accelerated timing, the welcome kit shipped only after LDC approves it (US-028), and the two-month leader feedback request and congratulation, sent only after LDC approves them and never with restricted data (US-029);
 - a simulated mailbox where new start emails arrive, and a Teams-like chat panel;
 - an optional Claude engine that reads start details written as free text;
@@ -70,7 +71,7 @@ The architecture as it runs in the demo, with its controls and the tests behind 
 | JobDiva and Workflow | Must | After approval, creates and updates the JobDiva case, requests, task list and payroll package | Built (simulated systems; payroll behind `FEATURE_PAYROLL_PACKAGE`) |
 | Access and Equipment | Should | Email, Teams, apps, laptop, 2% or 5% overhead and bill-back | Built, behind `FEATURE_ACCESS_EQUIPMENT` |
 | Candidate Follow-up | Should | Checklist, tiered reminders and document verification | Built, behind `FEATURE_CANDIDATE_FOLLOWUP` |
-| Onboarding Knowledge | Should | Answers process questions from records the Onboarding Team validates, citing the record; drafts are labelled; unanswered questions stay pending for the team | Built |
+| Onboarding Knowledge | Should | Answers process questions from records the Onboarding Team validates, citing the record; drafts are labelled; unanswered questions stay pending for the team; prepares the new-hire information package | Built |
 | Culture and Belonging (IGS) | Could | LDC tracker, welcome kit and two-month feedback | Built, behind `FEATURE_IGS_HANDOFF` |
 
 Case lifecycle and the demo sequence are documented in [section 5 of the checkpoint deliverable](Documents/CheckPoint/14October/checkpoint-deliverable.md#5-solution-design).
@@ -173,7 +174,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 - **Free text needs the `claude` engine.** With `rules`, a new start must be sent as `Label: value` lines. With `claude`, labelled lines are still read first at no cost, and Claude reads only the fields still missing. FLSA, sponsorship and visa are never sent to the model: they come from labelled lines or from the recruiter's answers.
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** the new-hire information package (US-031, Could).
+- **Every Must, Should and Could story is built.** The Could features run behind their feature flags.
 - **Simulated time and documents.** Reminders run when the Onboarding Team presses *Simulate time* in the Status view, and a candidate's delivery is recorded by the team; there is no real scheduler, candidate portal or file upload.
 - **Knowledge search** matches the words of the question against the records and does not use a model. The records are example content in `code/rules/knowledge/records.yaml`.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.

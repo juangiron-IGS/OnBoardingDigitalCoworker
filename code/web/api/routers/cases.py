@@ -279,6 +279,33 @@ def payroll_return(
         raise _refused(refusal, cases, case_id) from None
 
 
+# --- New-hire information package (US-031) ---
+
+
+@router.post("/{case_id}/info-package")
+def prepare_info_package(
+    case_id: str, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Prepare the package from validated knowledge (US-031 AC-001)."""
+    _onboarding_only(role)
+    try:
+        return coworker.prepare_info_package(case_id)
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+@router.post("/{case_id}/info-package/send")
+def send_info_package(
+    case_id: str, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """The Onboarding Team reviewed the package and sends it."""
+    _onboarding_only(role)
+    try:
+        return coworker.send_info_package(case_id, reviewed_by=role)
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
 # --- Culture and Belonging (US-028, US-029) ---
 
 

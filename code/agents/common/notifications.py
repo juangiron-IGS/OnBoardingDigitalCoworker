@@ -92,6 +92,11 @@ def leader_drafts_text(case_id: str) -> str:
     )
 
 
+def info_package_text(case_id: str, sections: list[dict]) -> str:
+    parts = " ".join(f"{s['heading']}: {s['text']}" for s in sections)
+    return f"Your welcome information ({case_id}). {parts}"
+
+
 def duplicate_text(existing_ref: str) -> str:
     return (
         "This start was not processed: a case for the same person and start date "

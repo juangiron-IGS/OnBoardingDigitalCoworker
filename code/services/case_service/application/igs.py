@@ -63,6 +63,59 @@ def record_kit_approval(
         ) from None
 
 
+def prepare_info_package(
+    repo: CaseRepository,
+    igs: PostgresIgsRepository,
+    audit: AuditLog,
+    case_id: str,
+    content: dict,
+    *,
+    agent: str,
+) -> None:
+    """US-031 AC-001: the package of an approved case, for the team to review."""
+    action = "prepare_info_package"
+    with repo.transaction():
+        case = repo.lock_case(case_id)
+        if case.state in APPROVED_STATES:
+            igs.add_info_package(case_id, content)
+            audit.append(
+                case_id=case_id,
+                agent=agent,
+                action=action,
+                outcome="completed",
+                rule_ids=[s["record_id"] for s in content["sections"]],
+            )
+            return
+    raise _refused(repo, audit, case_id, agent, action, "case_not_approved")
+
+
+def send_info_package(
+    repo: CaseRepository,
+    igs: PostgresIgsRepository,
+    audit: AuditLog,
+    case_id: str,
+    *,
+    reviewed_by: str,
+) -> dict:
+    """Sent only after the Onboarding Team reviewed it (US-031 AC-001)."""
+    action = "send_info_package"
+    with repo.transaction():
+        repo.lock_case(case_id)
+        package = igs.info_package(case_id)
+        if package is not None and package["status"] == "draft":
+            igs.mark_info_package_sent(case_id, reviewed_by)
+            audit.append(
+                case_id=case_id,
+                agent=reviewed_by,
+                action=action,
+                outcome="completed",
+                rule_ids=[s["record_id"] for s in package["content"]["sections"]],
+            )
+            return package["content"]
+    reason = "no_info_package" if package is None else "info_package_sent"
+    raise _refused(repo, audit, case_id, reviewed_by, action, reason)
+
+
 def draft_messages(
     repo: CaseRepository,
     igs: PostgresIgsRepository,

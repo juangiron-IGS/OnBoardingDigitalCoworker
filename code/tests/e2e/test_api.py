@@ -626,3 +626,25 @@ def test_dashboard_never_shows_restricted_values(client) -> None:
 
     text = " ".join(item["pending"] + item["risks"]).lower()
     assert "exempt" not in text
+
+
+def test_info_package_through_the_api(client) -> None:
+    # US-031 through the API: only the Onboarding Team prepares and sends it
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+
+    refused = client.post(f"/api/cases/{case_id}/info-package", headers=_as("it"))
+    prepared = client.post(
+        f"/api/cases/{case_id}/info-package", headers=_as("onboarding")
+    ).json()
+    sent = client.post(
+        f"/api/cases/{case_id}/info-package/send", headers=_as("onboarding")
+    ).json()
+
+    assert refused.status_code == 403
+    assert len(prepared["content"]["sections"]) == 3
+    assert sent == {"status": "sent", "sections": 3}

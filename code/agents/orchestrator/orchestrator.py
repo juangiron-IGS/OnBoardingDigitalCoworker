@@ -391,6 +391,29 @@ class Orchestrator:
         )
         return {"task_id": task_id}
 
+    # --- New-hire information package (US-031) ---
+
+    def prepare_info_package(self, case_id: str) -> dict:
+        """Company, client and role information from validated knowledge only, for
+        the Onboarding Team to review before it is sent."""
+        if self._knowledge is None:
+            raise ValueError("the knowledge base is not available")
+        content = knowledge_agent.new_hire_package(
+            self._cases.case_data(case_id), self._knowledge.records()
+        )
+        self._cases.prepare_info_package(case_id, content, agent=knowledge_agent.AGENT)
+        return self._cases.info_package(case_id) or {}
+
+    def send_info_package(self, case_id: str, *, reviewed_by: str) -> dict:
+        content = self._cases.send_info_package(case_id, reviewed_by=reviewed_by)
+        notifications.notify(
+            self._alerts,
+            case_id,
+            CANDIDATE,
+            notifications.info_package_text(case_id, content["sections"]),
+        )
+        return {"status": "sent", "sections": len(content["sections"])}
+
     # --- Culture and Belonging (US-028, US-029) ---
 
     def _handoff_to_igs(

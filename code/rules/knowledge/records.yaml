@@ -111,3 +111,69 @@ records:
     source: Onboarding process (checkpoint, US-004)
     owner: Onboarding Team
     date: 2026-10-14
+  # New-hire information (US-031): company, client and role records the package
+  # is built from. Only validated ones are ever sent to a new hire (BR-013).
+  - id: KB-008
+    type: procedure
+    title: About INSPYR
+    question: What should a new hire know about INSPYR?
+    answer: >-
+      INSPYR places consultants with client companies and supports them from the
+      first day: your onboarding owner is your contact for paperwork, equipment and
+      questions during your first weeks.
+    steps: []
+    category: company
+    tags: [inspyr, company, welcome]
+    status: validated
+    source: Onboarding Team welcome guide
+    owner: Onboarding Team
+    date: 2026-10-14
+    audience: new_hire
+  - id: KB-009
+    type: procedure
+    title: Working with Acme Synthetic
+    question: What should a new hire know about Acme Synthetic?
+    answer: >-
+      Acme Synthetic sends the building access and the first-day schedule a week
+      before the start. Timesheets are approved every Friday by your timesheet
+      approver.
+    steps: []
+    category: client
+    tags: [acme synthetic, client]
+    status: validated
+    source: Account team notes for Acme Synthetic
+    owner: Onboarding Team
+    date: 2026-10-14
+    audience: new_hire
+    applies_to: {client: Acme Synthetic}
+  - id: KB-010
+    type: procedure
+    title: Your first weeks as a Data Analyst
+    question: What does a Data Analyst do in the first weeks?
+    answer: >-
+      In the first two weeks you get access to the reporting tools, meet the data
+      owners of your team and shadow the weekly reporting cycle.
+    steps: []
+    category: role
+    tags: [data analyst, role]
+    status: validated
+    source: Delivery team role guide
+    owner: Onboarding Team
+    date: 2026-10-14
+    audience: new_hire
+    applies_to: {role: Data Analyst}
+  - id: KB-011
+    type: procedure
+    title: Working with Beta Synthetic Corp
+    question: What should a new hire know about Beta Synthetic Corp?
+    answer: >-
+      Beta Synthetic Corp works hybrid, with office days on Tuesday and Thursday.
+    steps: []
+    category: client
+    tags: [beta synthetic corp, client]
+    status: unvalidated
+    source: Draft from a recruiter conversation
+    owner: Onboarding Team
+    date: 2026-10-26
+    audience: new_hire
+    applies_to: {client: Beta Synthetic Corp}
