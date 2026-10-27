@@ -80,7 +80,7 @@ As **Onboarding Team**, in **Status**, press **Prepare the package**: it holds o
 
 ### Culture and Belonging (optional, 40 s)
 
-With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** and open **Approval** (or **Status**): the kit ships 5 days before the start (**R-IG-01**). While the documents are pending the kit waits; after the payroll handoff of section 8, press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the leader feedback request and the congratulation are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
+With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** and open **Approval** (or **Status**): the kit ships 5 days before the start (**R-IG-01**). While the documents are pending the kit waits; after the payroll handoff of section 8, press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the feedback request to the hiring manager and the congratulation to the candidate, by name, are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
 
 ## 9. Onboarding knowledge (1 min)
 
