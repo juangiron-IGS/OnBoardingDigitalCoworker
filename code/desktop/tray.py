@@ -10,6 +10,7 @@ Run from code/: .venv/Scripts/python -m desktop.tray   (or ./scripts/tray.sh)
 """
 
 import asyncio
+import ctypes
 import os
 import threading
 import webbrowser
@@ -17,7 +18,7 @@ import webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-from .feed import ROLES, AlertFeed, case_url, window_url
+from .feed import ABOUT, ROLES, AlertFeed, case_url, window_url
 from .notifier import Notifier, logo_path, use_app_identity
 from .poller import poll, server_params
 from .window import CoworkerWindow
@@ -159,6 +160,7 @@ class CoworkerTray:
                 checked=lambda item: self.paused,
             ),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem("About the Coworker", self._about),
             pystray.MenuItem("Quit", self._quit),
         )
 
@@ -193,6 +195,14 @@ class CoworkerTray:
             self._start_polling()
 
         return set_role
+
+    def _about(self, icon, item) -> None:  # noqa: ANN001
+        # A native message box, on its own thread so the tray keeps running.
+        threading.Thread(
+            target=ctypes.windll.user32.MessageBoxW,
+            args=(0, ABOUT, "About the Onboarding Coworker", 0x40 | 0x40000),
+            daemon=True,
+        ).start()
 
     def _toggle_pause(self, icon, item) -> None:  # noqa: ANN001
         self.paused = not self.paused

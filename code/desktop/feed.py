@@ -11,6 +11,23 @@ ROLES = {
     "ldc": "LDC (Culture and Belonging)",
 }
 
+BYLINE = "By INSPYR Velocity - All rights reserved"
+ABOUT = (
+    "Onboarding Coworker\n"
+    f"{BYLINE}\n\n"
+    "A digital coworker for the INSPYR onboarding team. It reads each new start "
+    "from the recruiter's email, asks the recruiter for any missing data, and "
+    "builds the onboarding package: path, paperwork, welcome kit, owner and the "
+    "laptop and access request, each line with its source or rule.\n\n"
+    "People decide: the Onboarding Team reviews, IT approves equipment and the "
+    "Consultant Onboarding Supervisor approves the package before anything is "
+    "created in the (simulated) systems. It then follows up the candidate's "
+    "documents, the payroll handoff and the IGS welcome. FLSA, classification "
+    "and legal questions go to HR.\n\n"
+    "Specialized agents work on one case under an orchestrator. Every action is "
+    "audited. Synthetic data only."
+)
+
 
 @dataclass
 class AlertFeed:
