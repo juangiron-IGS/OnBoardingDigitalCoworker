@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from agents.common.model_client import clean_value
+from agents.onboarding_knowledge.agent import HR_TOPICS
 from contracts.case_service_api import CaseState
 
 if TYPE_CHECKING:
@@ -72,10 +74,32 @@ def respond(
     if _is_new_start(labelled):
         return _start(orch, text)
     ref = CASE_REF.search(text)
+    about_case = case_id and ABOUT_CASE.search(text)
+    # FLSA, classification, visa or legal: HR decides; never sent to a model.
+    if orch.knows and HR_TOPICS.search(text):
+        answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
+        return ChatReply(reply=answer.reply, case_id=case_id)
+    # A process question with a knowledge record gets the record itself, cited.
+    in_case = bool(case_id) and orch.model.provider != "rules"
+    if orch.knows and QUESTION.search(text) and not (ref or about_case or in_case):
+        answer = orch.ask_knowledge(
+            text, asked_by=asked_by, channel="chat", register_unanswered=False
+        )
+        if answer.status != "no_answer":
+            return ChatReply(reply=answer.reply, case_id=case_id)
+    # Anything else Claude answers when the engine converses (assistant.py), in
+    # the person's language, with read-only tools.
+    from .assistant import converse
+
+    reply = converse(orch, text, case_id=case_id, role=asked_by)
+    if reply:
+        return ChatReply(reply=reply, case_id=case_id)
+    # Without a conversing engine: the fixed replies.
     if ref:
         return status(orch, ref.group(1))
-    about_case = case_id and ABOUT_CASE.search(text)
-    if orch.knows and QUESTION.search(text) and not about_case:
+    if about_case:
+        return status(orch, case_id)
+    if orch.knows and QUESTION.search(text):  # keep it pending (US-025)
         answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
         return ChatReply(reply=answer.reply, case_id=case_id)
     if case_id:
@@ -89,7 +113,6 @@ def status(orch: "Orchestrator", ref: str) -> ChatReply:
     if case_id is None:
         return ChatReply(reply=f"Information not available: I have no case for {ref}.")
     state = orch.cases.case_state(case_id)
-    person = orch.cases.case_data(case_id).get("person_ref", case_id)
     orch.cases.log_action(
         case_id,
         agent="orchestrator",
@@ -97,7 +120,7 @@ def status(orch: "Orchestrator", ref: str) -> ChatReply:
         data_refs={"state": "case record"},
     )
     return ChatReply(
-        reply=f"{person} ({case_id}) is {STATE_LABELS.get(state, state.value)}: "
+        reply=f"{orch.label(case_id)} is {STATE_LABELS.get(state, state.value)}: "
         f"{_who_acts(orch, case_id, state)}.",
         case_id=case_id,
         state=state.value,
@@ -113,6 +136,16 @@ def _continue(
     if not answers:
         # A plain reply answers the question that was asked: the first open one.
         answers = {questions[0]["field"]: text}
+    if clean_value(next(iter(answers.values()))) is None:
+        # "N/A", "-" or "pending" is not an answer: the field stays open.
+        label = next(q["label"] for q in questions if q["field"] in answers)
+        return ChatReply(
+            reply=f'I still need the {label}: "{text}" is not a value. '
+            f"What is the {label}?",
+            case_id=case_id,
+            state=orch.cases.case_state(case_id).value,
+            asking=next(iter(answers)),
+        )
     state = None
     for field_name, value in answers.items():
         state = orch.answer(case_id, field_name, value)
@@ -130,11 +163,14 @@ def _start(orch: "Orchestrator", text: str) -> ChatReply:
     if result.state == "blocked_duplicate":
         return ChatReply(
             reply="I did not create a new case: one already exists for this person "
-            f"and start date ({result.blocked_by}).",
+            f"and start date ({result.label}).",
             state=result.state,
         )
     return _next_step(
-        orch, result.case_id, result.state, prefix=f"I created case {result.case_id}. "
+        orch,
+        result.case_id,
+        result.state,
+        prefix=f"I created the case for {result.label}. ",
     )
 
 

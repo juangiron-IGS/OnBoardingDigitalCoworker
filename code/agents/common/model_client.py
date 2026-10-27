@@ -9,6 +9,7 @@ runtime). MODEL_PROVIDER picks the engine; agents only see ModelClient.
 
 import os
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
@@ -27,6 +28,43 @@ LABELS_FILE = (
 DEFAULT_CAP_PER_RUN = 50
 
 _LINE = re.compile(r"^\s*([^:\n]{1,60}?)\s*:\s*(.+?)\s*$")
+# What people write when they have no value: it counts as missing, so the
+# recruiter is asked for it (US-004, FR-VAL-004), never stored as data.
+PLACEHOLDERS = frozenset(
+    {
+        "-",
+        "--",
+        "---",
+        "n/a",
+        "na",
+        "n.a.",
+        "none",
+        "null",
+        "nil",
+        "tbd",
+        "tba",
+        "tbc",
+        "pending",
+        "unknown",
+        "?",
+        "??",
+        "x",
+        ".",
+        "same",
+        "see above",
+    }
+)
+_INVISIBLE = re.compile(r"[\s\u200b-\u200f\u2060\ufeff]+")
+
+
+def clean_value(value: object) -> str | None:
+    """The value as text, or None when it is blank, invisible or a placeholder."""
+    if value is None:
+        return None
+    text = _INVISIBLE.sub(" ", str(value)).strip()
+    if not text or text.casefold() in PLACEHOLDERS:
+        return None
+    return text
 
 
 class ModelNotConfigured(Exception):
@@ -58,6 +96,19 @@ class ModelClient(Protocol):
         words). It only chooses: the answer is always the record's own text."""
         ...
 
+    def converse(
+        self,
+        system: str,
+        message: str,
+        tools: list[dict],
+        run_tool: Callable[[str, dict], str],
+        *,
+        run_id: str,
+    ) -> str | None:
+        """A conversational reply that may call the given read-only tools, or None
+        when this engine does not converse (the chat then shows its help)."""
+        ...
+
 
 class RulesModelClient:
     """Deterministic engine for the synthetic, labelled emails and chat messages."""
@@ -83,6 +134,17 @@ class RulesModelClient:
     ) -> str | None:
         return None  # no model: the knowledge agent matches words
 
+    def converse(
+        self,
+        system: str,
+        message: str,
+        tools: list[dict],
+        run_tool: Callable[[str, dict], str],
+        *,
+        run_id: str,
+    ) -> str | None:
+        return None  # no model: the chat keeps its fixed replies
+
 
 def read_labelled(text: str, fields: list[str], by_label: dict[str, str]) -> Extraction:
     """The fields stated as "Label: value" lines; a field given twice with two
@@ -93,8 +155,9 @@ def read_labelled(text: str, fields: list[str], by_label: dict[str, str]) -> Ext
         if not match:
             continue
         name = by_label.get(match.group(1).casefold())
-        if name in fields:
-            found.setdefault(name, set()).add(match.group(2))
+        value = clean_value(match.group(2))
+        if name in fields and value is not None:
+            found.setdefault(name, set()).add(value)
     ambiguous = sorted(name for name, seen in found.items() if len(seen) > 1)
     values = {
         name: next(iter(found[name]))

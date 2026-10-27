@@ -15,12 +15,13 @@ Controls:
 import json
 import logging
 import re
+from collections.abc import Callable
 from datetime import date
 from typing import Any
 
 import anthropic
 
-from .model_client import RESTRICTED_TERMS, Extraction, read_labelled
+from .model_client import RESTRICTED_TERMS, Extraction, clean_value, read_labelled
 from .usage_meter import UsageMeter
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,9 @@ differ (a paraphrase, a synonym, another language).
 - If no record answers the question, return an empty record_id. Never guess."""
 MAX_QUESTION = 1000
 KNOWLEDGE_RUN = "knowledge"
+CHAT_RUN = "chat"
+MAX_TOOL_STEPS = 4
+MAX_MESSAGE = 4000
 
 
 class ClaudeModelClient:
@@ -103,8 +107,8 @@ class ClaudeModelClient:
         for name in missing:
             if name in found["ambiguous"]:
                 ambiguous.append(name)
-            elif found["values"].get(name):
-                values[name] = found["values"][name]
+            elif clean_value(found["values"].get(name)) is not None:
+                values[name] = clean_value(found["values"][name])
         if values.get("start_date") and not _is_iso_date(values["start_date"]):
             values["start_date"] = None  # asked, never guessed
         return Extraction(values=values, ambiguous=sorted(set(ambiguous)))
@@ -144,6 +148,68 @@ class ClaudeModelClient:
             return None
         chosen = str(data.get("record_id") or "")
         return chosen if chosen in ids else ""
+
+    def converse(
+        self,
+        system: str,
+        message: str,
+        tools: list[dict],
+        run_tool: Callable[[str, dict], str],
+        *,
+        run_id: str,
+    ) -> str | None:
+        """Claude answers, calling read-only tools as it needs, at most
+        MAX_TOOL_STEPS rounds. Sentences that mention FLSA, visa or sponsorship are
+        removed from the message first (BR-011). None when Claude fails."""
+        text = _redact(message)[:MAX_MESSAGE].strip()
+        if not text:
+            return None
+        messages: list[dict] = [
+            {"role": "user", "content": f"<message>\n{text}\n</message>"}
+        ]
+        for _ in range(MAX_TOOL_STEPS + 1):
+            self._meter.record(run_id=run_id, case_id=CHAT_RUN, provider=PROVIDER)
+            try:
+                response = self._client.messages.create(
+                    model=self._model,
+                    max_tokens=1200,
+                    system=system,
+                    tools=tools,
+                    messages=messages,
+                )
+            except anthropic.APIError as error:
+                logger.warning(
+                    "claude chat failed",
+                    extra={"case_id": CHAT_RUN, "error": type(error).__name__},
+                )
+                return None
+            logger.info(
+                "claude usage",
+                extra={
+                    "case_id": CHAT_RUN,
+                    "input_tokens": response.usage.input_tokens,
+                    "output_tokens": response.usage.output_tokens,
+                },
+            )
+            if response.stop_reason != "tool_use":
+                reply = "".join(
+                    b.text for b in response.content if b.type == "text"
+                ).strip()
+                return reply or None
+            results = [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": run_tool(block.name, dict(block.input or {})),
+                }
+                for block in response.content
+                if block.type == "tool_use"
+            ]
+            messages += [
+                {"role": "assistant", "content": response.content},
+                {"role": "user", "content": results},
+            ]
+        return None
 
     def _ask(self, text: str, fields: list[str], *, case_id: str) -> dict | None:
         described = "\n".join(f"- {f}: {self._labels[f][0]}" for f in fields)

@@ -116,11 +116,15 @@ def test_duplicate_email_is_blocked_and_names_the_case(
     second = _start(coworker, mailbox, "03_duplicate")
 
     alert = app_conn.execute(
-        "SELECT text FROM mocks.alerts WHERE case_id = %s", (first.case_id,)
+        "SELECT text FROM mocks.alerts WHERE case_id = %s"
+        " AND text LIKE 'This start was not processed%%'",
+        (first.case_id,),
     ).fetchone()[0]
     assert second.state == "blocked_duplicate"
     assert second.case_id is None and second.blocked_by == first.case_id
-    assert first.case_id in alert
+    # people see the candidate and role, never the internal case ID
+    assert "SYN-0042 · Data Analyst" in alert
+    assert first.case_id not in alert
 
 
 def test_contradiction_asks_for_one_work_arrangement(coworker, mailbox) -> None:

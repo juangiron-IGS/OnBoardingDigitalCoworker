@@ -47,9 +47,9 @@ def register_app(logo: Path) -> None:
 
 def headline(alert: dict, more: int) -> tuple[str, str]:
     """(title, body) of the notification; the title names the case."""
-    case = alert.get("case_id") or "Onboarding"
+    # The text names the case by candidate and role; the internal ID stays out.
     extra = f"  (+{more} more)" if more else ""
-    return f"New alert · {case}", alert["text"] + extra
+    return "New onboarding alert", alert["text"] + extra
 
 
 class Notifier:

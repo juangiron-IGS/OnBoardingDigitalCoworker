@@ -9,7 +9,12 @@ from datetime import date
 from agents.access_equipment import agent as access
 from agents.candidate_followup import agent as followup_agent
 from agents.common import notifications
-from agents.common.model_client import ModelClient, load_labels, load_required
+from agents.common.model_client import (
+    ModelClient,
+    clean_value,
+    load_labels,
+    load_required,
+)
 from agents.culture_belonging import agent as igs_agent
 from agents.intake_validation import agent as intake
 from agents.jobdiva_workflow import agent as workflow_agent
@@ -50,6 +55,7 @@ class StartResult:
     missing: list[str] = field(default_factory=list)
     contradictions: list[str] = field(default_factory=list)
     blocked_by: str | None = None
+    label: str | None = None  # "SYN-0043 · QA Engineer", for people
 
 
 class Orchestrator:
@@ -111,8 +117,28 @@ class Orchestrator:
     def knows(self) -> bool:
         return self._knowledge is not None
 
+    def label(self, case_id: str) -> str:
+        """How people see a case: its candidate and role, e.g. "SYN-0043 · QA
+        Engineer". The internal case ID stays in the system and the audit."""
+        try:
+            data = self._cases.case_data(case_id)
+        except GovernanceError:
+            return case_id
+        person = str(data.get("person_ref") or case_id)
+        role = str(data.get("role") or "").strip()
+        return f"{person} · {role}" if role else person
+
+    @property
+    def model(self) -> ModelClient:
+        return self._model
+
     def ask_knowledge(
-        self, question: str, *, asked_by: str, channel: str
+        self,
+        question: str,
+        *,
+        asked_by: str,
+        channel: str,
+        register_unanswered: bool = True,
     ) -> knowledge_agent.KnowledgeAnswer:
         """Route a process question to the Onboarding Knowledge agent (US-025)."""
         if self._knowledge is None:
@@ -123,6 +149,7 @@ class Orchestrator:
             asked_by=asked_by,
             channel=channel,
             model=self._model,
+            register_unanswered=register_unanswered,
         )
 
     def read_labelled(self, text: str) -> dict[str, str]:
@@ -173,10 +200,12 @@ class Orchestrator:
                 self._alerts,
                 blocked.existing_ref,
                 RECRUITER,
-                notifications.duplicate_text(blocked.existing_ref),
+                notifications.duplicate_text(self.label(blocked.existing_ref)),
             )
             return StartResult(
-                state="blocked_duplicate", blocked_by=blocked.existing_ref
+                state="blocked_duplicate",
+                blocked_by=blocked.existing_ref,
+                label=self.label(blocked.existing_ref),
             )
 
         self._cases.move_case(case_id, CaseState.VALIDATED, agent=intake.AGENT)
@@ -186,6 +215,10 @@ class Orchestrator:
         """The recruiter answers one question (US-003)."""
         if field_name not in self._labels:
             raise ValueError(f"unknown field {field_name!r}")
+        cleaned = clean_value(value)
+        if cleaned is None:
+            raise ValueError(f"{field_name} needs a value, not {value.strip()!r}")
+        value = cleaned
         data = self._cases.case_data(case_id)
         contradictions = [f for f in data.get("contradictions", []) if f != field_name]
         # The package cites the recruiter for this value, not the start's channel.
@@ -284,7 +317,7 @@ class Orchestrator:
                 self._alerts,
                 case_id,
                 IT,
-                notifications.it_request_text(case_id, package_version),
+                notifications.it_request_text(self.label(case_id), package_version),
             )
             self._cases.log_action(case_id, agent=access.AGENT, action="alert_it")
             return None
@@ -308,7 +341,9 @@ class Orchestrator:
             self._alerts,
             case_id,
             CANDIDATE,
-            notifications.checklist_text(case_id, [item for item, _ in items]),
+            notifications.checklist_text(
+                self.label(case_id), [item for item, _ in items]
+            ),
         )
 
     def run_followup(self, case_id: str, *, at_hours: int) -> list[dict]:
@@ -337,11 +372,13 @@ class Orchestrator:
             )
             if kind == "reminder":
                 reminders += 1
-                text = notifications.reminder_text(case_id, outstanding, reminders)
+                text = notifications.reminder_text(
+                    self.label(case_id), outstanding, reminders
+                )
                 notifications.notify(self._alerts, case_id, CANDIDATE, text)
             else:
                 text = notifications.followup_escalation_text(
-                    case_id, outstanding, hour
+                    self.label(case_id), outstanding, hour
                 )
                 notifications.notify(self._alerts, case_id, ONBOARDING, text)
         return [{"kind": kind, "at_hours": hour} for kind, hour in due]
@@ -391,7 +428,7 @@ class Orchestrator:
             self._alerts,
             case_id,
             ONBOARDING,
-            notifications.payroll_return_text(case_id),
+            notifications.payroll_return_text(self.label(case_id)),
         )
         return {"task_id": task_id}
 
@@ -414,7 +451,7 @@ class Orchestrator:
             self._alerts,
             case_id,
             CANDIDATE,
-            notifications.info_package_text(case_id, content["sections"]),
+            notifications.info_package_text(self.label(case_id), content["sections"]),
         )
         return {"status": "sent", "sections": len(content["sections"])}
 
@@ -441,7 +478,7 @@ class Orchestrator:
             self._alerts,
             case_id,
             LDC,
-            notifications.ldc_handoff_text(case_id, entry["kit_ship_by"]),
+            notifications.ldc_handoff_text(self.label(case_id), entry["kit_ship_by"]),
         )
         return result
 
@@ -498,7 +535,10 @@ class Orchestrator:
             return []
         self._cases.draft_leader_messages(case_id, drafts, agent=igs_agent.AGENT)
         notifications.notify(
-            self._alerts, case_id, LDC, notifications.leader_drafts_text(case_id)
+            self._alerts,
+            case_id,
+            LDC,
+            notifications.leader_drafts_text(self.label(case_id)),
         )
         return [{"kind": kind} for kind, *_ in drafts]
 
@@ -556,7 +596,7 @@ class Orchestrator:
 
     def _escalate(self, case_id: str, fields: list[str]) -> None:
         """US-009: Onboarding and HR decide; alerts name fields only (BR-011)."""
-        text = notifications.escalation_text(case_id, fields, self._labels)
+        text = notifications.escalation_text(self.label(case_id), fields, self._labels)
         for recipient in ("Onboarding Team", "HR"):
             notifications.notify(self._alerts, case_id, recipient, text)
         self._cases.log_action(
@@ -582,7 +622,9 @@ class Orchestrator:
             self._alerts,
             case_id,
             SUPERVISOR,
-            notifications.owner_text(case_id, owner.value, owner.source_or_rule_id),
+            notifications.owner_text(
+                self.label(case_id), owner.value, owner.source_or_rule_id
+            ),
         )
         self._cases.log_action(
             case_id,
@@ -610,7 +652,7 @@ class Orchestrator:
                 case_id,
                 RECRUITER,
                 notifications.missing_fields_text(
-                    case_id, missing, contradictions, self._labels
+                    self.label(case_id), missing, contradictions, self._labels
                 ),
             )
             self._cases.log_action(
@@ -625,11 +667,16 @@ class Orchestrator:
                 case_id=case_id,
                 missing=missing,
                 contradictions=contradictions,
+                label=self.label(case_id),
             )
 
         self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
         self._set_up(case_id, data)
-        return StartResult(state=self._cases.case_state(case_id).value, case_id=case_id)
+        return StartResult(
+            state=self._cases.case_state(case_id).value,
+            case_id=case_id,
+            label=self.label(case_id),
+        )
 
     def _set_up(self, case_id: str, data: dict) -> int:
         """Build the package for a case in Case set up; returns its version."""

@@ -74,3 +74,9 @@ class RulesCatalog:
 
     def matching(self, domain: str, case: dict[str, object]) -> list[Rule]:
         return [rule for rule in self.rules(domain) if rule.applies_to(case)]
+
+
+def onboarding_team(root: Path = RULES_ROOT) -> list[str]:
+    """The Onboarding Team people who can be assigned as follow-up owner (US-032)."""
+    with (root / "owners" / "team.yaml").open(encoding="utf-8") as handle:
+        return [str(name) for name in (yaml.safe_load(handle) or {}).get("members", [])]

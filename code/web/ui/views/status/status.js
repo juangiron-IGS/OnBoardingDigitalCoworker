@@ -183,7 +183,7 @@ async function drawCase(root, caseId, show) {
   const now = view.case.state;
   const reached = PATH.indexOf(now);
   root.append(el("section", { class: "card" },
-    el("h2", {}, `${view.case.person_ref} · ${view.case.id}`),
+    el("h2", {}, [view.case.person_ref, view.case.data.role].filter(Boolean).join(" · ")),
     el("div", { class: "steps", "aria-label": "Case states" }, PATH.map((s, i) =>
       el("span", { class: `step${s === now ? " now" : reached > i ? " done" : ""}` }, STATE_LABELS[s]))),
     PATH.includes(now) ? null : el("p", {}, "Current state: ", statePill(now)),
