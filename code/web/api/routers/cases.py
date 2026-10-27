@@ -55,6 +55,7 @@ def get_case(case_id: str, cases: Cases, coworker: Coworker, role: Role) -> dict
     if view is None:
         raise HTTPException(404, detail=f"No case {case_id!r}")
     view["questions"] = coworker.questions(case_id)
+    view["candidate_email"] = coworker.candidate_email(case_id)
     return view
 
 

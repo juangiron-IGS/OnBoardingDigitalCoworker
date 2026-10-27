@@ -74,8 +74,19 @@ function followupCard(view, caseId, show) {
           onclick: act(() => api.countersign(caseId, c.item), () => `${c.item} verified.`) }, "Countersign") : null));
   });
   const allVerified = view.checklist.every((c) => c.status === "verified");
+  const outstanding = view.checklist.filter((c) => c.status === "outstanding").map((c) => c.item);
+  const mail = view.candidate_email;
   return el("section", { class: "card" },
     el("h2", {}, "Candidate documents"),
+    mail ? el("details", { class: "email-preview", open: state === "documents_pending" },
+      el("summary", {}, "Email sent to the candidate (simulated)"),
+      el("div", { class: "meta" }, `To: ${mail.to}`),
+      el("div", {}, el("strong", {}, mail.subject)),
+      mail.body.map((line) => el("p", {}, line))) : null,
+    isTeam && state === "documents_pending" && outstanding.length ? el("div", { class: "actions" },
+      el("button", { class: "btn primary", type: "button",
+        onclick: act(() => api.deliver(caseId, outstanding), (r) => r.missing.length ? `Still missing: ${r.missing.join("; ")}.` : "The candidate sent every document. Countersign each one to verify it.") },
+        "Simulate: the candidate sent the documents")) : null,
     el("p", { class: "lead" }, "The checklist the candidate received. A delivered document is verified only when the Onboarding Team countersigns it."),
     el("div", { class: "list" }, rows),
     el("h3", {}, "Reminders"),

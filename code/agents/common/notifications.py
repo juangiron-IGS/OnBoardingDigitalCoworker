@@ -58,6 +58,24 @@ def checklist_text(case: str, items: list[str]) -> str:
     )
 
 
+def checklist_email(case: str, items: list[str]) -> dict:
+    """The checklist as the email the candidate receives (simulated, US-022)."""
+    return {
+        "to": "Candidate (synthetic mailbox)",
+        "subject": f"Welcome to INSPYR: documents for your onboarding ({case})",
+        "body": [
+            "Hello,",
+            f"Welcome to INSPYR! To complete your onboarding ({case}), please send "
+            "us these documents:",
+            *[f"- {item}" for item in items],
+            "Reply to this email with the documents attached. If something is "
+            "still missing, we will send you a reminder.",
+            "Thank you,",
+            "INSPYR Onboarding Team",
+        ],
+    }
+
+
 def reminder_text(case: str, items: list[str], number: int) -> str:
     return (
         f"Reminder {number} for {case}: we are still waiting for "
