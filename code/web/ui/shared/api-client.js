@@ -38,6 +38,7 @@ export const api = {
   process: (id) => call("POST", `/api/inbox/${encodeURIComponent(id)}/process`),
   cases: () => call("GET", "/api/cases"),
   rule: (id) => call("GET", `/api/rules/${encodeURIComponent(id)}`),
+  team: () => call("GET", "/api/rules/owners/team"),
   dashboard: () => call("GET", "/api/cases/dashboard"),
   case: (id) => call("GET", `/api/cases/${encodeURIComponent(id)}`),
   answer: (id, field, value) => call("POST", `/api/cases/${encodeURIComponent(id)}/answers`, { field, value }),
