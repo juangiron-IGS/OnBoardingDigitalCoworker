@@ -47,6 +47,7 @@ os.environ["AGENT_TRANSPORT"] = "in_process"
 os.environ["FEATURE_ACCESS_EQUIPMENT"] = "false"
 os.environ["FEATURE_CANDIDATE_FOLLOWUP"] = "false"
 os.environ["FEATURE_PAYROLL_PACKAGE"] = "false"
+os.environ["FEATURE_IGS_HANDOFF"] = "false"
 # The suite never calls a real model or holds its key, whatever code/.env says.
 os.environ["MODEL_PROVIDER"] = "rules"
 os.environ.pop("ANTHROPIC_API_KEY", None)

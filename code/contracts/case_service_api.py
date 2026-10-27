@@ -107,12 +107,50 @@ class CaseServiceClient(Protocol):
 
     def record_payroll_return(self, case_id: str, issue: str, *, agent: str) -> int: ...
 
+    # Culture and Belonging (US-028, US-029): LDC approves before anything is sent
+    def record_kit_approval(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> None: ...
+
+    def kit_approved(self, case_id: str, package_version: int) -> bool: ...
+
+    def draft_leader_messages(
+        self, case_id: str, drafts: list[tuple[str, str, str, str]], *, agent: str
+    ) -> None: ...
+
+    def leader_messages(self, case_id: str) -> list[dict[str, Any]]: ...
+
+    def approve_leader_message(
+        self, case_id: str, message_id: int, *, approved_by: str
+    ) -> None: ...
+
+    def mark_leader_message_sent(
+        self, case_id: str, message_id: int, *, agent: str
+    ) -> dict: ...
+
+    # New-hire information package (US-031)
+    def prepare_info_package(
+        self, case_id: str, content: dict, *, agent: str
+    ) -> None: ...
+
+    def info_package(self, case_id: str) -> dict[str, Any] | None: ...
+
+    def send_info_package(self, case_id: str, *, reviewed_by: str) -> dict: ...
+
     def approval_id_for(self, case_id: str, package_version: int) -> str | None:
         """The approval ID of this version, or None if it is not approved."""
         ...
 
     def assign_owner(self, case_id: str, owner: str, *, assigned_by: str) -> None:
         """A person assigns the follow-up owner (US-032); the audit records who."""
+        ...
+
+    def list_cases(self) -> list[dict[str, Any]]:
+        """The latest cases with state, version and package timing."""
+        ...
+
+    def case_view(self, case_id: str, *, role: str) -> dict[str, Any] | None:
+        """The case as this role may see it: restricted values hidden (US-040)."""
         ...
 
     def find_case(self, ref: str) -> str | None:

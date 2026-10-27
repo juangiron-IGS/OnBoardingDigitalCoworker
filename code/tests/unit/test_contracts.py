@@ -33,6 +33,8 @@ def test_simulated_actions_are_the_approved_set() -> None:
                 "create_task_list",
                 "create_it_request",
                 "send_payroll_package",
+                "create_ldc_entry",
+                "send_welcome_kit",
             }
         )
         == SIMULATED_ACTIONS

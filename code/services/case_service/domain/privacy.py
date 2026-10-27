@@ -3,7 +3,7 @@
 The authorized roles are a default pending confirmation (OQ-003).
 """
 
-ROLES = frozenset({"recruiter", "onboarding", "approver", "it"})
+ROLES = frozenset({"recruiter", "onboarding", "approver", "it", "ldc"})
 RESTRICTED_FIELDS = frozenset({"flsa", "sponsorship_visa"})
 AUTHORIZED_ROLES = frozenset({"onboarding", "approver"})
 HIDDEN = "Restricted"

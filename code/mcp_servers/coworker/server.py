@@ -37,6 +37,7 @@ RECIPIENTS = {
     "onboarding": ["Onboarding Team", "HR"],
     "approver": ["Onboarding Supervisor"],
     "it": ["IT"],
+    "ldc": ["LDC"],
 }
 
 _catalog = RulesCatalog.load()

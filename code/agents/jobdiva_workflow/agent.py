@@ -64,6 +64,32 @@ def payroll_package(lines: list[dict], checklist: list[dict]) -> dict[str, str]:
     return payload
 
 
+def create_ldc_entry(
+    workflow: JobDivaWorkflow,
+    *,
+    approval_id: str,
+    package_version: int,
+    payload: dict[str, str],
+) -> dict:
+    """The LDC tracker entry (SharePoint list, simulated), US-028 AC-001."""
+    return workflow.execute_simulated_action(
+        approval_id, package_version, "create_ldc_entry", payload
+    )
+
+
+def send_welcome_kit(
+    workflow: JobDivaWorkflow,
+    *,
+    approval_id: str,
+    package_version: int,
+    payload: dict[str, str],
+) -> dict:
+    """The welcome kit shipment, once LDC approved it (US-028 AC-002)."""
+    return workflow.execute_simulated_action(
+        approval_id, package_version, "send_welcome_kit", payload
+    )
+
+
 def send_payroll_package(
     workflow: JobDivaWorkflow,
     *,

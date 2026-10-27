@@ -49,7 +49,7 @@ Type `How is <candidate ID> doing?`, for example `How is SYN-0873 doing?`. The r
 
 ## 6. Status and audit (1 min)
 
-Open **Status**:
+Open **Dashboard**: every case sits under its current state with what is pending (who must act) and its risks, such as a blocked package or a start date close without approval. Select the approved case to open it in **Status**:
 - the case path from *Received* to *Actions executed*;
 - the JobDiva case (mock) and the task list, each carrying the **approval ID**;
 - the audit log: Intake and Validation, Policy and Case Setup, the approver and JobDiva and Workflow on one case, with the rules used.
@@ -70,6 +70,14 @@ Check that `code/.env` has `FEATURE_CANDIDATE_FOLLOWUP=true` and `FEATURE_PAYROL
 2. Press **Simulate time** three times: a reminder at 24 h and at 48 h (**R-RM-01**), then an escalation to the Onboarding Team at 72 h.
 3. Press **Candidate delivered** on each item: it shows *Pending countersign*, not verified. Press **Countersign** on each.
 4. Press **Approve payroll handoff**: the single writer sends the payroll package to Paychex (simulated) with validated data only, and the case is *Sent to payroll*. Press **Simulate a Paychex return**: the issue appears as a task and in the audit log.
+
+### New-hire information package (optional, 30 s)
+
+As **Onboarding Team**, in **Status**, press **Prepare the package**: it holds only validated records for the company (**KB-008**), the client (**KB-009**) and the role (**KB-010**), with no FLSA, visa or sponsorship data. Press **Reviewed: send to the new hire**.
+
+### Culture and Belonging (optional, 40 s)
+
+With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** in **Status**: the kit ships 5 days before the start (**R-IG-01**). Press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the leader feedback request and the congratulation are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
 
 ## 9. Onboarding knowledge (1 min)
 

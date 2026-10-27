@@ -1,0 +1,28 @@
+# Culture and Belonging (IGS): which hires go to the LDC tracker, the accelerated
+# timing, and the leader message templates (FR-IGS-001, FR-FBK-001). Owned by LDC.
+# Example content (status: draft). Templates may use only {person}, {role},
+# {client} and {start}: never FLSA, visa or sponsorship (BR-011).
+domain: igs
+rules:
+  - id: R-IG-01
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {kit_ship_days_before_start: 5, feedback_after_days: 60}
+  - id: R-IG-02
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result:
+      kind: feedback_request
+      template: "{person} joined {client} as {role} on {start}. How are the first two months going? Please share a short feedback with LDC."
+  - id: R-IG-03
+    owner: LDC
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result:
+      kind: congratulation
+      template: "Congratulations to {person} on two months as {role} with {client}. Thank you for being part of INSPYR!"

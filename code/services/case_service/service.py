@@ -6,7 +6,8 @@ from .adapters.postgres import queries
 from .adapters.postgres.audit_log import PostgresAuditLog
 from .adapters.postgres.case_repository import PostgresCaseRepository
 from .adapters.postgres.followup_repository import PostgresFollowupRepository
-from .application import decisions, followup
+from .adapters.postgres.igs_repository import PostgresIgsRepository
+from .application import decisions, followup, igs
 from .application.assign_owner import assign_owner
 from .application.build_package import build_package
 from .application.case_data import log_action, record_answers
@@ -30,6 +31,7 @@ class LocalCaseService:
         self._repo = PostgresCaseRepository(conn)
         self._audit = PostgresAuditLog(conn)
         self._followup = PostgresFollowupRepository(conn)
+        self._igs = PostgresIgsRepository(conn)
         self._jobdiva_read = jobdiva_read
 
     def create_case(self, intake: CaseIntake, *, agent: str) -> str:
@@ -239,6 +241,65 @@ class LocalCaseService:
     def payroll_returns(self, case_id: str) -> list[dict[str, Any]]:
         return self._followup.payroll_returns(case_id)
 
+    # Culture and Belonging (US-028, US-029)
+    def record_kit_approval(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> None:
+        igs.record_kit_approval(
+            self._repo,
+            self._igs,
+            self._audit,
+            case_id,
+            package_version=package_version,
+            approved_by=approved_by,
+        )
+
+    def kit_approved(self, case_id: str, package_version: int) -> bool:
+        return self._igs.kit_approved(case_id, package_version)
+
+    def draft_leader_messages(
+        self, case_id: str, drafts: list[tuple[str, str, str, str]], *, agent: str
+    ) -> None:
+        igs.draft_messages(
+            self._repo, self._igs, self._audit, case_id, drafts, agent=agent
+        )
+
+    def leader_messages(self, case_id: str) -> list[dict[str, Any]]:
+        return self._igs.messages(case_id)
+
+    def approve_leader_message(
+        self, case_id: str, message_id: int, *, approved_by: str
+    ) -> None:
+        igs.approve_message(
+            self._repo,
+            self._igs,
+            self._audit,
+            case_id,
+            message_id,
+            approved_by=approved_by,
+        )
+
+    def mark_leader_message_sent(
+        self, case_id: str, message_id: int, *, agent: str
+    ) -> dict:
+        return igs.mark_sent(
+            self._repo, self._igs, self._audit, case_id, message_id, agent=agent
+        )
+
+    # New-hire information package (US-031)
+    def prepare_info_package(self, case_id: str, content: dict, *, agent: str) -> None:
+        igs.prepare_info_package(
+            self._repo, self._igs, self._audit, case_id, content, agent=agent
+        )
+
+    def info_package(self, case_id: str) -> dict[str, Any] | None:
+        return self._igs.info_package(case_id)
+
+    def send_info_package(self, case_id: str, *, reviewed_by: str) -> dict:
+        return igs.send_info_package(
+            self._repo, self._igs, self._audit, case_id, reviewed_by=reviewed_by
+        )
+
     def find_case(self, ref: str) -> str | None:
         return queries.find_case(self._conn, ref)
 
@@ -260,4 +321,9 @@ class LocalCaseService:
         view["checklist"] = self._followup.checklist(case_id)
         view["reminders"] = self._followup.reminders(case_id)
         view["payroll_returns"] = self._followup.payroll_returns(case_id)
+        view["leader_messages"] = self._igs.messages(case_id)
+        view["info_package"] = self._igs.info_package(case_id)
+        view["case"]["kit_approved"] = self._igs.kit_approved(
+            case_id, view["case"]["package_version"]
+        )
         return view

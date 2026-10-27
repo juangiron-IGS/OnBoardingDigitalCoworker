@@ -28,6 +28,7 @@ HELP = (
 
 STATE_LABELS = {
     CaseState.RECEIVED: "Received",
+    CaseState.BLOCKED_DUPLICATE: "Blocked: duplicate",
     CaseState.VALIDATED: "Validated",
     CaseState.NEEDS_CLARIFICATION: "Needs clarification",
     CaseState.CASE_SET_UP: "Case set up",

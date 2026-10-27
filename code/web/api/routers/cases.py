@@ -43,6 +43,12 @@ def list_cases(cases: Cases, role: Role) -> list[dict]:
     return cases.list_cases()
 
 
+@router.get("/dashboard")
+def dashboard(coworker: Coworker, role: Role) -> list[dict]:
+    """The status dashboard (US-030): cases by state, pending items and risks."""
+    return coworker.dashboard(role=role)
+
+
 @router.get("/{case_id}")
 def get_case(case_id: str, cases: Cases, coworker: Coworker, role: Role) -> dict:
     view = cases.case_view(case_id, role=role)
@@ -269,6 +275,87 @@ def payroll_return(
     _onboarding_only(role)
     try:
         return coworker.record_payroll_return(case_id, body.issue.strip())
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+# --- New-hire information package (US-031) ---
+
+
+@router.post("/{case_id}/info-package")
+def prepare_info_package(
+    case_id: str, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Prepare the package from validated knowledge (US-031 AC-001)."""
+    _onboarding_only(role)
+    try:
+        return coworker.prepare_info_package(case_id)
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+@router.post("/{case_id}/info-package/send")
+def send_info_package(
+    case_id: str, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """The Onboarding Team reviewed the package and sends it."""
+    _onboarding_only(role)
+    try:
+        return coworker.send_info_package(case_id, reviewed_by=role)
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+# --- Culture and Belonging (US-028, US-029) ---
+
+
+def _ldc_only(role: str) -> None:
+    if role != "ldc":
+        raise HTTPException(403, detail="Only LDC does this")
+
+
+class KitApproval(BaseModel):
+    package_version: int = Field(ge=1)
+
+
+@router.post("/{case_id}/welcome-kit")
+def approve_welcome_kit(
+    case_id: str, body: KitApproval, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """LDC approves the welcome kit; then it ships (US-028 AC-002)."""
+    _ldc_only(role)
+    try:
+        return coworker.approve_welcome_kit(
+            case_id, package_version=body.package_version, approved_by=role
+        )
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+class IgsRun(BaseModel):
+    at_days: int = Field(ge=0, le=365)
+
+
+@router.post("/{case_id}/igs/run")
+def run_igs_schedule(
+    case_id: str, body: IgsRun, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Simulates the two-month schedule (US-029 AC-003)."""
+    _ldc_only(role)
+    try:
+        return {"drafted": coworker.run_igs_schedule(case_id, at_days=body.at_days)}
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+@router.post("/{case_id}/leader-messages/{message_id}/approval")
+def approve_leader_message(
+    case_id: str, message_id: int, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """LDC approves a leader message, which is then sent (US-029 AC-001)."""
+    _ldc_only(role)
+    try:
+        return coworker.approve_leader_message(case_id, message_id, approved_by=role)
     except GovernanceError as refusal:
         raise _refused(refusal, cases, case_id) from None
 

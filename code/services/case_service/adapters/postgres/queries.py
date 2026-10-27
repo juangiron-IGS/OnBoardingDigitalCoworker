@@ -8,7 +8,14 @@ import psycopg
 
 from ...domain.timing import package_timing
 
-MOCK_STORES = ("jobdiva_cases", "task_lists", "it_requests", "payroll_packages")
+MOCK_STORES = (
+    "jobdiva_cases",
+    "task_lists",
+    "it_requests",
+    "payroll_packages",
+    "ldc_tracker",
+    "welcome_kits",
+)
 
 
 def _timing(

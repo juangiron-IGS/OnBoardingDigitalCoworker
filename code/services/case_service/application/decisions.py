@@ -76,6 +76,7 @@ APPROVED_STATES = frozenset(
         CaseState.ACTIONS_EXECUTED,
         CaseState.DOCUMENTS_PENDING,
         CaseState.IN_VERIFICATION,
+        CaseState.SENT_TO_PAYROLL,
     }
 )
 

@@ -10,6 +10,7 @@ from agents.access_equipment import agent as access
 from agents.candidate_followup import agent as followup_agent
 from agents.common import notifications
 from agents.common.model_client import ModelClient, load_labels, load_required
+from agents.culture_belonging import agent as igs_agent
 from agents.intake_validation import agent as intake
 from agents.jobdiva_workflow import agent as workflow_agent
 from agents.onboarding_knowledge import agent as knowledge_agent
@@ -32,6 +33,8 @@ SUPERVISOR = "Onboarding Supervisor"
 IT = "IT"
 CANDIDATE = "Candidate"
 ONBOARDING = "Onboarding Team"
+LDC = "LDC"
+LEADER = "Leader"
 
 
 def _flag(name: str, value: bool | None) -> bool:
@@ -63,6 +66,7 @@ class Orchestrator:
         knowledge: KnowledgeBase | None = None,
         followup: bool | None = None,
         payroll: bool | None = None,
+        igs: bool | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
@@ -80,6 +84,8 @@ class Orchestrator:
         # Should agents S2 and S4 (US-022..024), behind their feature flags
         self._followup = _flag("FEATURE_CANDIDATE_FOLLOWUP", followup)
         self._payroll = _flag("FEATURE_PAYROLL_PACKAGE", payroll)
+        # Could agent C1 (US-028, US-029), behind its feature flag
+        self._igs = _flag("FEATURE_IGS_HANDOFF", igs)
         self._labels = load_labels()
         self._required = load_required()
 
@@ -94,6 +100,12 @@ class Orchestrator:
         from .chat import respond
 
         return respond(self, message, case_id, asked_by=asked_by)
+
+    def dashboard(self, *, role: str) -> list[dict]:
+        """US-030: cases by state, with pending items and risks."""
+        from .dashboard import build
+
+        return build(self, role=role)
 
     @property
     def knows(self) -> bool:
@@ -220,6 +232,10 @@ class Orchestrator:
                 results.append(sent)
             if self._followup:
                 self._send_checklist(case_id, package_version)
+            if self._igs:
+                entry = self._handoff_to_igs(case_id, package_version, approval_id)
+                if entry:
+                    results.append(entry)
             return {
                 "state": self._cases.case_state(case_id).value,
                 "approval_id": approval_id,
@@ -374,6 +390,128 @@ class Orchestrator:
             notifications.payroll_return_text(case_id),
         )
         return {"task_id": task_id}
+
+    # --- New-hire information package (US-031) ---
+
+    def prepare_info_package(self, case_id: str) -> dict:
+        """Company, client and role information from validated knowledge only, for
+        the Onboarding Team to review before it is sent."""
+        if self._knowledge is None:
+            raise ValueError("the knowledge base is not available")
+        content = knowledge_agent.new_hire_package(
+            self._cases.case_data(case_id), self._knowledge.records()
+        )
+        self._cases.prepare_info_package(case_id, content, agent=knowledge_agent.AGENT)
+        return self._cases.info_package(case_id) or {}
+
+    def send_info_package(self, case_id: str, *, reviewed_by: str) -> dict:
+        content = self._cases.send_info_package(case_id, reviewed_by=reviewed_by)
+        notifications.notify(
+            self._alerts,
+            case_id,
+            CANDIDATE,
+            notifications.info_package_text(case_id, content["sections"]),
+        )
+        return {"status": "sent", "sections": len(content["sections"])}
+
+    # --- Culture and Belonging (US-028, US-029) ---
+
+    def _handoff_to_igs(
+        self, case_id: str, package_version: int, approval_id: str
+    ) -> dict | None:
+        """US-028 AC-001: the LDC tracker entry, with accelerated timing and kit."""
+        entry = igs_agent.plan(
+            self._cases.case_data(case_id),
+            self._cases.package_lines(case_id, package_version),
+            self._catalog,
+        )
+        if entry is None:
+            return None
+        result = workflow_agent.create_ldc_entry(
+            self._workflow,
+            approval_id=approval_id,
+            package_version=package_version,
+            payload=entry,
+        )
+        notifications.notify(
+            self._alerts,
+            case_id,
+            LDC,
+            notifications.ldc_handoff_text(case_id, entry["kit_ship_by"]),
+        )
+        return result
+
+    def approve_welcome_kit(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> dict:
+        """US-028 AC-002: LDC approves the kit; only then the single writer ships it."""
+        if not self._igs:
+            raise GovernanceError("igs_handoff_disabled")
+        self._cases.record_kit_approval(
+            case_id, package_version=package_version, approved_by=approved_by
+        )
+        approval_id = self._cases.approval_id_for(case_id, package_version)
+        if approval_id is None:
+            raise GovernanceError("no_approval")
+        entry = igs_agent.plan(
+            self._cases.case_data(case_id),
+            self._cases.package_lines(case_id, package_version),
+            self._catalog,
+        )
+        if entry is None:
+            raise GovernanceError("no_igs_handoff")
+        sent = workflow_agent.send_welcome_kit(
+            self._workflow,
+            approval_id=approval_id,
+            package_version=package_version,
+            payload={k: entry[k] for k in ("person_ref", "welcome_kit", "kit_ship_by")},
+        )
+        return {"case_id": case_id, "kit_approved": True, "sent": sent}
+
+    def run_igs_schedule(self, case_id: str, *, at_days: int) -> list[dict]:
+        """US-029 AC-003: at two months, draft the leader feedback request and the
+        congratulation for LDC approval. Runs at a (simulated) day since the start."""
+        if at_days < 0:
+            raise ValueError("at_days must be zero or more")
+        if not self._igs or self._cases.leader_messages(case_id):
+            return []
+        version = self._cases.current_package_version(case_id)
+        data = self._cases.case_data(case_id)
+        entry = igs_agent.plan(
+            data, self._cases.package_lines(case_id, version), self._catalog
+        )
+        if entry is None or self._cases.approval_id_for(case_id, version) is None:
+            return []
+        rule = self._catalog.get(entry["rule_id"])
+        if at_days < int(rule.result["feedback_after_days"]):
+            return []
+        leader = str(data.get("manager") or "Hiring manager")
+        drafts = [
+            (kind, leader, text, rule_id)
+            for kind, text, rule_id in igs_agent.drafts(data, self._catalog)
+        ]
+        if not drafts:
+            return []
+        self._cases.draft_leader_messages(case_id, drafts, agent=igs_agent.AGENT)
+        notifications.notify(
+            self._alerts, case_id, LDC, notifications.leader_drafts_text(case_id)
+        )
+        return [{"kind": kind} for kind, *_ in drafts]
+
+    def approve_leader_message(
+        self, case_id: str, message_id: int, *, approved_by: str
+    ) -> dict:
+        """LDC approves a leader message; it is sent right after."""
+        self._cases.approve_leader_message(case_id, message_id, approved_by=approved_by)
+        return self.send_leader_message(case_id, message_id)
+
+    def send_leader_message(self, case_id: str, message_id: int) -> dict:
+        """US-029 AC-001: refused unless LDC approved the message."""
+        message = self._cases.mark_leader_message_sent(
+            case_id, message_id, agent=igs_agent.AGENT
+        )
+        notifications.notify(self._alerts, case_id, LEADER, message["text"])
+        return {"message_id": message_id, "status": "sent"}
 
     def _equipment_lines(self, data: dict) -> list:
         """S1 lines; a failing Should agent adds an exception and never stops J1."""
