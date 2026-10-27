@@ -78,3 +78,34 @@ def test_the_window_opens_the_chat_on_the_case() -> None:
         == "http://127.0.0.1:3000/?role=approver&mode=desktop#chat/case-abc"
     )
     assert window_url("http://127.0.0.1:3000", None, "it").endswith("#chat")
+
+
+def test_notification_names_the_case_and_counts_the_rest() -> None:
+    from desktop.notifier import headline
+
+    title, body = headline({"case_id": "case-abc", "text": "Missing: Bill rate."}, 2)
+
+    assert title == "New alert · case-abc"
+    assert body == "Missing: Bill rate.  (+2 more)"
+
+
+def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) -> None:
+    from desktop import notifier as module
+
+    monkeypatch.setattr(module.sys, "platform", "linux")
+    shown = []
+    notifier = module.Notifier(
+        tmp_path / "logo.png",
+        lambda case: None,
+        lambda body, title: shown.append((title, body)),
+    )
+
+    notifier.show({"case_id": "case-1", "text": "Hi"}, 0, "Recruiter")
+
+    assert shown == [("New alert · case-1", "Hi")]
+
+
+def test_the_logo_is_drawn_large_and_sharp() -> None:
+    from desktop.tray import icon_image
+
+    assert icon_image(0, True, size=256).size == (256, 256)

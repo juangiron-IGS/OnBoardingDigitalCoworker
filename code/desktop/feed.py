@@ -53,7 +53,3 @@ def window_url(base: str, case_id: str | None, role: str) -> str:
     """The Coworker window: the chat as its main view, on the alert's case."""
     base = f"{base.rstrip('/')}/?role={role}&mode=desktop"
     return f"{base}#chat/{case_id}" if case_id else f"{base}#chat"
-
-
-def title(alert: dict) -> str:
-    return f"Onboarding Coworker · {alert.get('case_id') or 'alert'}"

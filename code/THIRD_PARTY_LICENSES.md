@@ -18,6 +18,7 @@ Direct dependencies declared in `code/pyproject.toml`. The versions are those in
 | Pillow | 12.3.0 | MIT-CMU | Coworker Tray icon image (extra `tray`) |
 | pywebview | 6.2.1 | BSD-3-Clause | Coworker window the tray opens, on Windows' Edge WebView2 (extra `tray`) |
 | pythonnet | 3.2.1 | MIT | Installed by pywebview on Windows (extra `tray`) |
+| Windows-Toasts | 1.3.1 | Apache-2.0 | Coworker Tray notifications with the Coworker's name, logo and an Open case button (extra `tray`, Windows) |
 
 ## Development and test
 

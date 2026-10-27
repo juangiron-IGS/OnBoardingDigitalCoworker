@@ -56,7 +56,7 @@ Then open the web app (http://127.0.0.1:3000) as the Approver to review and appr
 
 ## Coworker Tray (Windows notifications)
 
-The tray is an MCP client too. It starts `onboarding-coworker` over stdio with the role picked in its menu (`COWORKER_MCP_ROLE`) and calls only `my_alerts`, every 5 seconds. A new alert shows a Windows notification and a red dot on the icon; **Open latest alert** (or a click on the icon) opens the Coworker window docked above the clock, as that role. The chat is its main view, on the alert's case; Approval, Dashboard, Status and the other views are tabs, with the same controls as the web app (`?mode=desktop`). **Open in the browser** opens it in the browser instead.
+The tray is an MCP client too. It starts `onboarding-coworker` over stdio with the role picked in its menu (`COWORKER_MCP_ROLE`) and calls only `my_alerts`, every 5 seconds. A new alert shows a Windows notification from *Onboarding Coworker*, with its logo, the case, the alert text and an **Open case** button (the tray registers its name and logo once for the current user, under `HKCU\Software\Classes\AppUserModelId`), and a red dot on the icon; a click on the notification opens the case; **Open latest alert** (or a click on the icon) opens the Coworker window docked above the clock, as that role. The chat is its main view, on the alert's case; Approval, Dashboard, Status and the other views are tabs, with the same controls as the web app (`?mode=desktop`). **Open in the browser** opens it in the browser instead.
 
 ```bash
 .venv/Scripts/python -m pip install -e ".[tray]"   # once

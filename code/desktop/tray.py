@@ -17,7 +17,8 @@ import webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-from .feed import ROLES, AlertFeed, case_url, title, window_url
+from .feed import ROLES, AlertFeed, case_url, window_url
+from .notifier import Notifier, logo_path
 from .poller import poll, server_params
 from .window import CoworkerWindow
 
@@ -25,16 +26,26 @@ ACCENT = (31, 95, 174)
 ALERT = (214, 48, 49)
 
 
-def icon_image(unseen: int, connected: bool) -> Image.Image:
-    """A blue tile with a tick; grey when disconnected; a red dot for new alerts."""
-    image = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+def icon_image(unseen: int, connected: bool, size: int = 64) -> Image.Image:
+    """A blue tile with a tick; grey when disconnected; a red dot for new alerts.
+    Drawn on a 64-unit grid and scaled, so the notification logo stays sharp."""
+    k = size / 64
+    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
     draw.rounded_rectangle(
-        (4, 4, 60, 60), radius=14, fill=ACCENT if connected else (128, 128, 128)
+        (4 * k, 4 * k, 60 * k, 60 * k),
+        radius=14 * k,
+        fill=ACCENT if connected else (128, 128, 128),
     )
-    draw.line((18, 34, 28, 44, 46, 22), fill="white", width=7, joint="curve")
+    tick = [v * k for v in (18, 34, 28, 44, 46, 22)]
+    draw.line(tick, fill="white", width=round(7 * k), joint="curve")
     if unseen:
-        draw.ellipse((40, 0, 64, 24), fill=ALERT, outline="white", width=2)
+        draw.ellipse(
+            (40 * k, 0, 64 * k, 24 * k),
+            fill=ALERT,
+            outline="white",
+            width=max(2, round(2 * k)),
+        )
     return image
 
 
@@ -56,6 +67,9 @@ class CoworkerTray:
         self.window = (
             CoworkerWindow(window_url(app_url, None, role)) if window else None
         )
+        logo = logo_path()
+        icon_image(0, True, size=256).save(logo)
+        self.notifier = Notifier(logo, self._open_case, self.icon.notify)
 
     # --- MCP polling, on its own thread with its own event loop ---
 
@@ -85,9 +99,7 @@ class CoworkerTray:
     def _on_alerts(self, alerts: list[dict]) -> None:
         fresh = self.feed.new(alerts)
         if fresh and not self.paused:
-            latest = fresh[-1]
-            more = f" (+{len(fresh) - 1} more)" if len(fresh) > 1 else ""
-            self.icon.notify(latest["text"] + more, title(latest))
+            self.notifier.show(fresh[-1], len(fresh) - 1, ROLES[self.role])
         self._refresh()
 
     # --- icon and menu ---
@@ -144,16 +156,17 @@ class CoworkerTray:
             pystray.MenuItem("Quit", self._quit),
         )
 
-    def _opener(self, case_id: str | None):  # noqa: ANN202
-        def open_case(icon, item) -> None:  # noqa: ANN001
-            self.feed.mark_seen()
-            if self.window:
-                self.window.open(window_url(self.app_url, case_id, self.role))
-            else:
-                webbrowser.open(case_url(self.app_url, case_id, self.role))
-            self._refresh()
+    def _open_case(self, case_id: str | None) -> None:
+        """From the menu, the icon or a click on a notification."""
+        self.feed.mark_seen()
+        if self.window:
+            self.window.open(window_url(self.app_url, case_id, self.role))
+        else:
+            webbrowser.open(case_url(self.app_url, case_id, self.role))
+        self._refresh()
 
-        return open_case
+    def _opener(self, case_id: str | None):  # noqa: ANN202
+        return lambda icon, item: self._open_case(case_id)
 
     def _browser(self, icon, item) -> None:  # noqa: ANN001
         webbrowser.open(case_url(self.app_url, None, self.role))
