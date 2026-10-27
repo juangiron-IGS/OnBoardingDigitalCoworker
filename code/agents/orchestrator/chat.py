@@ -70,6 +70,15 @@ def respond(
     # A question is never stored as an answer; labelled answers always count.
     answering = not QUESTION.search(text) or bool(open_fields & set(labelled))
     if open_fields and answering and not _is_new_start(labelled):
+        if asked_by != "recruiter":
+            # The start data comes from the recruiter who sent the email (US-004).
+            labels = ", ".join(q["label"] for q in orch.questions(case_id))
+            return ChatReply(
+                reply=f"{orch.label(case_id)} is waiting for the recruiter to answer: "
+                f"{labels}. The recruiter completes it in the chat.",
+                case_id=case_id,
+                state=orch.cases.case_state(case_id).value,
+            )
         return _continue(orch, case_id, text, labelled)
     if _is_new_start(labelled):
         return _start(orch, text)
