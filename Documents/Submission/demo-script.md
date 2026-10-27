@@ -48,7 +48,7 @@ With `MODEL_PROVIDER=claude` the chat also converses, in the language you write 
 3. Select **Approver (Consultant Onboarding Supervisor)**. The restricted values are now visible.
 4. Point out that every line shows its label (source, recommended, exception) and its source or rule, for example **R-PA-02** (*CA state withholding form, DE 4*) and the client form **R-PA-10** (*Acme Synthetic confidentiality agreement*). Click a rule ID: it shows its owner, version, status and when it applies.
 5. Under **Follow-up owner**, the Coworker only recommends (**R-OW-01**). Type another name and press **Assign owner**: the assignment replaces the recommendation and is audited.
-6. Press **Approve v1**. The JobDiva and Workflow agent creates 3 simulated records: the JobDiva case, the task list and the Chelsea Tech request, which goes out only because IT and the approver both approved v1.
+6. Press **Approve package v1**. The JobDiva and Workflow agent creates 3 simulated records: the JobDiva case, the task list and the Chelsea Tech request, which goes out only because IT and the approver both approved v1.
 
 ## 6. Status and audit (1 min)
 
@@ -71,7 +71,7 @@ Check that `code/.env` has `FEATURE_CANDIDATE_FOLLOWUP=true` and `FEATURE_PAYROL
 
 1. Select **Onboarding Team** and open **Status** on the case approved in step 5. It is in *Documents pending*, and **Candidate documents** lists the checklist the candidate received, each item with its rule (the package forms, **R-CK-01**, **R-CK-02**).
 2. Press **Simulate time** three times: a reminder at 24 h and at 48 h (**R-RM-01**), then an escalation to the Onboarding Team at 72 h.
-3. Press **Candidate delivered** on each item: it shows *Pending countersign*, not verified. Press **Countersign** on each.
+3. Open **Email sent to the candidate** to show the checklist email. Press **Simulate: the candidate sent the documents** (or **Candidate delivered** on one item): each shows *Pending countersign*, not verified. Press **Countersign** on each.
 4. Press **Approve payroll handoff**: the single writer sends the payroll package to Paychex (simulated) with validated data only, and the case is *Sent to payroll*. Press **Simulate a Paychex return**: the issue appears as a task and in the audit log.
 
 ### New-hire information package (optional, 30 s)
@@ -80,7 +80,7 @@ As **Onboarding Team**, in **Status**, press **Prepare the package**: it holds o
 
 ### Culture and Belonging (optional, 40 s)
 
-With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** in **Status**: the kit ships 5 days before the start (**R-IG-01**). Press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the leader feedback request and the congratulation are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
+With `FEATURE_IGS_HANDOFF=true`, the approved case is already in the LDC tracker. Select **LDC (Culture and Belonging)** and open **Approval** (or **Status**): the kit ships 5 days before the start (**R-IG-01**). Press **Approve welcome kit**: only now is it shipped. Press **Simulate two months after the start**: the leader feedback request and the congratulation are drafted (**R-IG-02**, **R-IG-03**) with no FLSA, visa or sponsorship data. Press **Approve and send** on one.
 
 ## 9. Onboarding knowledge (1 min)
 

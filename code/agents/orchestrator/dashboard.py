@@ -31,6 +31,8 @@ ORDER = [
     CaseState.BLOCKED_DUPLICATE,
 ]
 STARTS_SOON_DAYS = 7
+# What the Onboarding Team reviews before the approver decides (US-026).
+REVIEWED = {"path": "onboarding path", "paperwork": "paperwork"}
 BEFORE_ACTIONS = {
     CaseState.RECEIVED,
     CaseState.NEEDS_CLARIFICATION,
@@ -57,6 +59,7 @@ def build(orch: "Orchestrator", *, role: str, today: date | None = None) -> list
                 "start_date": item["start_date"],
                 "package_version": item["package_version"],
                 "pending": _pending(orch, view, state),
+                "done": _done(view),
                 "risks": _risks(view, state, today),
             }
         )
@@ -67,16 +70,32 @@ def build(orch: "Orchestrator", *, role: str, today: date | None = None) -> list
     ]
 
 
+def steps(orch: "Orchestrator", case_id: str) -> tuple[list[str], list[str]]:
+    """What is pending on a case, each naming the team that acts, and what is done
+    (US-019, US-030). Pending items name fields and documents, never values."""
+    view = orch.cases.case_view(case_id, role="onboarding")
+    if view is None:
+        return [], []
+    state = CaseState(view["case"]["state"])
+    return _pending(orch, view, state), _done(view)
+
+
 def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     case = view["case"]
     pending = []
     if state is CaseState.NEEDS_CLARIFICATION:
         labels = ", ".join(q["label"] for q in orch.questions(case["id"]))
         pending.append(f"Recruiter to answer: {labels}")
+    review = case["data"].get("team_review") or {}
+    if state is CaseState.READY_FOR_REVIEW:
+        to_review = [name for name in REVIEWED if name not in review]
+        if to_review:
+            items = " and ".join(REVIEWED[name] for name in to_review)
+            pending.append(f"Onboarding Team to review the {items}")
     if state in (CaseState.READY_FOR_REVIEW, CaseState.APPROVAL_GATE):
         pending.append(f"Approver to decide on package v{case['package_version']}")
     if case.get("recommended_owner") and not case.get("assigned_owner"):
-        pending.append("Supervisor to assign the follow-up owner")
+        pending.append("Approver to assign the follow-up owner")
     lines = view["package"]["lines"] if view["package"] else []
     has_request = any(
         line["field"] == "equipment_request" and line["label"] != "exception"
@@ -101,9 +120,36 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
         and not (outstanding or to_sign)
     ):
         pending.append("Onboarding Team to approve the payroll handoff")
+    systems = {r["system"] for r in view.get("records", [])}
+    if "ldc_tracker" in systems and "welcome_kits" not in systems:
+        pending.append("LDC to approve the welcome kit")
+    drafts = [m for m in view.get("leader_messages", []) if m["status"] == "draft"]
+    if drafts:
+        pending.append(f"LDC to approve {len(drafts)} leader message(s)")
     for task in view.get("payroll_returns", []):
         pending.append(f"Payroll return: {task['issue']}")
     return pending
+
+
+def _done(view: dict) -> list[str]:
+    """Steps already completed, so they leave the pending list (US-030)."""
+    case = view["case"]
+    done = []
+    review = case["data"].get("team_review") or {}
+    for name, label in REVIEWED.items():
+        if name in review:
+            how = "confirmed" if review[name].get("confirmed") else "changed"
+            done.append(f"Onboarding Team {how} the {label}")
+    if case.get("assigned_owner"):
+        done.append(f"Follow-up owner assigned: {case['assigned_owner']}")
+    if case.get("it_approved"):
+        done.append("IT approved the laptop request")
+    systems = {r["system"] for r in view.get("records", [])}
+    if "ldc_tracker" in systems:
+        done.append("Handed off to IGS: in the LDC tracker")
+    if "welcome_kits" in systems:
+        done.append("LDC approved the welcome kit (shipped)")
+    return done
 
 
 def _risks(view: dict, state: CaseState, today: date) -> list[str]:

@@ -72,6 +72,7 @@ h2 { font-size: 16px; margin: 0 0 8px; }
   padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
 .row.selected { border-color: var(--accent); background: var(--accent-soft); }
 .row .meta { color: var(--muted); font-size: 13px; }
+.row .meta.done { color: var(--ok); }
 .row .actions { align-items: center; }
 .clickable { cursor: pointer; }
 
@@ -191,3 +192,6 @@ body.desktop main { flex: 1; overflow-y: auto; width: 100%; box-sizing: border-b
 body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 .chat-window.embedded { position: static; width: 100%; height: 100%; border-radius: 0; box-shadow: none; border: 0; }
 .chat-window.embedded .chat-head .icon-btn { display: none; }
+.email-preview { border: 1px solid var(--line, #d0d7de); border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; }
+.email-preview summary { cursor: pointer; font-weight: 600; }
+.email-preview p { margin: 6px 0; }

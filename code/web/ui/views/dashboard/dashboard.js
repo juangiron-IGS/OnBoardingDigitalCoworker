@@ -26,6 +26,7 @@ export async function render(root, show) {
           el("div", {},
             el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)),
             item.pending.map((p) => el("div", { class: "meta" }, `• ${p}`)),
+            (item.done || []).map((d) => el("div", { class: "meta done" }, `✓ ${d}`)),
             el("div", { class: "actions" }, item.risks.map((r) => el("span", { class: "pill bad" }, r)))));
       }))));
   }

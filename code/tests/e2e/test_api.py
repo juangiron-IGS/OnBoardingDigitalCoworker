@@ -703,3 +703,68 @@ def test_the_owner_can_be_any_onboarding_team_member(client) -> None:
     team = client.get("/api/rules/owners/team", headers=_as("approver")).json()
 
     assert "Avery Example" in team["members"]
+
+
+def test_a_reviewed_recommendation_leaves_the_pending_list(client) -> None:
+    # US-030: once the Onboarding Team confirms the path and paperwork, the
+    # dashboard lists them as done, no longer as pending
+    ready = _process(client, "01_complete_and_consistent")["case_id"]
+    _, before = _dashboard_case(client, "onboarding", ready)
+    for field in ("path", "paperwork"):
+        client.post(
+            f"/api/cases/{ready}/recommendation",
+            json={"field": field, "action": "confirm", "values": []},
+            headers=_as("onboarding"),
+        )
+    _, after = _dashboard_case(client, "onboarding", ready)
+
+    assert (
+        "Onboarding Team to review the onboarding path and paperwork"
+        in (before["pending"])
+    )
+    assert not any(p.startswith("Onboarding Team to review") for p in after["pending"])
+    assert "Onboarding Team confirmed the paperwork" in after["done"]
+
+
+def test_the_candidate_email_lists_the_checklist(client, monkeypatch) -> None:
+    # US-022: the email the candidate received, with every checklist item and
+    # no FLSA status in a form name (BR-011)
+    monkeypatch.setenv("FEATURE_CANDIDATE_FOLLOWUP", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    before = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    view = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()
+    mail = view["candidate_email"]
+    text = " ".join([mail["subject"], *mail["body"]])
+
+    assert before["candidate_email"] is None
+    assert all(f"- {c['item']}" in mail["body"] for c in view["checklist"])
+    assert "exempt" not in text.lower()
+
+
+def test_the_dashboard_shows_ldc_steps(client, monkeypatch) -> None:
+    # US-028: after approval the case is in the LDC tracker; the kit is pending
+    # for LDC until approved, then listed as done
+    monkeypatch.setenv("FEATURE_IGS_HANDOFF", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    _, before = _dashboard_case(client, "ldc", case_id)
+    client.post(
+        f"/api/cases/{case_id}/welcome-kit",
+        json={"package_version": 1},
+        headers=_as("ldc"),
+    )
+    _, after = _dashboard_case(client, "ldc", case_id)
+
+    assert "LDC to approve the welcome kit" in before["pending"]
+    assert "Handed off to IGS: in the LDC tracker" in before["done"]
+    assert "LDC to approve the welcome kit" not in after["pending"]
+    assert "LDC approved the welcome kit (shipped)" in after["done"]

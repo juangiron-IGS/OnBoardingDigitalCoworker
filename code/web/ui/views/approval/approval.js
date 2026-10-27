@@ -1,5 +1,6 @@
 import { api, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
 import { openChat } from "../../shared/chat-panel.js";
+import { igsCard } from "../status/status.js";
 
 const DECIDABLE = new Set(["ready_for_review", "approval_gate"]);
 const FIELD_NAMES = {
@@ -20,7 +21,7 @@ const LEADS = {
   recruiter: "What you sent in the start email, and what you still need to complete.",
   it: "The laptop, access and equipment lines IT approves.",
   onboarding: "The open exceptions and the path and paperwork the Onboarding Team reviews.",
-  ldc: "The welcome kit line for Culture and Belonging.",
+  ldc: "The new hires in the LDC tracker: approve the welcome kit and the leader messages.",
   approver: "Every line shows its label and its source or rule. Nothing runs on any system until the current version is approved.",
 };
 
@@ -42,7 +43,13 @@ export async function render(root, show) {
     picker.append(errorNotice(error));
     return;
   }
-  if (!cases.length) picker.append(el("p", { class: "empty" }, "No package yet. Simulate a complete start email in the inbox."));
+  if (!recruiter) {
+    const views = await Promise.all(cases.map((c) => api.case(c.id).catch(() => null)));
+    cases = cases.filter((c, i) => views[i] && pendingFor(getRole(), views[i]));
+  }
+  if (!cases.length) picker.append(el("p", { class: "empty" }, recruiter
+    ? "No package yet. Simulate a complete start email in the inbox."
+    : "Nothing pending for your role. Completed steps are on the Dashboard."));
   if (!cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
   for (const item of cases) {
     picker.append(el("div", {
@@ -54,6 +61,30 @@ export async function render(root, show) {
   }
   if (getCase() && cases.some((c) => c.id === getCase())) await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
+}
+
+// Whether this role still has to approve or adjust something on the case.
+function pendingFor(role, view) {
+  const { case: c, package: pkg } = view;
+  const lines = pkg?.lines || [];
+  if (role === "onboarding") {
+    const review = c.data.team_review || {};
+    const toHr = lines.some((l) => l.label === "exception" && HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
+    return c.state === "ready_for_review" && (!review.path || !review.paperwork || toHr);
+  }
+  if (role === "it") return !c.it_approved && lines.some((l) => l.field === "equipment_request" && l.label !== "exception") && DECIDABLE.has(c.state);
+  if (role === "approver") return DECIDABLE.has(c.state) || Boolean(c.recommended_owner && !c.assigned_owner);
+  if (role === "ldc") return ldcPending(view);
+  return true;
+}
+
+// US-028, US-029: after approval the case is in the LDC tracker; LDC approves the
+// welcome kit and then the leader messages.
+function ldcPending(view) {
+  if (!view.records.some((r) => r.system === "ldc_tracker")) return false;
+  const shipped = view.records.some((r) => r.system === "welcome_kits");
+  const messages = view.leader_messages || [];
+  return !shipped || !messages.length || messages.some((m) => m.status === "draft");
 }
 
 // US-007 AC-003: a cited rule opens to show its owner, version and status.
@@ -101,7 +132,8 @@ function reviewCard(view, lines, caseId, show) {
     };
     return el("div", { class: "list", "data-pending": canReview && !done },
       el("div", { class: "actions" }, el("strong", {}, FIELD_NAMES[field]), el("span", { class: `pill ${done ? "ok" : "neutral"}` }, state)),
-      canReview ? el("div", { class: "review-edit" }, editor,
+      done ? el("p", { class: "meta" }, current.join(" · ")) : null,
+      canReview && !done ? el("div", { class: "review-edit" }, editor,
         el("div", { class: "actions" },
           el("button", { class: "btn", type: "button", onclick: act("confirm") }, "Confirm recommendation"),
           el("button", { class: "btn primary", type: "button", onclick: act("change") }, "Save change (new version)"))) : null);
@@ -162,7 +194,7 @@ function itCard(view, pkg, caseId, show) {
   };
   return el("div", { "data-pending": getRole() === "it" && !view.case.it_approved },
     el("h3", {}, "IT approval of the laptop and access request"),
-    el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}.`),
+    el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}. The request goes to Chelsea Tech once IT and the package are both approved.`),
     getRole() === "it" && !view.case.it_approved
       ? el("div", { class: "actions" }, el("button", { class: "btn primary", onclick: approve }, `Approve request for v${pkg.version}`))
       : null,
@@ -261,7 +293,10 @@ async function drawPackage(root, caseId, show) {
   if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, refresh));
   if (role === "approver") root.append(ownerCard(view, caseId, refresh, (await api.team().catch(() => ({ members: [] }))).members));
   if (role === "onboarding") root.append(reviewCard(view, lines, caseId, refresh));
-  if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
+  // The approver sees IT's step only while it is still open; once IT approved,
+  // the package approval is all that is left.
+  if ((role === "it" || (role === "approver" && !view.case.it_approved)) && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
+  if (role === "ldc" && view.records.some((r) => r.system === "ldc_tracker")) root.append(igsCard(view, caseId, refresh));
   if (role !== "approver") return;
 
   const feedback = el("div");
@@ -283,7 +318,7 @@ async function drawPackage(root, caseId, show) {
   };
   root.append(...[
     el("div", { class: "actions" },
-      el("button", { class: "btn primary decision", disabled: !canDecide, onclick: decide("approve") }, `Approve v${pkg.version}`),
+      el("button", { class: "btn primary decision", disabled: !canDecide, onclick: decide("approve") }, `Approve package v${pkg.version}`),
       el("button", { class: "btn decision", disabled: !canDecide, onclick: decide("return") }, "Return for correction"),
       el("button", { class: "btn danger decision", disabled: !canDecide, onclick: decide("reject") }, "Reject")),
     feedback,
