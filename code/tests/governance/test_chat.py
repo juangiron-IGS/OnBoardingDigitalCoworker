@@ -121,7 +121,8 @@ def test_duplicate_start_in_chat_is_blocked(coworker) -> None:
     again = coworker.chat(START)
 
     assert again.state == "blocked_duplicate"
-    assert first.case_id in again.reply
+    assert "SYN-0050 · QA Engineer" in again.reply
+    assert first.case_id not in again.reply  # people never see the internal ID
 
 
 def test_empty_message_is_refused(coworker) -> None:

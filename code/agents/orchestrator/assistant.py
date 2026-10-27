@@ -91,8 +91,10 @@ def converse(
     """Claude's reply, or None when the engine does not converse (rules)."""
     case = ""
     if case_id:
-        person = orch.cases.case_data(case_id).get("person_ref", case_id)
-        case = f"- The conversation is about case {person} ({case_id})."
+        case = (
+            f"- The conversation is about the case of {orch.label(case_id)}. Name "
+            "cases by candidate and role, never by an internal case ID."
+        )
     system = SYSTEM.format(role=ROLE_NAMES.get(role, "a user"), case=case)
     used: list[str] = []
 

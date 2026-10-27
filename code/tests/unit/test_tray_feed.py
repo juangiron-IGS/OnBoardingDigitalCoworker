@@ -85,7 +85,7 @@ def test_notification_names_the_case_and_counts_the_rest() -> None:
 
     title, body = headline({"case_id": "case-abc", "text": "Missing: Bill rate."}, 2)
 
-    assert title == "New alert · case-abc"
+    assert title == "New onboarding alert"
     assert body == "Missing: Bill rate.  (+2 more)"
 
 
@@ -102,7 +102,7 @@ def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) ->
 
     notifier.show({"case_id": "case-1", "text": "Hi"}, 0, "Recruiter")
 
-    assert shown == [("New alert · case-1", "Hi")]
+    assert shown == [("New onboarding alert", "Hi")]
 
 
 def test_the_logo_is_drawn_large_and_sharp() -> None:

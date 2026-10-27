@@ -12,7 +12,7 @@ export async function render(root) {
     if (!alerts.length) list.append(el("p", { class: "empty" }, "No alerts yet."));
     for (const alert of alerts) {
       list.append(el("div", { class: "row" },
-        el("div", {}, el("div", {}, alert.text), el("div", { class: "meta" }, `To ${alert.recipient} · ${alert.case_id}`)),
+        el("div", {}, el("div", {}, alert.text), el("div", { class: "meta" }, `To ${alert.recipient}`)),
         el("span", { class: "meta" }, new Date(alert.at).toLocaleTimeString())));
     }
   } catch (error) {

@@ -61,8 +61,8 @@ export async function render(root, show) {
         } }, outcome.state === "needs_clarification" ? "Answer in chat" : "Open approval")
       : null;
     result.replaceChildren(el("div", { class: `notice ${tone}`, role: "status" },
-      el("div", { class: "actions" }, statePill(outcome.state), outcome.case_id ? el("span", { class: "mono" }, outcome.case_id) : null),
-      el("p", {}, text, outcome.blocked_by ? ` Existing case: ${outcome.blocked_by}.` : ""),
+      el("div", { class: "actions" }, statePill(outcome.state), outcome.label ? el("strong", {}, outcome.label) : null),
+      el("p", {}, text, outcome.blocked_by ? ` Existing case: ${outcome.label || outcome.blocked_by}.` : ""),
       next));
   };
 
