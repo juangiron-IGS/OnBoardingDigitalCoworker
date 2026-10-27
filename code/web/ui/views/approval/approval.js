@@ -39,6 +39,25 @@ export async function render(root, show) {
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
+// US-007 AC-003: a cited rule opens to show its owner, version and status.
+const RULE_ID = /^R-[A-Z]+-\d+$/;
+
+function ruleCell(sourceOrRule) {
+  if (!RULE_ID.test(sourceOrRule)) return sourceOrRule;
+  const detail = el("div", { class: "meta" });
+  const open = async () => {
+    if (detail.textContent) { detail.replaceChildren(); return; }
+    try {
+      const rule = await api.rule(sourceOrRule);
+      const when = Object.entries(rule.when).map(([k, v]) => `${k}: ${v}`).join(", ") || "every case";
+      detail.replaceChildren(`Owner: ${rule.owner} · version ${rule.version} · ${rule.status} · applies when ${when}`);
+    } catch (error) {
+      detail.replaceChildren(errorNotice(error));
+    }
+  };
+  return el("div", {}, el("button", { class: "link", type: "button", title: "Show the rule", onclick: open }, sourceOrRule), detail);
+}
+
 // US-026: the Onboarding Team confirms or changes the recommended path and paperwork.
 function reviewCard(view, lines, caseId, show) {
   const review = view.case.data.team_review || {};
@@ -174,7 +193,7 @@ async function drawPackage(root, caseId, show) {
         el("td", {}, FIELD_NAMES[line.field] || line.field),
         el("td", {}, line.value ?? "—"),
         el("td", {}, el("span", { class: `pill ${line.label}` }, line.label)),
-        el("td", { class: "mono" }, line.source_or_rule_id))))))
+        el("td", { class: "mono" }, ruleCell(line.source_or_rule_id)))))))
   ].filter(Boolean));
 
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));

@@ -15,18 +15,16 @@ from typing import Protocol
 
 import yaml
 
+from contracts.case_service_api import RESTRICTED_TERMS
+
 from .usage_meter import UsageMeter
+
+__all__ = ["RESTRICTED_TERMS"]
 
 LABELS_FILE = (
     Path(__file__).resolve().parents[2] / "rules" / "intake" / "field_labels.yaml"
 )
 DEFAULT_CAP_PER_RUN = 50
-# Words that mark FLSA, sponsorship, visa or work-authorization content (BR-011).
-# Text that matches never reaches a prompt, a log or a stored question.
-RESTRICTED_TERMS = (
-    r"flsa|exempt|sponsor\w*|visa|h-?1-?b|green[- ]?card|work (permit|authori[sz]ation)"
-    r"|\b(opt|ead|tn|l-?1|o-?1)\b|citizen\w*|permanent resident|immigra\w*"
-)
 
 _LINE = re.compile(r"^\s*([^:\n]{1,60}?)\s*:\s*(.+?)\s*$")
 

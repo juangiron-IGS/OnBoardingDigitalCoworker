@@ -9,8 +9,15 @@ from typing import Any, Protocol, runtime_checkable
 from services.case_service.application.create_case import CaseIntake
 from services.case_service.domain.case import CaseState
 from services.case_service.domain.package import PackageLine
+from services.case_service.domain.privacy import RESTRICTED_TERMS
 
-__all__ = ["CaseIntake", "CaseServiceClient", "CaseState", "PackageLine"]
+__all__ = [
+    "RESTRICTED_TERMS",
+    "CaseIntake",
+    "CaseServiceClient",
+    "CaseState",
+    "PackageLine",
+]
 
 
 @runtime_checkable

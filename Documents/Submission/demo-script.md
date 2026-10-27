@@ -43,7 +43,7 @@ Type `How is <candidate ID> doing?`, for example `How is SYN-0873 doing?`. The r
 1. Select **IT** and open **Approval**. FLSA and sponsorship show *Restricted*.
 2. Point out the Access and Equipment lines: the Chelsea Tech laptop request (**R-AC-01**), 2% overhead for INSPYR equipment (**R-OH-01**) and the bill-back rule (**R-BB-01**). Press **Approve request for v1**.
 3. Select **Approver (Consultant Onboarding Supervisor)**. The restricted values are now visible.
-4. Point out that every line shows its label (source, recommended, exception) and its source or rule, for example **R-PA-02** (*CA state withholding form, DE 4*).
+4. Point out that every line shows its label (source, recommended, exception) and its source or rule, for example **R-PA-02** (*CA state withholding form, DE 4*) and the client form **R-PA-10** (*Acme Synthetic confidentiality agreement*). Click a rule ID: it shows its owner, version, status and when it applies. As IT, the agreement named after the FLSA status shows *Restricted*, rule included.
 5. Under **Follow-up owner**, the Coworker only recommends (**R-OW-01**). Type another name and press **Assign owner**: the assignment replaces the recommendation and is audited.
 6. Press **Approve v1**. The JobDiva and Workflow agent creates 3 simulated records: the JobDiva case, the task list and the Chelsea Tech request, which goes out only because IT and the approver both approved v1.
 

@@ -19,6 +19,10 @@ from .transport import systems
 _catalog = RulesCatalog.load()
 
 
+def catalog() -> RulesCatalog:
+    return _catalog
+
+
 def get_conn() -> Iterator[psycopg.Connection]:
     with connect() as conn:
         yield conn
