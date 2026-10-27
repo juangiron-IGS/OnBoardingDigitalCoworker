@@ -1,5 +1,11 @@
-# pytest — 2026-10-26T19:40Z — commit 7d96807 (feature/b4-mcp)
-# PostgreSQL 16 in Docker, separate test database, MODEL_PROVIDER=rules
+# pytest — 2026-10-26T22:44Z — commit 3f5214e (main)
+# PostgreSQL 16 in Docker, separate test database, MODEL_PROVIDER=rules (the suite never calls a real model)
+tests/connectors/test_coworker_mcp.py::test_no_tool_can_approve_or_act_on_a_system PASSED
+tests/connectors/test_coworker_mcp.py::test_start_answer_and_status_over_mcp PASSED
+tests/connectors/test_coworker_mcp.py::test_recruiter_alerts_reach_the_mcp_client PASSED
+tests/connectors/test_coworker_mcp.py::test_unknown_case_is_answered_from_the_record_only PASSED
+tests/connectors/test_coworker_mcp.py::test_oversized_text_is_refused PASSED
+tests/connectors/test_coworker_mcp.py::test_unknown_role_stops_the_server PASSED
 tests/connectors/test_jobdiva_read.py::test_mock_is_the_default_mode PASSED
 tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[sandbox] PASSED
 tests/connectors/test_jobdiva_read.py::test_known_modes_are_accepted[mock] PASSED
@@ -38,6 +44,15 @@ tests/e2e/test_api.py::test_chat_endpoint_starts_and_continues_a_case PASSED
 tests/e2e/test_api.py::test_chat_endpoint_refuses_an_empty_message PASSED
 tests/e2e/test_api.py::test_health_reports_the_database PASSED
 tests/e2e/test_api.py::test_health_reports_mcp_servers_that_are_down PASSED
+tests/e2e/test_api.py::test_approver_assigns_the_follow_up_owner PASSED
+tests/e2e/test_api.py::test_only_the_approver_assigns_the_owner PASSED
+tests/e2e/test_api.py::test_case_reports_the_package_timing PASSED
+tests/e2e/test_api.py::test_it_approves_the_laptop_request PASSED
+tests/e2e/test_api.py::test_new_email_arrives_and_the_coworker_processes_it PASSED
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad0] PASSED
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad1] PASSED
+tests/e2e/test_api.py::test_new_email_with_bad_fields_is_refused[bad2] PASSED
+tests/e2e/test_api.py::test_claude_engine_without_a_key_is_a_clear_503 PASSED
 tests/e2e/test_over_mcp.py::test_j1_and_j2_run_with_every_system_call_over_mcp PASSED
 tests/e2e/test_over_mcp.py::test_duplicate_in_jobdiva_is_found_over_mcp PASSED
 tests/e2e/test_over_mcp.py::test_flsa_conflict_is_escalated_from_notes_read_over_mcp PASSED
@@ -70,6 +85,15 @@ tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_de
 tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE action_ledger SET action = action] PASSED
 tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[UPDATE package_lines SET value = value] PASSED
 tests/governance/test_every_action_is_audited.py::test_app_role_cannot_change_decision_records[DELETE FROM approvals] PASSED
+tests/governance/test_inbound_mail.py::test_delivered_email_is_listed_first_and_readable PASSED
+tests/governance/test_inbound_mail.py::test_outcome_is_kept_with_the_email PASSED
+tests/governance/test_inbound_mail.py::test_unknown_delivered_id_is_refused PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_request_waits_for_it_after_the_approver_approves PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_request_is_sent_once_both_have_approved PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_it_first_then_approver_sends_the_request PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_writer_refuses_the_request_without_it_approval PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_it_approval_of_an_old_version_is_refused PASSED
+tests/governance/test_it_request_needs_it_approval.py::test_feature_off_adds_no_equipment_lines PASSED
 tests/governance/test_local_case_service.py::test_local_service_fulfils_the_contract PASSED
 tests/governance/test_local_case_service.py::test_local_service_runs_intake_to_approval PASSED
 tests/governance/test_no_action_without_approval.py::test_unknown_approval_id_is_refused PASSED
@@ -83,6 +107,11 @@ tests/governance/test_only_workflow_agent_writes.py::test_action_carries_the_app
 tests/governance/test_only_workflow_agent_writes.py::test_action_for_another_version_is_blocked PASSED
 tests/governance/test_only_workflow_agent_writes.py::test_retry_with_same_key_does_not_duplicate PASSED
 tests/governance/test_only_workflow_agent_writes.py::test_unknown_action_is_refused PASSED
+tests/governance/test_owner_assignment.py::test_supervisor_is_notified_with_the_recommended_owner PASSED
+tests/governance/test_owner_assignment.py::test_owner_is_recommended_until_a_person_assigns_it PASSED
+tests/governance/test_owner_assignment.py::test_supervisor_assignment_is_shown_and_audited PASSED
+tests/governance/test_owner_assignment.py::test_supervisor_assignment_replaces_recommendation_and_is_logged PASSED
+tests/governance/test_owner_assignment.py::test_owner_cannot_be_assigned_before_a_recommendation PASSED
 tests/governance/test_package_flow.py::test_transition_is_audited_with_agent PASSED
 tests/governance/test_package_flow.py::test_no_package_for_failing_case PASSED
 tests/governance/test_package_flow.py::test_package_built_and_case_ready_for_review PASSED
@@ -103,6 +132,7 @@ tests/governance/test_vertical_slice.py::test_duplicate_email_is_blocked_and_nam
 tests/governance/test_vertical_slice.py::test_contradiction_asks_for_one_work_arrangement PASSED
 tests/governance/test_vertical_slice.py::test_approval_runs_the_actions_through_the_single_writer PASSED
 tests/governance/test_vertical_slice.py::test_returned_package_goes_back_for_correction PASSED
+tests/governance/test_vertical_slice.py::test_answered_fields_cite_the_recruiter_as_their_source PASSED
 tests/test_smoke.py::test_package_imports[contracts] PASSED
 tests/test_smoke.py::test_package_imports[services.case_service.domain] PASSED
 tests/test_smoke.py::test_package_imports[services.case_service.application] PASSED
@@ -111,6 +141,14 @@ tests/test_smoke.py::test_package_imports[services.case_service.adapters] PASSED
 tests/test_smoke.py::test_package_imports[web.api] PASSED
 tests/test_smoke.py::test_package_imports[agents.common] PASSED
 tests/test_smoke.py::test_package_imports[mcp_servers.common] PASSED
+tests/unit/test_access_equipment.py::test_request_names_provider_and_hardware_tier PASSED
+tests/unit/test_access_equipment.py::test_inspyr_equipment_gets_two_percent_overhead PASSED
+tests/unit/test_access_equipment.py::test_apple_direct_equipment_gets_five_percent_overhead PASSED
+tests/unit/test_access_equipment.py::test_client_without_bill_back_rule_is_an_exception PASSED
+tests/unit/test_access_equipment.py::test_client_with_bill_back_rule_cites_it PASSED
+tests/unit/test_access_equipment.py::test_no_equipment_means_no_request PASSED
+tests/unit/test_access_equipment.py::test_it_request_payload_carries_no_restricted_fields PASSED
+tests/unit/test_access_equipment.py::test_free_text_equipment_finds_the_provider PASSED
 tests/unit/test_case_states.py::test_allowed_transition_returns_new_state PASSED
 tests/unit/test_case_states.py::test_action_refused_before_approval_gate PASSED
 tests/unit/test_case_states.py::test_returned_package_goes_back_to_validated PASSED
@@ -132,6 +170,17 @@ tests/unit/test_case_states.py::test_rejected_case_cannot_move[closed] PASSED
 tests/unit/test_case_states.py::test_duplicate_blocks_at_received PASSED
 tests/unit/test_case_states.py::test_blocked_duplicate_cannot_move PASSED
 tests/unit/test_case_states.py::test_invalid_transition_is_a_governance_error PASSED
+tests/unit/test_claude_engine.py::test_labelled_text_needs_no_model_call PASSED
+tests/unit/test_claude_engine.py::test_free_text_fills_the_missing_fields PASSED
+tests/unit/test_claude_engine.py::test_labelled_values_win_over_the_model PASSED
+tests/unit/test_claude_engine.py::test_restricted_values_never_reach_the_prompt PASSED
+tests/unit/test_claude_engine.py::test_text_reaches_the_model_only_as_delimited_data PASSED
+tests/unit/test_claude_engine.py::test_ambiguous_field_is_asked_not_guessed PASSED
+tests/unit/test_claude_engine.py::test_api_failure_falls_back_to_the_labelled_values PASSED
+tests/unit/test_claude_engine.py::test_refusal_falls_back_to_the_labelled_values PASSED
+tests/unit/test_claude_engine.py::test_model_calls_count_against_the_cap PASSED
+tests/unit/test_claude_engine.py::test_redaction_keeps_the_other_sentences_of_the_line PASSED
+tests/unit/test_claude_engine.py::test_workspace_id_is_sent_with_every_request PASSED
 tests/unit/test_contracts.py::test_idempotency_key_is_stable PASSED
 tests/unit/test_contracts.py::test_idempotency_key_differs_per_action PASSED
 tests/unit/test_contracts.py::test_simulated_actions_are_the_approved_set PASSED
@@ -162,6 +211,9 @@ tests/unit/test_package.py::test_verify_refuses_missing_approval PASSED
 tests/unit/test_package.py::test_verify_refuses_other_version PASSED
 tests/unit/test_package.py::test_verify_accepts_current_version PASSED
 tests/unit/test_package.py::test_only_catalog_ids_count_as_rules PASSED
+tests/unit/test_package_timing.py::test_package_within_five_minutes_meets_the_target PASSED
+tests/unit/test_package_timing.py::test_late_package_is_reported_as_missing_the_target PASSED
+tests/unit/test_package_timing.py::test_target_is_five_minutes PASSED
 tests/unit/test_rule_lookup.py::test_lookup_returns_rule_with_its_id PASSED
 tests/unit/test_rule_lookup.py::test_rule_shows_owner_and_version PASSED
 tests/unit/test_rule_lookup.py::test_texas_has_no_state_forms PASSED
@@ -187,4 +239,4 @@ tests/unit/test_transport.py::test_unknown_transport_is_refused PASSED
 tests/unit/test_transport.py::test_in_process_uses_the_services_directly PASSED
 tests/unit/test_transport.py::test_mcp_uses_the_adapters PASSED
 tests/unit/test_transport.py::test_mcp_urls_come_from_the_environment PASSED
-============================ 187 passed in 12.82s =============================
+============================ 239 passed in 19.77s =============================
