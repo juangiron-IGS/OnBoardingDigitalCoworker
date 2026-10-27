@@ -9,7 +9,12 @@ from datetime import date
 from agents.access_equipment import agent as access
 from agents.candidate_followup import agent as followup_agent
 from agents.common import notifications
-from agents.common.model_client import ModelClient, load_labels, load_required
+from agents.common.model_client import (
+    ModelClient,
+    clean_value,
+    load_labels,
+    load_required,
+)
 from agents.culture_belonging import agent as igs_agent
 from agents.intake_validation import agent as intake
 from agents.jobdiva_workflow import agent as workflow_agent
@@ -210,6 +215,10 @@ class Orchestrator:
         """The recruiter answers one question (US-003)."""
         if field_name not in self._labels:
             raise ValueError(f"unknown field {field_name!r}")
+        cleaned = clean_value(value)
+        if cleaned is None:
+            raise ValueError(f"{field_name} needs a value, not {value.strip()!r}")
+        value = cleaned
         data = self._cases.case_data(case_id)
         contradictions = [f for f in data.get("contradictions", []) if f != field_name]
         # The package cites the recruiter for this value, not the start's channel.

@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from agents.common.model_client import clean_value
 from agents.onboarding_knowledge.agent import HR_TOPICS
 from contracts.case_service_api import CaseState
 
@@ -79,7 +80,8 @@ def respond(
         answer = orch.ask_knowledge(text, asked_by=asked_by, channel="chat")
         return ChatReply(reply=answer.reply, case_id=case_id)
     # A process question with a knowledge record gets the record itself, cited.
-    if orch.knows and QUESTION.search(text) and not ref and not about_case:
+    in_case = bool(case_id) and orch.model.provider != "rules"
+    if orch.knows and QUESTION.search(text) and not (ref or about_case or in_case):
         answer = orch.ask_knowledge(
             text, asked_by=asked_by, channel="chat", register_unanswered=False
         )
@@ -134,6 +136,16 @@ def _continue(
     if not answers:
         # A plain reply answers the question that was asked: the first open one.
         answers = {questions[0]["field"]: text}
+    if clean_value(next(iter(answers.values()))) is None:
+        # "N/A", "-" or "pending" is not an answer: the field stays open.
+        label = next(q["label"] for q in questions if q["field"] in answers)
+        return ChatReply(
+            reply=f'I still need the {label}: "{text}" is not a value. '
+            f"What is the {label}?",
+            case_id=case_id,
+            state=orch.cases.case_state(case_id).value,
+            asking=next(iter(answers)),
+        )
     state = None
     for field_name, value in answers.items():
         state = orch.answer(case_id, field_name, value)

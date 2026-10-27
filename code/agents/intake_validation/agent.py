@@ -4,7 +4,7 @@ client only reads fields from the untrusted text."""
 
 from dataclasses import dataclass
 
-from agents.common.model_client import ModelClient
+from agents.common.model_client import ModelClient, clean_value
 
 AGENT = "intake_validation"
 
@@ -26,7 +26,11 @@ def read_start(
     run_id: str,
 ) -> IntakeReading:
     extraction = model.extract_fields(text, fields, case_id=case_id, run_id=run_id)
-    values = {k: v for k, v in extraction.values.items() if v is not None}
+    values = {
+        k: clean_value(v)
+        for k, v in extraction.values.items()
+        if clean_value(v) is not None
+    }
     return IntakeReading(
         values=values,
         missing=missing_fields(values, required, extraction.ambiguous),

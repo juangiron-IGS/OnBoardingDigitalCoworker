@@ -21,7 +21,7 @@ from typing import Any
 
 import anthropic
 
-from .model_client import RESTRICTED_TERMS, Extraction, read_labelled
+from .model_client import RESTRICTED_TERMS, Extraction, clean_value, read_labelled
 from .usage_meter import UsageMeter
 
 logger = logging.getLogger(__name__)
@@ -107,8 +107,8 @@ class ClaudeModelClient:
         for name in missing:
             if name in found["ambiguous"]:
                 ambiguous.append(name)
-            elif found["values"].get(name):
-                values[name] = found["values"][name]
+            elif clean_value(found["values"].get(name)) is not None:
+                values[name] = clean_value(found["values"][name])
         if values.get("start_date") and not _is_iso_date(values["start_date"]):
             values["start_date"] = None  # asked, never guessed
         return Extraction(values=values, ambiguous=sorted(set(ambiguous)))
