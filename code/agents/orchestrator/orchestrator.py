@@ -15,7 +15,7 @@ from agents.policy_case_setup import agent as policy
 from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
 from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
-from services.case_service.domain.errors import DuplicateCase
+from services.case_service.domain.errors import DuplicateCase, GovernanceError
 from services.case_service.domain.package import PackageLine
 
 from .chat import ChatReply
@@ -362,6 +362,49 @@ class Orchestrator:
         if version == 1:  # the supervisor hears of each new hire once
             self._notify_supervisor(case_id, lines)
         return version
+
+    def review_recommendation(
+        self,
+        case_id: str,
+        field_name: str,
+        *,
+        reviewed_by: str,
+        confirm: bool = False,
+        values: list[str] | None = None,
+    ) -> dict:
+        """US-026 (BR-006): the Onboarding Team confirms the recommended path or
+        paperwork, or changes it. A change rebuilds the package as a new version,
+        so approvals of the earlier version no longer apply."""
+        if field_name not in policy.REVIEWABLE:
+            raise ValueError("only path or paperwork can be reviewed")
+        values = [v.strip() for v in values or [] if v.strip()]
+        if not confirm and not values:
+            raise ValueError("a change needs at least one value")
+        if self._cases.case_state(case_id) is not CaseState.READY_FOR_REVIEW:
+            raise GovernanceError("case_not_in_review")
+        version = self._cases.current_package_version(case_id)
+        data = self._cases.case_data(case_id)
+        entry = {"confirmed": True} if confirm else {"values": values}
+        review = {
+            **data.get("team_review", {}),
+            field_name: entry | {"version": version},
+        }
+        self._cases.record_answers(
+            case_id, {"team_review": review}, agent=reviewed_by, source=policy.TEAM
+        )
+        self._cases.log_action(
+            case_id,
+            agent=reviewed_by,
+            action="confirm_recommendation" if confirm else "change_recommendation",
+            data_refs={field_name: policy.TEAM},
+        )
+        if not confirm:
+            self._cases.move_case(case_id, CaseState.CASE_SET_UP, agent=policy.AGENT)
+            version = self._set_up(case_id, self._cases.case_data(case_id))
+        return {
+            "state": self._cases.case_state(case_id).value,
+            "package_version": version,
+        }
 
     def record_hr_answer(
         self, case_id: str, field_name: str, value: str, *, recorded_by: str

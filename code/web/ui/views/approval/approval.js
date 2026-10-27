@@ -39,6 +39,44 @@ export async function render(root, show) {
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
+// US-026: the Onboarding Team confirms or changes the recommended path and paperwork.
+function reviewCard(view, lines, caseId, show) {
+  const review = view.case.data.team_review || {};
+  const feedback = el("div");
+  const canReview = getRole() === "onboarding" && view.case.state === "ready_for_review";
+  const rows = ["path", "paperwork"].map((field) => {
+    const current = lines.filter((l) => l.field === field).map((l) => l.value);
+    const done = review[field];
+    const state = done
+      ? (done.confirmed ? `Confirmed by the Onboarding Team (v${done.version})` : `Changed by the Onboarding Team (from v${done.version})`)
+      : "Recommended, not reviewed yet";
+    const editor = el("textarea", { rows: "3", maxlength: "4000", "aria-label": `New ${FIELD_NAMES[field]}, one per line` }, current.join(String.fromCharCode(10)));
+    const act = (action) => async () => {
+      feedback.replaceChildren();
+      try {
+        const values = action === "change" ? editor.value.split(/\r?\n/).map((v) => v.trim()).filter(Boolean) : [];
+        const outcome = await api.review(caseId, field, action, values);
+        feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
+          action === "confirm" ? `${FIELD_NAMES[field]} confirmed.` : `${FIELD_NAMES[field]} changed. Package v${outcome.package_version} is ready for the approver.`));
+        setTimeout(() => show("approval"), 1500);
+      } catch (error) {
+        feedback.replaceChildren(errorNotice(error));
+      }
+    };
+    return el("div", { class: "list" },
+      el("div", { class: "actions" }, el("strong", {}, FIELD_NAMES[field]), el("span", { class: `pill ${done ? "ok" : "neutral"}` }, state)),
+      canReview ? el("div", { class: "review-edit" }, editor,
+        el("div", { class: "actions" },
+          el("button", { class: "btn", type: "button", onclick: act("confirm") }, "Confirm recommendation"),
+          el("button", { class: "btn primary", type: "button", onclick: act("change") }, "Save change (new version)"))) : null);
+  });
+  return el("div", {},
+    el("h3", {}, "Path and paperwork review"),
+    rows,
+    getRole() !== "onboarding" ? el("p", { class: "lead" }, "The Onboarding Team confirms or changes these. Switch to that role to review.") : null,
+    feedback);
+}
+
 // US-027: HR decides FLSA and classification; the Onboarding Team records the answer.
 const HR_FIELDS = { flsa: ["Exempt", "Non-exempt"], employment_type: null };
 
@@ -142,6 +180,7 @@ async function drawPackage(root, caseId, show) {
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
   if (escalated.length) root.append(hrCard(escalated, caseId, show));
   root.append(ownerCard(view, caseId, show));
+  root.append(reviewCard(view, lines, caseId, show));
   if (lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
 
   const feedback = el("div");

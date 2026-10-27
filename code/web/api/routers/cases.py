@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -77,6 +77,41 @@ def approve_it_request(
         return coworker.approve_it_request(
             case_id, package_version=body.package_version, approver_role=role
         )
+    except GovernanceError as refusal:
+        raise HTTPException(
+            409,
+            detail={
+                "refused": refusal.reason,
+                "current_version": cases.current_package_version(case_id),
+            },
+        ) from None
+
+
+class Review(BaseModel):
+    field: Literal["path", "paperwork"]
+    action: Literal["confirm", "change"]
+    values: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        default_factory=list, max_length=20
+    )
+
+
+@router.post("/{case_id}/recommendation")
+def review_recommendation(
+    case_id: str, body: Review, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """The Onboarding Team confirms or changes the path or paperwork (US-026)."""
+    if role != "onboarding":
+        raise HTTPException(403, detail="Only the Onboarding Team reviews this")
+    try:
+        return coworker.review_recommendation(
+            case_id,
+            body.field,
+            reviewed_by=role,
+            confirm=body.action == "confirm",
+            values=body.values,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc)) from None
     except GovernanceError as refusal:
         raise HTTPException(
             409,
