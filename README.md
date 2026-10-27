@@ -28,6 +28,17 @@ The Coworker moves validation to the start: nothing reaches onboarding incomplet
 | Time from the last answer to a package ready for approval | Not applicable | 5 minutes or less |
 | Actions executed without human approval | Not applicable | 0 |
 
+Measured on the MVP (synthetic seed emails; details and the command to rerun in [code/tests/evidence/metrics.md](code/tests/evidence/metrics.md)):
+
+| Metric | Target | Measured |
+| --- | --- | --- |
+| Time from the last answer to a package ready for approval | 5 minutes or less | 47 to 79 ms with the rules engine (5 seed emails); 3.1 to 4.3 s with Claude (3 live runs) |
+| Questions asked compared with fields really missing or in conflict | Equal | 3 asked for 3 missing or conflicting fields, none extra, none missed |
+| Actions executed without human approval | 0 | 0. Both simulated records carry the approval ID; approving the blocked FLSA package is refused (HTTP 409) |
+| Duplicate start (same person and start date) | Blocked | Blocked at Received |
+
+The pilot target (document onboarding in 1 to 1.5 days) needs real cases and is not measured here.
+
 ## Digital Coworker responsibilities
 
 | The Coworker | People |
