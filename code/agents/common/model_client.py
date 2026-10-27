@@ -3,8 +3,8 @@ runtime). MODEL_PROVIDER picks the engine; agents only see ModelClient.
 
 - rules (default): reads "Label: value" lines of the synthetic emails and chat
   messages. No model, no key, no cost; also what the tests use.
-- Other providers (a local model, the Claude API) plug in here once one is
-  available, without changing any agent.
+- claude: labelled lines first, then Claude (agents/common/claude_client.py) for
+  the fields still missing. Needs ANTHROPIC_API_KEY in code/.env.
 """
 
 import os
@@ -64,22 +64,28 @@ class RulesModelClient:
         self, text: str, fields: list[str], *, case_id: str, run_id: str
     ) -> Extraction:
         self._meter.record(run_id=run_id, case_id=case_id, provider=self.provider)
-        found: dict[str, set[str]] = {}
-        for line in text.splitlines():
-            match = _LINE.match(line)
-            if not match:
-                continue
-            name = self._by_label.get(match.group(1).casefold())
-            if name in fields:
-                found.setdefault(name, set()).add(match.group(2))
-        ambiguous = sorted(name for name, seen in found.items() if len(seen) > 1)
-        values = {
-            name: next(iter(found[name]))
-            if name in found and name not in ambiguous
-            else None
-            for name in fields
-        }
-        return Extraction(values=values, ambiguous=ambiguous)
+        return read_labelled(text, fields, self._by_label)
+
+
+def read_labelled(text: str, fields: list[str], by_label: dict[str, str]) -> Extraction:
+    """The fields stated as "Label: value" lines; a field given twice with two
+    different values is ambiguous."""
+    found: dict[str, set[str]] = {}
+    for line in text.splitlines():
+        match = _LINE.match(line)
+        if not match:
+            continue
+        name = by_label.get(match.group(1).casefold())
+        if name in fields:
+            found.setdefault(name, set()).add(match.group(2))
+    ambiguous = sorted(name for name, seen in found.items() if len(seen) > 1)
+    values = {
+        name: next(iter(found[name]))
+        if name in found and name not in ambiguous
+        else None
+        for name in fields
+    }
+    return Extraction(values=values, ambiguous=ambiguous)
 
 
 def _catalog(path: Path) -> dict:
@@ -102,6 +108,22 @@ def get_model_client() -> ModelClient:
     meter = UsageMeter(cap_per_run=cap)
     if provider == "rules":
         return RulesModelClient(load_labels(), meter)
+    if provider == "claude":
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            raise ModelNotConfigured("MODEL_PROVIDER=claude needs ANTHROPIC_API_KEY")
+        import anthropic
+
+        from .claude_client import ClaudeModelClient
+
+        # A key not scoped to a workspace names the workspace on every request.
+        workspace = os.environ.get("ANTHROPIC_WORKSPACE_ID")
+        headers = {"anthropic-workspace-id": workspace} if workspace else None
+        return ClaudeModelClient(
+            load_labels(),
+            meter,
+            client=anthropic.Anthropic(default_headers=headers),
+            model=os.environ.get("MODEL_EXTRACTION") or "claude-haiku-5-5",
+        )
     raise ModelNotConfigured(
-        f"MODEL_PROVIDER={provider!r} is not set up yet; use 'rules'"
+        f"MODEL_PROVIDER={provider!r} is unknown; use 'rules' or 'claude'"
     )

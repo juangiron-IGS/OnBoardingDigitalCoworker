@@ -5,7 +5,7 @@
 # 6. health check. Everything binds to 127.0.0.1.
 set -euo pipefail
 
-set -a; source .env; set +a
+source scripts/load_env.sh
 
 if ! docker info >/dev/null 2>&1; then
   echo "Container runtime not running. Start Docker or Podman and run this again." >&2
@@ -44,6 +44,7 @@ if [ "${AGENT_TRANSPORT:-in_process}" = "mcp" ]; then
   launch jobdiva-read mcp_servers.jobdiva_read.server
   launch jobdiva-workflow mcp_servers.jobdiva_workflow.server
   launch teams-mock mcp_servers.mocks.teams.server
+  launch coworker-mcp mcp_servers.coworker.server   # the Coworker for other chat apps
 fi
 launch web web.api.main
 

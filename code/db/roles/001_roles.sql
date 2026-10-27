@@ -9,7 +9,7 @@ GRANT USAGE ON SCHEMA public TO coworker_app, audit_writer;
 -- Case state changes in place; package lines, decisions and applied actions are
 -- records that are only ever added, never changed.
 GRANT SELECT, INSERT, UPDATE ON cases, package_versions TO coworker_app;
-GRANT SELECT, INSERT ON package_lines, approvals, action_ledger TO coworker_app;
+GRANT SELECT, INSERT ON package_lines, approvals, action_ledger, it_approvals TO coworker_app;
 GRANT USAGE ON SEQUENCE package_lines_id_seq, approvals_id_seq TO coworker_app;
 
 -- Audit log: append-only for every application role (NFR-SEC-004).
@@ -31,3 +31,8 @@ GRANT USAGE ON SEQUENCE mocks.jobdiva_cases_id_seq, mocks.task_lists_id_seq,
 -- Simulated alerts: added by the notifications tool, read by the alerts view.
 GRANT SELECT, INSERT ON mocks.alerts TO coworker_app;
 GRANT USAGE ON SEQUENCE mocks.alerts_id_seq TO coworker_app;
+
+-- Simulated mailbox: emails arrive, and the Coworker records what it did with each.
+GRANT SELECT, INSERT ON mocks.inbound_mail TO coworker_app;
+GRANT UPDATE (case_id, outcome) ON mocks.inbound_mail TO coworker_app;
+GRANT USAGE ON SEQUENCE mocks.inbound_mail_id_seq TO coworker_app;

@@ -27,6 +27,16 @@ def build_package(
         version = case.current_package_version + 1
         status = package_status(escalated=escalated, waiting_answer=waiting_answer)
         repo.add_package_version(case_id, version, status, lines)
+        # Only a recommendation: a person assigns the owner (US-010 AC-002, US-032)
+        owner = next(
+            (
+                line.value
+                for line in lines
+                if line.field == "owner" and line.label == "recommended"
+            ),
+            None,
+        )
+        repo.set_recommended_owner(case_id, owner)
         repo.set_state(case_id, transition(case.state, CaseState.READY_FOR_REVIEW))
         audit.append(
             case_id=case_id,

@@ -13,6 +13,7 @@ flowchart LR
             Intake["Intake and Validation"]
             Policy["Policy and Case Setup"]
             WF["JobDiva and Workflow"]
+            Access["Access and Equipment (Should)<br/>FEATURE_ACCESS_EQUIPMENT"]
             Model["Model client<br/>engine: rules (no model)<br/>usage meter"]
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
@@ -32,6 +33,7 @@ flowchart LR
     Browser --> API --> Orch
     Orch --> Intake --> Model
     Orch --> Policy --> Rules
+    Orch --> Access --> Rules
     Orch --> Case
     WF --> Client
     Orch --> WF
@@ -63,5 +65,5 @@ flowchart LR
 
 | Topic | Target (SAD) | Demo | Reason |
 |---|---|---|---|
-| Model | A model reads free text | `rules` engine reads labelled messages | No model API key yet (ADR-006). A model engine plugs in behind `model_client.py` |
+| Model | A model reads free text | `claude` engine (Claude Haiku 5.5) reads free text when `MODEL_PROVIDER=claude`; `rules` stays the default and the fallback | Restricted fields never reach the model; every call is metered and capped (ADR-006, TC-004) |
 | Velocity 2.0 | Agent runtime | Delivery method | Corrected in ADR-006 |

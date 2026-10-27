@@ -203,7 +203,12 @@ def test_health_reports_the_database(client) -> None:
 
 def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
     monkeypatch.setenv("AGENT_TRANSPORT", "mcp")
-    for var in ("JOBDIVA_MOCK_URL", "JOBDIVA_WORKFLOW_URL", "TEAMS_MOCK_URL"):
+    for var in (
+        "JOBDIVA_MOCK_URL",
+        "JOBDIVA_WORKFLOW_URL",
+        "TEAMS_MOCK_URL",
+        "COWORKER_MCP_URL",
+    ):
         monkeypatch.setenv(var, "http://127.0.0.1:9")
 
     body = client.get("/api/health").json()
@@ -211,3 +216,130 @@ def test_health_reports_mcp_servers_that_are_down(client, monkeypatch) -> None:
     assert body["transport"] == "mcp"
     assert body["status"] == "degraded"
     assert set(body["mcp_servers"].values()) == {"down"}
+
+
+def test_approver_assigns_the_follow_up_owner(client) -> None:
+    # US-032 AC-002
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/owner",
+        json={"owner": "Dana Synthetic"},
+        headers=_as("approver"),
+    )
+
+    view = client.get(f"/api/cases/{case_id}", headers=_as("recruiter")).json()
+    assert response.status_code == 200
+    assert view["case"]["assigned_owner"] == "Dana Synthetic"
+
+
+def test_only_the_approver_assigns_the_owner(client) -> None:
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    response = client.post(
+        f"/api/cases/{case_id}/owner",
+        json={"owner": "Dana Synthetic"},
+        headers=_as("recruiter"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_case_reports_the_package_timing(client) -> None:
+    # US-012 AC-001 and AC-003
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    listed = client.get("/api/cases", headers=_as("approver")).json()
+    timing = next(c for c in listed if c["id"] == case_id)["package_timing"]
+
+    assert timing["met"] is True
+    assert timing["target_seconds"] == 300
+
+
+def test_it_approves_the_laptop_request(client, monkeypatch) -> None:
+    # US-020 AC-002, through the API
+    monkeypatch.setenv("FEATURE_ACCESS_EQUIPMENT", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+
+    refused = client.post(
+        f"/api/cases/{case_id}/it-approval",
+        json={"package_version": 1},
+        headers=_as("recruiter"),
+    )
+    approved = client.post(
+        f"/api/cases/{case_id}/it-approval",
+        json={"package_version": 1},
+        headers=_as("it"),
+    )
+
+    view = client.get(f"/api/cases/{case_id}", headers=_as("it")).json()
+    assert refused.status_code == 403
+    assert approved.json() == {"case_id": case_id, "it_approved": True, "sent": False}
+    assert view["case"]["it_approved"] is True
+
+
+_NEW_START = """Hi team, new start below.
+
+Candidate ID: SYN-0077
+Position: QA Engineer
+Hiring manager: Lee Example
+Start date: 2026-12-07
+Client: Acme Synthetic
+Client type: Enterprise
+Division: Digital
+Line of business: Professional Services
+Employment type: W-2
+Vendor company: INSPYR Solutions
+Work arrangement: Hybrid
+Pay rate: 40.00 USD/h
+Work city: Los Angeles
+Work state: CA
+FLSA: Non-exempt
+Billing contact: billing.acme@example.com
+Equipment: Standard laptop, INSPYR
+Sponsorship: No
+"""
+
+
+def test_new_email_arrives_and_the_coworker_processes_it(client) -> None:
+    response = client.post(
+        "/api/inbox",
+        json={
+            "sender": "recruiter.sam@example.com",
+            "subject": "New start - SYN-0077 - QA Engineer",
+            "body": _NEW_START,
+        },
+        headers=_as("recruiter"),
+    )
+
+    listed = client.get("/api/inbox", headers=_as("recruiter")).json()[0]
+    assert response.status_code == 200
+    assert response.json()["state"] == "needs_clarification"
+    assert listed["subject"] == "New start - SYN-0077 - QA Engineer"
+    assert listed["case_id"] == response.json()["case_id"]
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        {"sender": "not-an-email", "subject": "s", "body": "Candidate ID: X"},
+        {"sender": "a@example.com", "subject": "", "body": "Candidate ID: X"},
+        {"sender": "a@example.com", "subject": "s", "body": ""},
+    ],
+)
+def test_new_email_with_bad_fields_is_refused(client, bad) -> None:
+    response = client.post("/api/inbox", json=bad, headers=_as("recruiter"))
+
+    assert response.status_code == 400
+
+
+def test_claude_engine_without_a_key_is_a_clear_503(client, monkeypatch) -> None:
+    monkeypatch.setenv("MODEL_PROVIDER", "claude")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    response = client.post(
+        "/api/chat", json={"message": "hello"}, headers=_as("recruiter")
+    )
+
+    assert response.status_code == 503
+    assert "ANTHROPIC_API_KEY" in response.json()["detail"]

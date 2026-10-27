@@ -47,7 +47,7 @@ To users it is one Coworker. Inside, an Onboarding Orchestrator owns the case an
 
 ![Agent architecture](Documents/CheckPoint/14October/images/08-architecture.png)
 
-The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The Should and Could agents are not built yet.
+The architecture as it runs in the demo, with its controls and the tests behind them, is in [Documents/Submission/architecture.md](Documents/Submission/architecture.md). The demo implements the four Must agents, the Access and Equipment agent (Should, behind `FEATURE_ACCESS_EQUIPMENT`), the shared notifications tool and the mocks for JobDiva, Outlook and Teams. The other Should and Could agents are not built yet.
 
 | Agent | Priority | Responsibility |
 | --- | --- | --- |
@@ -67,7 +67,7 @@ Case lifecycle and the demo sequence are documented in [section 5 of the checkpo
 - **Python 3.12 or later**
 - **Docker** (Docker Desktop on Windows), for the local PostgreSQL 16
 - **Git Bash or WSL** on Windows, to run the `scripts/*.sh`
-- No model API key: the default model engine (`MODEL_PROVIDER=rules`) uses no model (see ADR-006 in the [Software Architecture Document](Documents/Velocity/02.%20Architecture/))
+- No model API key needed: the default model engine (`MODEL_PROVIDER=rules`) uses no model. With an Anthropic API key, `MODEL_PROVIDER=claude` reads start details written as free text (see ADR-006 in the [Software Architecture Document](Documents/Velocity/02.%20Architecture/))
 
 ```bash
 git clone https://github.com/juangiron-IGS/OnBoardingDigitalCoworker.git
@@ -91,8 +91,10 @@ All configuration comes from environment variables in `code/.env`. The repositor
 | `DATABASE_URL` / `AUDIT_DATABASE_URL` | none | PostgreSQL as the application role, and as the INSERT-only audit role |
 | `DB_PORT`, `DB_NAME`, `DB_*_PASSWORD` | `5432`, `coworker` | The local container and its roles |
 | `WEB_APP_PORT` | `3000` | Web app on `127.0.0.1` |
-| `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key |
+| `MODEL_PROVIDER` | `rules` | Model engine. `rules` reads labelled messages with no model and no key; `claude` also reads free text |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_WORKSPACE_ID`, `MODEL_EXTRACTION` | none, none, `claude-haiku-5-5` | `claude` engine only: the key (never committed), the workspace when the key is not scoped to one, and the model that reads start details |
 | `MODEL_USAGE_CAP_PER_RUN` | `50` | Model calls allowed per run |
+| `FEATURE_ACCESS_EQUIPMENT` | `false` (`.env.example`: `true`) | Access and Equipment agent: laptop and access request, 2% or 5% overhead, bill-back, IT approval |
 | `AGENT_TRANSPORT` | `in_process` (`.env.example`: `mcp`) | `mcp`: agents call the JobDiva READ, JobDiva and Workflow, and Teams MCP servers over HTTP. `in_process`: fallback that calls the same services directly |
 | `JOBDIVA_MODE` | `mock` | `mock`, or read-only `sandbox` for the JobDiva READ server |
 | `JOBDIVA_BASE_URL`, `JOBDIVA_CLIENT_ID`, `JOBDIVA_API_USER`, `JOBDIVA_API_PASSWORD` | none | Sandbox mode only: Client ID from JobDiva support and a dedicated API user |
@@ -109,6 +111,8 @@ From `code/` (in Git Bash or WSL on Windows):
 
 `start.sh` ends with one line such as `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Then open http://127.0.0.1:3000.
 
+The Coworker can also be used from another chat app (Claude Code, Claude Desktop, VS Code) through its MCP server `onboarding-coworker` on `127.0.0.1:8110`: start a case, answer its questions and ask for status. Approvals stay in the web app. See [Documents/Submission/mcp-clients.md](Documents/Submission/mcp-clients.md).
+
 Quality gates, also run from `code/`:
 
 ```bash
@@ -120,11 +124,11 @@ Quality gates, also run from `code/`:
 
 Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md). It takes about 7 minutes and uses synthetic data only:
 
-1. A start email arrives with two fields missing. The recruiter gets an alert naming them.
+1. A start email arrives in the simulated mailbox (**New email**) with two fields missing. The recruiter gets an alert naming them, in the Teams-like chat panel.
 2. The recruiter answers in the chat, one question at a time. The package is built with a rule ID on every recommendation.
 3. Someone asks for the case status in the chat.
-4. IT cannot see FLSA or sponsorship. The approver can, and approves package v1.
-5. The single writer creates the JobDiva case (mock) and the task list, each with the approval ID. The status view shows the full audit log.
+4. IT cannot see FLSA or sponsorship, and approves the laptop and access request (2% overhead, bill-back by rule). The approver can see them, assigns the follow-up owner and approves package v1.
+5. The single writer creates the JobDiva case (mock), the task list and the Chelsea Tech request, each with the approval ID. The status view shows the full audit log and whether the package met the 5-minute target.
 6. Guardrails:
    - a duplicate start is blocked;
    - an FLSA conflict between the email and JobDiva is escalated and blocks the package;
@@ -144,10 +148,10 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 ## Known limitations
 
 - **Everything is simulated.** All enterprise systems (JobDiva, IT and equipment, payroll, email, Teams, LDC tracker) are mocks in the hackathon.
-- **No model yet.** The model engine is `rules`: a new start must be sent as `Label: value` lines. Answers and status questions are free text. A model engine plugs in behind `agents/common/model_client.py` once a model key is approved (ADR-006).
+- **Free text needs the `claude` engine.** With `rules`, a new start must be sent as `Label: value` lines. With `claude`, labelled lines are still read first at no cost, and Claude reads only the fields still missing. FLSA, sponsorship and visa are never sent to the model: they come from labelled lines or from the recruiter's answers.
 - **JobDiva sandbox.** Its endpoints follow integrator guides and must be confirmed against JobDiva's API documentation. It also needs API credentials. The web app always reads JobDiva in mock mode.
 - **Draft rules.** Paperwork, path, kit and owner rules are example content marked `status: draft`, until the Onboarding Team confirms them.
-- **Not built yet:** the Should and Could agents (Access and Equipment, Candidate Follow-up, Onboarding Knowledge, Culture and Belonging), the supervisor's owner assignment (US-032) and the 5-minute package timing report (US-012 AC-003).
+- **Not built yet:** the Should and Could agents Candidate Follow-up, Onboarding Knowledge and Culture and Belonging.
 - **Out of scope:** background checks, I-9, payroll processing and real e-signature.
 
 ## Reusable components

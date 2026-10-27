@@ -56,6 +56,10 @@ class WorkflowService:
                 case_id = approval.case_id
                 if approval.package_version != package_version:
                     raise ApprovalRefused("version_mismatch")
+                if action == "create_it_request" and not self._repo.it_approved(
+                    case_id, package_version
+                ):
+                    raise GovernanceError("it_not_approved")  # BR-012, US-020 AC-002
                 self._apply(action, case_id, approval_id, payload)
                 self._conn.execute(
                     "INSERT INTO action_ledger"

@@ -22,6 +22,8 @@ _SERVERS = {
     "jobdiva-read": ("JOBDIVA_MOCK_URL", "http://127.0.0.1:8101"),
     "jobdiva-workflow": ("JOBDIVA_WORKFLOW_URL", "http://127.0.0.1:8106"),
     "teams-mock": ("TEAMS_MOCK_URL", "http://127.0.0.1:8108"),
+    # The Coworker itself, for other chat apps; checked by the health endpoint only.
+    "onboarding-coworker": ("COWORKER_MCP_URL", "http://127.0.0.1:8110"),
 }
 
 # In process, JobDiva is always read in mock mode; sandbox needs the READ server.

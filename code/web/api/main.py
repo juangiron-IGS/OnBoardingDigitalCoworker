@@ -8,6 +8,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from agents.common.model_client import ModelNotConfigured
+
 from .routers import alerts, cases, health, inbox
 
 UI = Path(__file__).resolve().parents[1] / "ui"
@@ -18,6 +20,21 @@ app.include_router(cases.router)
 app.include_router(alerts.router)
 app.include_router(health.router)
 app.include_router(cases.chat_router)
+
+
+@app.middleware("http")
+async def revalidate_ui(request: Request, call_next):  # noqa: ANN001, ANN201
+    """The browser revalidates the UI files, so a restart never serves stale code."""
+    response = await call_next(request)
+    if not request.url.path.startswith("/api"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+@app.exception_handler(ModelNotConfigured)
+def model_not_configured(request: Request, exc: ModelNotConfigured) -> JSONResponse:
+    """A wrong MODEL_PROVIDER setting is a clear 503, never a 500 (no secrets)."""
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.exception_handler(RequestValidationError)

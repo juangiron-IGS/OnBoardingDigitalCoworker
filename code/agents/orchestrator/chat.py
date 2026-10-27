@@ -14,9 +14,9 @@ CASE_REF = re.compile(r"\b(SYN-\d+|case-[0-9a-f]{12})\b", re.IGNORECASE)
 
 HELP = (
     "I can start an onboarding case or tell you how one is going. To start one, send "
-    "the start details as 'Label: value' lines, at least Candidate ID and Start date "
-    "(YYYY-MM-DD). To ask about a case, include its candidate ID, for example: "
-    "How is SYN-0043 doing?"
+    "the start details with at least the Candidate ID and the Start date (YYYY-MM-DD); "
+    "'Label: value' lines always work. To ask about a case, include its candidate ID, "
+    "for example: How is SYN-0043 doing?"
 )
 
 STATE_LABELS = {

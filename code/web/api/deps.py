@@ -52,8 +52,8 @@ def get_orchestrator(conn: Conn) -> Orchestrator:
     )
 
 
-def get_mailbox() -> MailboxService:
-    return MailboxService()
+def get_mailbox(conn: Conn) -> MailboxService:
+    return MailboxService(conn=conn)
 
 
 Cases = Annotated[LocalCaseService, Depends(get_cases)]

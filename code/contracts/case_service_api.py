@@ -70,6 +70,24 @@ class CaseServiceClient(Protocol):
 
     def case_data(self, case_id: str) -> dict[str, Any]: ...
 
+    def record_it_approval(
+        self, case_id: str, *, package_version: int, approver_role: str
+    ) -> None:
+        """IT approves the access and laptop request of this version (BR-012)."""
+        ...
+
+    def it_approved(self, case_id: str, package_version: int) -> bool: ...
+
+    def has_it_request(self, case_id: str, package_version: int) -> bool: ...
+
+    def approval_id_for(self, case_id: str, package_version: int) -> str | None:
+        """The approval ID of this version, or None if it is not approved."""
+        ...
+
+    def assign_owner(self, case_id: str, owner: str, *, assigned_by: str) -> None:
+        """A person assigns the follow-up owner (US-032); the audit records who."""
+        ...
+
     def find_case(self, ref: str) -> str | None:
         """A case by its ID or candidate reference, or None."""
         ...
