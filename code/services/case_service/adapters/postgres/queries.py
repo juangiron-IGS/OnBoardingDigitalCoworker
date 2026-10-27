@@ -30,7 +30,8 @@ def _timing(
 def list_cases(conn: psycopg.Connection) -> list[dict[str, Any]]:
     rows = conn.execute(
         "SELECT c.id, c.person_ref, c.start_date, c.state,"
-        " c.current_package_version, c.created_at, last.at, p.created_at"
+        " c.current_package_version, c.created_at, last.at, p.created_at,"
+        " c.data->>'candidate_name', c.data->>'role'"
         " FROM cases c"
         " LEFT JOIN package_versions p"
         "   ON p.case_id = c.id AND p.version = c.current_package_version"
@@ -48,6 +49,8 @@ def list_cases(conn: psycopg.Connection) -> list[dict[str, Any]]:
             "package_version": r[4],
             "created_at": r[5].isoformat(),
             "package_timing": _timing(r[6], r[7]),
+            "candidate_name": r[8],
+            "role": r[9],
         }
         for r in rows
     ]

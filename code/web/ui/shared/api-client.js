@@ -88,6 +88,11 @@ export const STATE_LABELS = {
   in_verification: "In verification", sent_to_payroll: "Sent to payroll", closed: "Closed",
 };
 
+// Who the case is about: the candidate's name and role, under the candidate ID.
+export function caseName(item) {
+  return [item.candidate_name, item.role].filter(Boolean).join(" · ");
+}
+
 export function statePill(stateName) {
   const tone = { actions_executed: "ok", approved: "ok", sent_to_payroll: "ok", documents_pending: "warn", in_verification: "warn", ready_for_review: "warn",
     needs_clarification: "warn", rejected: "bad", blocked_duplicate: "bad" }[stateName] || "neutral";

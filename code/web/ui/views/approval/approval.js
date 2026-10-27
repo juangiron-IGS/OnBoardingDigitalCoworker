@@ -1,4 +1,4 @@
-import { api, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
+import { api, caseName, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
 import { openChat } from "../../shared/chat-panel.js";
 import { igsCard } from "../status/status.js";
 
@@ -57,7 +57,8 @@ export async function render(root, show) {
       tabindex: "0",
       onclick: () => { setCase(item.id); show("approval"); },
       onkeydown: (e) => { if (e.key === "Enter") { setCase(item.id); show("approval"); } },
-    }, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, item.package_version ? ` · v${item.package_version}` : " · waiting for your answers")), statePill(item.state)));
+    }, el("div", {}, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, item.package_version ? ` · v${item.package_version}` : " · waiting for your answers")),
+      el("div", { class: "meta" }, caseName(item))), statePill(item.state)));
   }
   if (getCase() && cases.some((c) => c.id === getCase())) await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
@@ -252,7 +253,7 @@ async function drawRecruiter(root, caseId, show) {
   const sent = (view.package?.lines || []).filter((l) => l.source_or_rule_id === "email" && String(l.value ?? "").trim());
   const missing = view.questions || [];
   root.replaceChildren(...[
-    el("div", { class: "actions" }, el("h2", {}, view.case.person_ref), statePill(view.case.state)),
+    el("div", { class: "actions" }, el("h2", {}, view.case.person_ref), el("span", { class: "meta" }, caseName(view.case.data)), statePill(view.case.state)),
     missing.length
       ? el("div", { class: "notice warn" },
           el("div", {}, `To complete: ${missing.map((q) => q.label).join(", ")}.`),
@@ -281,7 +282,7 @@ async function drawPackage(root, caseId, show) {
   const exceptions = lines.filter((l) => l.label === "exception");
 
   root.replaceChildren(...[
-    el("div", { class: "actions" }, el("h2", {}, `${view.case.person_ref} · package v${pkg.version}`), statePill(view.case.state),
+    el("div", { class: "actions" }, el("h2", {}, `${view.case.person_ref} · package v${pkg.version}`), el("span", { class: "meta" }, caseName(view.case.data)), statePill(view.case.state),
       el("span", { class: `pill ${pkg.status === "ready" ? "ok" : "bad"}` }, `Package ${pkg.status.replaceAll("_", " ")}`)),
     exceptions.length
       ? el("div", { class: "notice warn" }, `${exceptions.length} open exception${exceptions.length > 1 ? "s" : ""} to review before deciding.`)

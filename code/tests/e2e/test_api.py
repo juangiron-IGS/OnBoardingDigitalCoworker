@@ -768,3 +768,13 @@ def test_the_dashboard_shows_ldc_steps(client, monkeypatch) -> None:
     assert "Handed off to IGS: in the LDC tracker" in before["done"]
     assert "LDC to approve the welcome kit" not in after["pending"]
     assert "LDC approved the welcome kit (shipped)" in after["done"]
+
+
+def test_case_lists_show_the_candidate_name_and_role(client) -> None:
+    # The candidate ID alone is hard to recognise: lists also carry name and role
+    _process(client, "02_missing_two_fields")
+
+    cases = client.get("/api/cases", headers=_as("recruiter")).json()
+    item = next(c for c in cases if c["person_ref"] == "SYN-0043")
+
+    assert (item["candidate_name"], item["role"]) == ("Casey Demo", "QA Engineer")

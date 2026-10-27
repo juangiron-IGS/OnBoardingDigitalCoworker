@@ -1,7 +1,7 @@
 // The Coworker's chat as a floating panel, like a Teams chat (US-002, US-003, US-019).
 // One conversation for the page. Alerts for the current role arrive in it too,
 // with an unread badge on the launcher. Text only: never innerHTML.
-import { api, el, errorNotice, getRole, setCase, STATE_LABELS } from "./api-client.js";
+import { api, caseName, el, errorNotice, getRole, setCase, STATE_LABELS } from "./api-client.js";
 
 // Which simulated alerts each role receives in its chat.
 const RECIPIENTS = {
@@ -142,7 +142,7 @@ async function loadCases() {
   } catch { /* the conversation still works without the list */ }
   ui.caseSelect.replaceChildren(
     el("option", { value: "" }, "New conversation"),
-    ...cases.map((c) => el("option", { value: c.id }, `${c.person_ref} · ${STATE_LABELS[c.state] || c.state}`)));
+    ...cases.map((c) => el("option", { value: c.id }, [c.person_ref, caseName(c), STATE_LABELS[c.state] || c.state].filter(Boolean).join(" · "))));
   ui.caseSelect.value = state.caseId || "";
 }
 
