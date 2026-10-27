@@ -168,10 +168,14 @@ function itCard(view, pkg, caseId, show) {
     feedback);
 }
 
-// US-032: the Coworker recommends the follow-up owner; the supervisor assigns it.
-function ownerCard(view, caseId, show) {
+// US-032: the Coworker recommends the follow-up owner; the supervisor assigns it
+// to the recommendation or to a person of the Onboarding Team.
+function ownerCard(view, caseId, show, team) {
   const { recommended_owner: recommended, assigned_owner: assigned } = view.case;
-  const input = el("input", { type: "text", "aria-label": "Follow-up owner", maxlength: "120", value: assigned || recommended || "" });
+  const names = [...new Set([recommended, ...team, assigned].filter(Boolean))];
+  const input = el("select", { "aria-label": "Follow-up owner" },
+    names.map((name) => el("option", { value: name, selected: name === (assigned || recommended) },
+      name === recommended ? `${name} (recommended)` : name)));
   const feedback = el("div");
   const assign = async () => {
     feedback.replaceChildren();
@@ -188,7 +192,7 @@ function ownerCard(view, caseId, show) {
     el("p", {}, assigned
       ? `Assigned: ${assigned}${assigned === recommended ? " (the recommendation)" : ` (recommended: ${recommended})`}`
       : recommended ? `Recommended, pending assignment: ${recommended}` : "No recommendation yet."),
-    canAssign ? el("div", { class: "actions" }, input, el("button", { class: "btn", onclick: assign }, assigned ? "Change owner" : "Assign owner")) : null,
+    canAssign ? el("div", { class: "actions" }, input, el("button", { class: "btn primary", onclick: assign }, assigned ? "Change owner" : "Assign owner")) : null,
     feedback);
 }
 
@@ -244,7 +248,7 @@ async function drawPackage(root, caseId, show) {
 
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
   if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, show));
-  if (role === "approver") root.append(ownerCard(view, caseId, show));
+  if (role === "approver") root.append(ownerCard(view, caseId, show, (await api.team().catch(() => ({ members: [] }))).members));
   if (role === "onboarding") root.append(reviewCard(view, lines, caseId, show));
   if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
   if (role !== "approver") return;

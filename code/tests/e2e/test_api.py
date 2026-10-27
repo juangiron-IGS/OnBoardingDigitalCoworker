@@ -696,3 +696,10 @@ def test_a_form_named_after_the_flsa_status_is_hidden(client, role) -> None:
     assert any(
         line["source_or_rule_id"] == "R-PA-05" for line in approver["package"]["lines"]
     )
+
+
+def test_the_owner_can_be_any_onboarding_team_member(client) -> None:
+    # US-032: the approver picks the owner from the Onboarding Team list
+    team = client.get("/api/rules/owners/team", headers=_as("approver")).json()
+
+    assert "Avery Example" in team["members"]
