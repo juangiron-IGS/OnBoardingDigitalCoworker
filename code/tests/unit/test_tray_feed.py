@@ -116,3 +116,10 @@ def test_about_describes_the_coworker_by_inspyr_velocity() -> None:
 
     assert "By INSPYR Velocity" in ABOUT
     assert "approves the package" in ABOUT
+
+
+def test_the_window_opens_in_the_chosen_theme() -> None:
+    base = "http://127.0.0.1:3000"
+
+    assert "&theme=dark" in window_url(base, None, "it", "dark")
+    assert "theme=" not in window_url(base, None, "it", "system")

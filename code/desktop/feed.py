@@ -10,6 +10,7 @@ ROLES = {
     "it": "IT",
     "ldc": "LDC (Culture and Belonging)",
 }
+THEMES = {"system": "Same as Windows", "light": "Light", "dark": "Dark"}
 
 BYLINE = "By INSPYR Velocity - All rights reserved"
 ABOUT = (
@@ -66,7 +67,9 @@ def case_url(base: str, case_id: str | None, role: str) -> str:
     return f"{base}#status/{case_id}" if case_id else f"{base}#dashboard"
 
 
-def window_url(base: str, case_id: str | None, role: str) -> str:
+def window_url(base: str, case_id: str | None, role: str, theme: str = "system") -> str:
     """The Coworker window: the chat as its main view, on the alert's case."""
     base = f"{base.rstrip('/')}/?role={role}&mode=desktop"
+    if theme in ("light", "dark"):
+        base += f"&theme={theme}"
     return f"{base}#chat/{case_id}" if case_id else f"{base}#chat"
