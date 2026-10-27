@@ -1,5 +1,7 @@
 """Coworker Tray: only alerts not shown yet are notified, and each opens its case."""
 
+import pytest
+
 from desktop.feed import AlertFeed, case_url, window_url
 
 
@@ -54,6 +56,8 @@ def test_link_opens_the_case_as_the_tray_role() -> None:
 
 
 def test_icon_shows_a_red_dot_for_new_alerts() -> None:
+    # Needs the optional tray extra (pystray, Pillow); the CI runner has neither.
+    pytest.importorskip("pystray")
     from desktop.tray import ALERT, icon_image
 
     quiet = icon_image(0, connected=True)
@@ -106,6 +110,7 @@ def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) ->
 
 
 def test_the_logo_is_drawn_large_and_sharp() -> None:
+    pytest.importorskip("pystray")
     from desktop.tray import icon_image
 
     assert icon_image(0, True, size=256).size == (256, 256)
