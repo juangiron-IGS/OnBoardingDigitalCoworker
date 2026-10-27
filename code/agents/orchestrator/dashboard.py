@@ -110,6 +110,12 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
         and not (outstanding or to_sign)
     ):
         pending.append("Onboarding Team to approve the payroll handoff")
+    systems = {r["system"] for r in view.get("records", [])}
+    if "ldc_tracker" in systems and "welcome_kits" not in systems:
+        pending.append("LDC to approve the welcome kit")
+    drafts = [m for m in view.get("leader_messages", []) if m["status"] == "draft"]
+    if drafts:
+        pending.append(f"LDC to approve {len(drafts)} leader message(s)")
     for task in view.get("payroll_returns", []):
         pending.append(f"Payroll return: {task['issue']}")
     return pending
@@ -128,6 +134,11 @@ def _done(view: dict) -> list[str]:
         done.append(f"Follow-up owner assigned: {case['assigned_owner']}")
     if case.get("it_approved"):
         done.append("IT approved the laptop request")
+    systems = {r["system"] for r in view.get("records", [])}
+    if "ldc_tracker" in systems:
+        done.append("Handed off to IGS: in the LDC tracker")
+    if "welcome_kits" in systems:
+        done.append("LDC approved the welcome kit (shipped)")
     return done
 
 
