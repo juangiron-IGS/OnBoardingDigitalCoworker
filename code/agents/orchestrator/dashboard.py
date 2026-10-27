@@ -31,6 +31,8 @@ ORDER = [
     CaseState.BLOCKED_DUPLICATE,
 ]
 STARTS_SOON_DAYS = 7
+# What the Onboarding Team reviews before the approver decides (US-026).
+REVIEWED = {"path": "onboarding path", "paperwork": "paperwork"}
 BEFORE_ACTIONS = {
     CaseState.RECEIVED,
     CaseState.NEEDS_CLARIFICATION,
@@ -57,6 +59,7 @@ def build(orch: "Orchestrator", *, role: str, today: date | None = None) -> list
                 "start_date": item["start_date"],
                 "package_version": item["package_version"],
                 "pending": _pending(orch, view, state),
+                "done": _done(view),
                 "risks": _risks(view, state, today),
             }
         )
@@ -73,6 +76,12 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     if state is CaseState.NEEDS_CLARIFICATION:
         labels = ", ".join(q["label"] for q in orch.questions(case["id"]))
         pending.append(f"Recruiter to answer: {labels}")
+    review = case["data"].get("team_review") or {}
+    if state is CaseState.READY_FOR_REVIEW:
+        to_review = [name for name in REVIEWED if name not in review]
+        if to_review:
+            items = " and ".join(REVIEWED[name] for name in to_review)
+            pending.append(f"Onboarding Team to review the {items}")
     if state in (CaseState.READY_FOR_REVIEW, CaseState.APPROVAL_GATE):
         pending.append(f"Approver to decide on package v{case['package_version']}")
     if case.get("recommended_owner") and not case.get("assigned_owner"):
@@ -104,6 +113,22 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     for task in view.get("payroll_returns", []):
         pending.append(f"Payroll return: {task['issue']}")
     return pending
+
+
+def _done(view: dict) -> list[str]:
+    """Steps already completed, so they leave the pending list (US-030)."""
+    case = view["case"]
+    done = []
+    review = case["data"].get("team_review") or {}
+    for name, label in REVIEWED.items():
+        if name in review:
+            how = "confirmed" if review[name].get("confirmed") else "changed"
+            done.append(f"Onboarding Team {how} the {label}")
+    if case.get("assigned_owner"):
+        done.append(f"Follow-up owner assigned: {case['assigned_owner']}")
+    if case.get("it_approved"):
+        done.append("IT approved the laptop request")
+    return done
 
 
 def _risks(view: dict, state: CaseState, today: date) -> list[str]:
