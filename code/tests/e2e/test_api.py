@@ -744,3 +744,27 @@ def test_the_candidate_email_lists_the_checklist(client, monkeypatch) -> None:
     assert before["candidate_email"] is None
     assert all(f"- {c['item']}" in mail["body"] for c in view["checklist"])
     assert "exempt" not in text.lower()
+
+
+def test_the_dashboard_shows_ldc_steps(client, monkeypatch) -> None:
+    # US-028: after approval the case is in the LDC tracker; the kit is pending
+    # for LDC until approved, then listed as done
+    monkeypatch.setenv("FEATURE_IGS_HANDOFF", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    _, before = _dashboard_case(client, "ldc", case_id)
+    client.post(
+        f"/api/cases/{case_id}/welcome-kit",
+        json={"package_version": 1},
+        headers=_as("ldc"),
+    )
+    _, after = _dashboard_case(client, "ldc", case_id)
+
+    assert "LDC to approve the welcome kit" in before["pending"]
+    assert "Handed off to IGS: in the LDC tracker" in before["done"]
+    assert "LDC to approve the welcome kit" not in after["pending"]
+    assert "LDC approved the welcome kit (shipped)" in after["done"]

@@ -152,7 +152,7 @@ function infoPackageCard(view, caseId, show) {
 }
 
 // US-028, US-029: LDC tracker, welcome kit and leader messages, all approved by LDC.
-function igsCard(view, caseId, show) {
+export function igsCard(view, caseId, show) {
   const entry = view.records.find((r) => r.system === "ldc_tracker");
   if (!entry) return null;
   const shipped = view.records.some((r) => r.system === "welcome_kits");

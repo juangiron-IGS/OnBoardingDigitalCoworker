@@ -1,5 +1,6 @@
 import { api, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
 import { openChat } from "../../shared/chat-panel.js";
+import { igsCard } from "../status/status.js";
 
 const DECIDABLE = new Set(["ready_for_review", "approval_gate"]);
 const FIELD_NAMES = {
@@ -20,7 +21,7 @@ const LEADS = {
   recruiter: "What you sent in the start email, and what you still need to complete.",
   it: "The laptop, access and equipment lines IT approves.",
   onboarding: "The open exceptions and the path and paperwork the Onboarding Team reviews.",
-  ldc: "The welcome kit line for Culture and Belonging.",
+  ldc: "The new hires in the LDC tracker: approve the welcome kit and the leader messages.",
   approver: "Every line shows its label and its source or rule. Nothing runs on any system until the current version is approved.",
 };
 
@@ -73,7 +74,17 @@ function pendingFor(role, view) {
   }
   if (role === "it") return !c.it_approved && lines.some((l) => l.field === "equipment_request" && l.label !== "exception") && DECIDABLE.has(c.state);
   if (role === "approver") return DECIDABLE.has(c.state) || Boolean(c.recommended_owner && !c.assigned_owner);
+  if (role === "ldc") return ldcPending(view);
   return true;
+}
+
+// US-028, US-029: after approval the case is in the LDC tracker; LDC approves the
+// welcome kit and then the leader messages.
+function ldcPending(view) {
+  if (!view.records.some((r) => r.system === "ldc_tracker")) return false;
+  const shipped = view.records.some((r) => r.system === "welcome_kits");
+  const messages = view.leader_messages || [];
+  return !shipped || !messages.length || messages.some((m) => m.status === "draft");
 }
 
 // US-007 AC-003: a cited rule opens to show its owner, version and status.
@@ -283,6 +294,7 @@ async function drawPackage(root, caseId, show) {
   if (role === "approver") root.append(ownerCard(view, caseId, refresh, (await api.team().catch(() => ({ members: [] }))).members));
   if (role === "onboarding") root.append(reviewCard(view, lines, caseId, refresh));
   if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
+  if (role === "ldc" && view.records.some((r) => r.system === "ldc_tracker")) root.append(igsCard(view, caseId, refresh));
   if (role !== "approver") return;
 
   const feedback = el("div");
