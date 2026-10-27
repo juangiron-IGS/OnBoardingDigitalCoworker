@@ -109,3 +109,10 @@ def test_the_logo_is_drawn_large_and_sharp() -> None:
     from desktop.tray import icon_image
 
     assert icon_image(0, True, size=256).size == (256, 256)
+
+
+def test_about_describes_the_coworker_by_inspyr_velocity() -> None:
+    from desktop.feed import ABOUT
+
+    assert "By INSPYR Velocity" in ABOUT
+    assert "approves the package" in ABOUT

@@ -52,6 +52,7 @@ button, select, input { font: inherit; color: inherit; }
 .brand { display: flex; flex-direction: column; }
 .brand strong { font-size: 17px; }
 .brand span { color: var(--muted); font-size: 13px; }
+.brand .byline { color: var(--muted); font-size: 11px; }
 .role { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
 .role select { padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 
