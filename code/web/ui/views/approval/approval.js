@@ -84,8 +84,9 @@ function pendingFor(role, view) {
 function ldcPending(view) {
   if (!view.records.some((r) => r.system === "ldc_tracker")) return false;
   const shipped = view.records.some((r) => r.system === "welcome_kits");
+  const documentsOpen = ["documents_pending", "in_verification"].includes(view.case.state);
   const messages = view.leader_messages || [];
-  return !shipped || !messages.length || messages.some((m) => m.status === "draft");
+  return (!shipped && !documentsOpen) || (shipped && !messages.length) || messages.some((m) => m.status === "draft");
 }
 
 // US-007 AC-003: a cited rule opens to show its owner, version and status.

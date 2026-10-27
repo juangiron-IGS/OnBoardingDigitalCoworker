@@ -4,10 +4,15 @@ a refusal is audited in its own transaction before it reaches the caller."""
 
 from ..adapters.postgres.igs_repository import PostgresIgsRepository
 from ..domain.approval_gate import Approval, verify
+from ..domain.case import CaseState
 from ..domain.errors import GovernanceError
 from ..ports.audit_log import AuditLog
 from ..ports.case_repository import CaseRepository
 from .decisions import APPROVED_STATES
+
+# While the candidate's documents are pending or being verified, the kit waits: it
+# ships once the Onboarding Team verified them and approved the payroll handoff.
+DOCUMENTS_OPEN = {CaseState.DOCUMENTS_PENDING, CaseState.IN_VERIFICATION}
 
 
 def _refused(
@@ -49,6 +54,8 @@ def record_kit_approval(
             )
             if case.state not in APPROVED_STATES:
                 raise GovernanceError("case_not_approved")
+            if case.state in DOCUMENTS_OPEN:
+                raise GovernanceError("documents_not_verified")
             igs.add_kit_approval(case_id, package_version, approved_by)
             audit.append(
                 case_id=case_id,

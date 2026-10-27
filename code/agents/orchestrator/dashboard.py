@@ -123,7 +123,12 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     ):
         pending.append("Onboarding Team to approve the payroll handoff")
     systems = {r["system"] for r in view.get("records", [])}
-    if "ldc_tracker" in systems and "welcome_kits" not in systems:
+    documents_open = state in (CaseState.DOCUMENTS_PENDING, CaseState.IN_VERIFICATION)
+    if (
+        "ldc_tracker" in systems
+        and "welcome_kits" not in systems
+        and not documents_open
+    ):
         pending.append("LDC to approve the welcome kit")
     drafts = [m for m in view.get("leader_messages", []) if m["status"] == "draft"]
     if drafts:
