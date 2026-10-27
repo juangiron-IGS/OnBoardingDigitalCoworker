@@ -94,21 +94,23 @@ function reviewCard(view, lines, caseId, show) {
         const outcome = await api.review(caseId, field, action, values);
         feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
           action === "confirm" ? `${FIELD_NAMES[field]} confirmed.` : `${FIELD_NAMES[field]} changed. Package v${outcome.package_version} is ready for the approver.`));
-        setTimeout(() => show("approval"), 1500);
+        setTimeout(show, 800);
       } catch (error) {
         feedback.replaceChildren(errorNotice(error));
       }
     };
-    return el("div", { class: "list" },
+    return el("div", { class: "list", "data-pending": canReview && !done },
       el("div", { class: "actions" }, el("strong", {}, FIELD_NAMES[field]), el("span", { class: `pill ${done ? "ok" : "neutral"}` }, state)),
       canReview ? el("div", { class: "review-edit" }, editor,
         el("div", { class: "actions" },
           el("button", { class: "btn", type: "button", onclick: act("confirm") }, "Confirm recommendation"),
           el("button", { class: "btn primary", type: "button", onclick: act("change") }, "Save change (new version)"))) : null);
   });
+  const reviewed = canReview && ["path", "paperwork"].every((field) => review[field]);
   return el("div", {},
     el("h3", {}, "Path and paperwork review"),
     rows,
+    reviewed ? el("div", { class: "notice ok", "data-done": true }, "Path and paperwork reviewed. The package is with the approver.") : null,
     getRole() !== "onboarding" ? el("p", { class: "lead" }, "The Onboarding Team confirms or changes these. Switch to that role to review.") : null,
     feedback);
 }
@@ -129,7 +131,7 @@ function hrCard(lines, caseId, show) {
         const outcome = await api.hrAnswer(caseId, line.field, input.value);
         feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
           `HR's answer recorded. Package v${outcome.package_version} was rebuilt and is ready for the approver.`));
-        setTimeout(() => show("approval"), 1500);
+        setTimeout(show, 800);
       } catch (error) {
         feedback.replaceChildren(errorNotice(error));
       }
@@ -137,7 +139,7 @@ function hrCard(lines, caseId, show) {
     return el("div", { class: "actions" }, el("span", {}, FIELD_NAMES[line.field] || line.field), input,
       el("button", { class: "btn primary", type: "button", onclick: save }, "Record HR's answer"));
   });
-  return el("div", {},
+  return el("div", { "data-pending": getRole() === "onboarding" },
     el("h3", {}, "Escalated to HR"),
     el("p", { class: "lead" }, "The Coworker does not decide FLSA or classification. Record HR's decision to rebuild the package."),
     getRole() === "onboarding" ? forms : el("p", { class: "lead" }, "Switch to the Onboarding Team role to record HR's answer."),
@@ -153,12 +155,12 @@ function itCard(view, pkg, caseId, show) {
       const outcome = await api.approveIt(caseId, pkg.version);
       feedback.replaceChildren(el("div", { class: "notice ok", role: "status" },
         outcome.sent ? "IT approved. The request was sent to Chelsea Tech (simulated)." : "IT approved. The request is sent once the approver approves this version."));
-      setTimeout(() => show("approval"), 1200);
+      setTimeout(show, 800);
     } catch (error) {
       feedback.replaceChildren(errorNotice(error));
     }
   };
-  return el("div", {},
+  return el("div", { "data-pending": getRole() === "it" && !view.case.it_approved },
     el("h3", {}, "IT approval of the laptop and access request"),
     el("p", {}, view.case.it_approved ? `IT approved v${pkg.version}.` : `Waiting for IT to approve v${pkg.version}.`),
     getRole() === "it" && !view.case.it_approved
@@ -181,13 +183,13 @@ function ownerCard(view, caseId, show, team) {
     feedback.replaceChildren();
     try {
       await api.assignOwner(caseId, input.value);
-      show("approval");
+      show();
     } catch (error) {
       feedback.replaceChildren(errorNotice(error));
     }
   };
   const canAssign = getRole() === "approver" && recommended;
-  return el("div", {},
+  return el("div", { "data-pending": canAssign && !assigned },
     el("h3", {}, "Follow-up owner"),
     el("p", {}, assigned
       ? `Assigned: ${assigned}${assigned === recommended ? " (the recommendation)" : ` (recommended: ${recommended})`}`
@@ -229,7 +231,16 @@ async function drawRecruiter(root, caseId, show) {
   ]);
 }
 
+// After an action, show the same case at its next pending step, not the top of the view.
+function goToNextStep(root) {
+  const next = root.querySelector("[data-pending]") || root.querySelector(".decision:not([disabled])") || root.querySelector("[data-done]");
+  if (!next) return;
+  next.scrollIntoView({ block: "center", behavior: "smooth" });
+  next.querySelector("button, textarea, select")?.focus({ preventScroll: true });
+}
+
 async function drawPackage(root, caseId, show) {
+  const refresh = async () => { await drawPackage(root, caseId, show); goToNextStep(root); };
   const role = getRole();
   const view = await api.case(caseId);
   const pkg = view.package;
@@ -247,10 +258,10 @@ async function drawPackage(root, caseId, show) {
   ].filter(Boolean));
 
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
-  if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, show));
-  if (role === "approver") root.append(ownerCard(view, caseId, show, (await api.team().catch(() => ({ members: [] }))).members));
-  if (role === "onboarding") root.append(reviewCard(view, lines, caseId, show));
-  if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
+  if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, refresh));
+  if (role === "approver") root.append(ownerCard(view, caseId, refresh, (await api.team().catch(() => ({ members: [] }))).members));
+  if (role === "onboarding") root.append(reviewCard(view, lines, caseId, refresh));
+  if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
   if (role !== "approver") return;
 
   const feedback = el("div");
