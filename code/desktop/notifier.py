@@ -15,7 +15,7 @@ from pathlib import Path
 
 AUMID = "INSPYR.OnboardingCoworker"
 APP_NAME = "Onboarding Coworker"
-BRAND = "1F5FAE"  # the tile colour behind the logo in Windows' notification header
+BRAND = "008080"  # the tile colour behind the logo in Windows' notification header
 
 
 def logo_path() -> Path:

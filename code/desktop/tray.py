@@ -22,23 +22,24 @@ from .notifier import Notifier, logo_path
 from .poller import poll, server_params
 from .window import CoworkerWindow
 
-ACCENT = (31, 95, 174)
+ACCENT = (0, 128, 128)  # teal, as the notification header (BRAND)
 ALERT = (214, 48, 49)
 
 
 def icon_image(unseen: int, connected: bool, size: int = 64) -> Image.Image:
-    """A blue tile with a tick; grey when disconnected; a red dot for new alerts.
-    Drawn on a 64-unit grid and scaled, so the notification logo stays sharp."""
+    """A new hire with a plus on a teal disc; grey when disconnected; a red dot for
+    new alerts. Drawn on a 64-unit grid and scaled, so the logo stays sharp."""
     k = size / 64
+    fill = ACCENT if connected else (128, 128, 128)
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    draw.rounded_rectangle(
-        (4 * k, 4 * k, 60 * k, 60 * k),
-        radius=14 * k,
-        fill=ACCENT if connected else (128, 128, 128),
-    )
-    tick = [v * k for v in (18, 34, 28, 44, 46, 22)]
-    draw.line(tick, fill="white", width=round(7 * k), joint="curve")
+    draw.ellipse((2 * k, 2 * k, 62 * k, 62 * k), fill=fill)
+    draw.ellipse((22 * k, 13 * k, 38 * k, 29 * k), fill="white")  # head
+    draw.pieslice((13 * k, 31 * k, 47 * k, 65 * k), 180, 360, fill="white")  # body
+    draw.ellipse((40 * k, 34 * k, 60 * k, 54 * k), fill="white")  # plus badge
+    bar = round(4 * k)
+    draw.line((50 * k, 38 * k, 50 * k, 50 * k), fill=fill, width=bar)
+    draw.line((44 * k, 44 * k, 56 * k, 44 * k), fill=fill, width=bar)
     if unseen:
         draw.ellipse(
             (40 * k, 0, 64 * k, 24 * k),
