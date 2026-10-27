@@ -1,4 +1,5 @@
 import { api, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
+import { openChat } from "../../shared/chat-panel.js";
 
 const DECIDABLE = new Set(["ready_for_review", "approval_gate"]);
 const FIELD_NAMES = {
@@ -9,10 +10,25 @@ const FIELD_NAMES = {
   equipment_request: "Laptop and access request", equipment_overhead: "Equipment overhead", bill_back: "Bill-back",
 };
 
+// Each role sees only the package lines it approves or adjusts; the approver sees all.
+const ROLE_FIELDS = {
+  it: ["equipment_request", "equipment_overhead", "bill_back"],
+  onboarding: ["path", "paperwork", "welcome_kit", "owner"],
+  ldc: ["welcome_kit"],
+};
+const LEADS = {
+  recruiter: "What you sent in the start email, and what you still need to complete.",
+  it: "The laptop, access and equipment lines IT approves.",
+  onboarding: "The open exceptions and the path and paperwork the Onboarding Team reviews.",
+  ldc: "The welcome kit line for Culture and Belonging.",
+  approver: "Every line shows its label and its source or rule. Nothing runs on any system until the current version is approved.",
+};
+
 export async function render(root, show) {
+  const recruiter = getRole() === "recruiter";
   root.append(
     el("h1", {}, "Approval"),
-    el("p", { class: "lead" }, "Every line shows its label and its source or rule. Nothing runs on any system until the current version is approved."),
+    el("p", { class: "lead" }, LEADS[getRole()] || LEADS.approver),
   );
   const picker = el("div", { class: "list" });
   const detail = el("section", { class: "card" });
@@ -20,7 +36,8 @@ export async function render(root, show) {
 
   let cases;
   try {
-    cases = (await api.cases()).filter((c) => c.package_version > 0);
+    // The recruiter also sees the cases still waiting for their answers.
+    cases = (await api.cases()).filter((c) => c.package_version > 0 || (recruiter && c.state === "needs_clarification"));
   } catch (error) {
     picker.append(errorNotice(error));
     return;
@@ -33,9 +50,9 @@ export async function render(root, show) {
       tabindex: "0",
       onclick: () => { setCase(item.id); show("approval"); },
       onkeydown: (e) => { if (e.key === "Enter") { setCase(item.id); show("approval"); } },
-    }, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · v${item.package_version}`)), statePill(item.state)));
+    }, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, item.package_version ? ` · v${item.package_version}` : " · waiting for your answers")), statePill(item.state)));
   }
-  if (getCase() && cases.some((c) => c.id === getCase())) await drawPackage(detail, getCase(), show);
+  if (getCase() && cases.some((c) => c.id === getCase())) await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
@@ -175,10 +192,45 @@ function ownerCard(view, caseId, show) {
     feedback);
 }
 
+// Opens the chat on the case: a panel on the web app, the Chat tab in the desktop window.
+function completeInChat(caseId, show) {
+  if (document.body.classList.contains("desktop")) show(`chat/${encodeURIComponent(caseId)}`);
+  else openChat(caseId);
+}
+
+function linesTable(lines) {
+  return el("div", { class: "table-wrap" }, el("table", {},
+    el("thead", {}, el("tr", {}, el("th", {}, "Data point"), el("th", {}, "Value"), el("th", {}, "Label"), el("th", {}, "Source or rule"))),
+    el("tbody", {}, lines.map((line) => el("tr", {},
+      el("td", {}, FIELD_NAMES[line.field] || line.field),
+      el("td", {}, line.value ?? "—"),
+      el("td", {}, el("span", { class: `pill ${line.label}` }, line.label)),
+      el("td", { class: "mono" }, ruleCell(line.source_or_rule_id)))))));
+}
+
+// US-004: the recruiter sees the data they sent and the fields still to complete.
+async function drawRecruiter(root, caseId, show) {
+  const view = await api.case(caseId);
+  const sent = (view.package?.lines || []).filter((l) => l.source_or_rule_id === "email" && String(l.value ?? "").trim());
+  const missing = view.questions || [];
+  root.replaceChildren(...[
+    el("div", { class: "actions" }, el("h2", {}, view.case.person_ref), statePill(view.case.state)),
+    missing.length
+      ? el("div", { class: "notice warn" },
+          el("div", {}, `To complete: ${missing.map((q) => q.label).join(", ")}.`),
+          el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => completeInChat(caseId, show) }, "Complete in the chat")))
+      : el("div", { class: "notice ok" }, "Nothing to complete. The package is with the Onboarding Team and the approver."),
+    el("h3", {}, "What you sent"),
+    sent.length ? linesTable(sent) : el("p", { class: "empty" }, "The package is built once the start data is complete."),
+  ]);
+}
+
 async function drawPackage(root, caseId, show) {
+  const role = getRole();
   const view = await api.case(caseId);
   const pkg = view.package;
-  const lines = [...pkg.lines].sort((a, b) => (a.label === "exception" ? -1 : 0) - (b.label === "exception" ? -1 : 0));
+  const fields = ROLE_FIELDS[role];
+  const lines = [...pkg.lines].filter((l) => !fields || fields.includes(l.field) || (role === "onboarding" && l.label === "exception")).sort((a, b) => (a.label === "exception" ? -1 : 0) - (b.label === "exception" ? -1 : 0));
   const exceptions = lines.filter((l) => l.label === "exception");
 
   root.replaceChildren(...[
@@ -187,20 +239,15 @@ async function drawPackage(root, caseId, show) {
     exceptions.length
       ? el("div", { class: "notice warn" }, `${exceptions.length} open exception${exceptions.length > 1 ? "s" : ""} to review before deciding.`)
       : null,
-    el("div", { class: "table-wrap" }, el("table", {},
-      el("thead", {}, el("tr", {}, el("th", {}, "Data point"), el("th", {}, "Value"), el("th", {}, "Label"), el("th", {}, "Source or rule"))),
-      el("tbody", {}, lines.map((line) => el("tr", {},
-        el("td", {}, FIELD_NAMES[line.field] || line.field),
-        el("td", {}, line.value ?? "—"),
-        el("td", {}, el("span", { class: `pill ${line.label}` }, line.label)),
-        el("td", { class: "mono" }, ruleCell(line.source_or_rule_id)))))))
+    lines.length ? linesTable(lines) : el("p", { class: "empty" }, "Nothing in this package for your role."),
   ].filter(Boolean));
 
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
-  if (escalated.length) root.append(hrCard(escalated, caseId, show));
-  root.append(ownerCard(view, caseId, show));
-  root.append(reviewCard(view, lines, caseId, show));
-  if (lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
+  if (escalated.length && role === "onboarding") root.append(hrCard(escalated, caseId, show));
+  if (role === "approver") root.append(ownerCard(view, caseId, show));
+  if (role === "onboarding") root.append(reviewCard(view, lines, caseId, show));
+  if ((role === "it" || role === "approver") && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, show));
+  if (role !== "approver") return;
 
   const feedback = el("div");
   const canDecide = getRole() === "approver" && DECIDABLE.has(view.case.state) && pkg.status === "ready";
@@ -224,7 +271,6 @@ async function drawPackage(root, caseId, show) {
       el("button", { class: "btn primary decision", disabled: !canDecide, onclick: decide("approve") }, `Approve v${pkg.version}`),
       el("button", { class: "btn decision", disabled: !canDecide, onclick: decide("return") }, "Return for correction"),
       el("button", { class: "btn danger decision", disabled: !canDecide, onclick: decide("reject") }, "Reject")),
-    getRole() !== "approver" ? el("p", { class: "lead" }, "Only the Approver role can decide. Switch roles at the top right.") : null,
     feedback,
   ].filter(Boolean));
 }
