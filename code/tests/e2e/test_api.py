@@ -703,3 +703,24 @@ def test_the_owner_can_be_any_onboarding_team_member(client) -> None:
     team = client.get("/api/rules/owners/team", headers=_as("approver")).json()
 
     assert "Avery Example" in team["members"]
+
+
+def test_a_reviewed_recommendation_leaves_the_pending_list(client) -> None:
+    # US-030: once the Onboarding Team confirms the path and paperwork, the
+    # dashboard lists them as done, no longer as pending
+    ready = _process(client, "01_complete_and_consistent")["case_id"]
+    _, before = _dashboard_case(client, "onboarding", ready)
+    for field in ("path", "paperwork"):
+        client.post(
+            f"/api/cases/{ready}/recommendation",
+            json={"field": field, "action": "confirm", "values": []},
+            headers=_as("onboarding"),
+        )
+    _, after = _dashboard_case(client, "onboarding", ready)
+
+    assert (
+        "Onboarding Team to review the onboarding path and paperwork"
+        in (before["pending"])
+    )
+    assert not any(p.startswith("Onboarding Team to review") for p in after["pending"])
+    assert "Onboarding Team confirmed the paperwork" in after["done"]

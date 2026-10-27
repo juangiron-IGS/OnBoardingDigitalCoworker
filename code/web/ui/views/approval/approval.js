@@ -42,7 +42,13 @@ export async function render(root, show) {
     picker.append(errorNotice(error));
     return;
   }
-  if (!cases.length) picker.append(el("p", { class: "empty" }, "No package yet. Simulate a complete start email in the inbox."));
+  if (!recruiter) {
+    const views = await Promise.all(cases.map((c) => api.case(c.id).catch(() => null)));
+    cases = cases.filter((c, i) => views[i] && pendingFor(getRole(), views[i]));
+  }
+  if (!cases.length) picker.append(el("p", { class: "empty" }, recruiter
+    ? "No package yet. Simulate a complete start email in the inbox."
+    : "Nothing pending for your role. Completed steps are on the Dashboard."));
   if (!cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
   for (const item of cases) {
     picker.append(el("div", {
@@ -54,6 +60,20 @@ export async function render(root, show) {
   }
   if (getCase() && cases.some((c) => c.id === getCase())) await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
   else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
+}
+
+// Whether this role still has to approve or adjust something on the case.
+function pendingFor(role, view) {
+  const { case: c, package: pkg } = view;
+  const lines = pkg?.lines || [];
+  if (role === "onboarding") {
+    const review = c.data.team_review || {};
+    const toHr = lines.some((l) => l.label === "exception" && HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
+    return c.state === "ready_for_review" && (!review.path || !review.paperwork || toHr);
+  }
+  if (role === "it") return !c.it_approved && lines.some((l) => l.field === "equipment_request" && l.label !== "exception") && DECIDABLE.has(c.state);
+  if (role === "approver") return DECIDABLE.has(c.state) || Boolean(c.recommended_owner && !c.assigned_owner);
+  return true;
 }
 
 // US-007 AC-003: a cited rule opens to show its owner, version and status.
@@ -101,7 +121,8 @@ function reviewCard(view, lines, caseId, show) {
     };
     return el("div", { class: "list", "data-pending": canReview && !done },
       el("div", { class: "actions" }, el("strong", {}, FIELD_NAMES[field]), el("span", { class: `pill ${done ? "ok" : "neutral"}` }, state)),
-      canReview ? el("div", { class: "review-edit" }, editor,
+      done ? el("p", { class: "meta" }, current.join(" · ")) : null,
+      canReview && !done ? el("div", { class: "review-edit" }, editor,
         el("div", { class: "actions" },
           el("button", { class: "btn", type: "button", onclick: act("confirm") }, "Confirm recommendation"),
           el("button", { class: "btn primary", type: "button", onclick: act("change") }, "Save change (new version)"))) : null);

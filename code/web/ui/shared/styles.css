@@ -72,6 +72,7 @@ h2 { font-size: 16px; margin: 0 0 8px; }
   padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
 .row.selected { border-color: var(--accent); background: var(--accent-soft); }
 .row .meta { color: var(--muted); font-size: 13px; }
+.row .meta.done { color: var(--ok); }
 .row .actions { align-items: center; }
 .clickable { cursor: pointer; }
 
