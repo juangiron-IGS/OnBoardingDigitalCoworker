@@ -25,6 +25,15 @@ def logo_path() -> Path:
     return base / "coworker-logo.png"
 
 
+def use_app_identity() -> None:
+    """Group the tray's window under "Onboarding Coworker" on the taskbar, with
+    the registered name and logo, instead of under Python."""
+    if sys.platform == "win32":
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(AUMID)
+
+
 def register_app(logo: Path) -> None:
     """Register the tray's name and logo for its notifications (current user)."""
     import winreg

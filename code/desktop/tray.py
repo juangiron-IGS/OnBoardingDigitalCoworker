@@ -18,7 +18,7 @@ import pystray
 from PIL import Image, ImageDraw
 
 from .feed import ROLES, AlertFeed, case_url, window_url
-from .notifier import Notifier, logo_path
+from .notifier import Notifier, logo_path, use_app_identity
 from .poller import poll, server_params
 from .window import CoworkerWindow
 
@@ -70,6 +70,11 @@ class CoworkerTray:
         )
         logo = logo_path()
         icon_image(0, True, size=256).save(logo)
+        # The window's own icon on the taskbar and in its title bar.
+        self.window_icon = logo.with_suffix(".ico")
+        icon_image(0, True, size=256).save(
+            self.window_icon, sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)]
+        )
         self.notifier = Notifier(logo, self._open_case, self.icon.notify)
 
     # --- MCP polling, on its own thread with its own event loop ---
@@ -206,7 +211,7 @@ class CoworkerTray:
             return
         # The window loop needs the main thread; the icon runs beside it.
         self.icon.run_detached()
-        CoworkerWindow.start()
+        CoworkerWindow.start(self.window_icon)
         self.icon.stop()
 
 
@@ -215,6 +220,7 @@ def main() -> None:
     if role not in ROLES:
         raise SystemExit(f"COWORKER_TRAY_ROLE must be one of {sorted(ROLES)}")
     port = os.environ.get("WEB_APP_PORT") or "3000"
+    use_app_identity()  # before any window exists
     CoworkerTray(role, f"http://127.0.0.1:{port}").run()
 
 
