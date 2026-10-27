@@ -16,6 +16,16 @@ MOCK_STORES = (
     "ldc_tracker",
     "welcome_kits",
 )
+# A readable reference per simulated record, to quote when following it up
+# (e.g. "JD-CASE-00012"); the approval ID stays on every record (BR-002).
+REFERENCE_PREFIX = {
+    "jobdiva_cases": "JD-CASE",
+    "task_lists": "TASK",
+    "it_requests": "IT-REQ",
+    "payroll_packages": "PAYROLL",
+    "ldc_tracker": "LDC",
+    "welcome_kits": "KIT",
+}
 
 
 def _timing(
@@ -152,12 +162,19 @@ def _records(conn: psycopg.Connection, case_id: str) -> list[dict]:
     for store in MOCK_STORES:
         rows = conn.execute(
             psycopg.sql.SQL(
-                "SELECT approval_id, data, created_at FROM mocks.{} WHERE case_id = %s"
+                "SELECT id, approval_id, data, created_at FROM mocks.{}"
+                " WHERE case_id = %s"
             ).format(psycopg.sql.Identifier(store)),
             (case_id,),
         ).fetchall()
         records += [
-            {"system": store, "approval_id": a, "data": d, "at": t.isoformat()}
-            for a, d, t in rows
+            {
+                "system": store,
+                "reference": f"{REFERENCE_PREFIX[store]}-{i:05d}",
+                "approval_id": a,
+                "data": d,
+                "at": t.isoformat(),
+            }
+            for i, a, d, t in rows
         ]
     return records

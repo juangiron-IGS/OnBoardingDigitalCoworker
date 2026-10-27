@@ -259,8 +259,9 @@ async function drawCase(root, caseId, show) {
   root.append(el("section", { class: "card" }, el("h2", {}, "Records created after approval"),
     view.records.length
       ? el("div", { class: "list" }, view.records.map((r) => el("div", { class: "row" },
-          el("div", {}, el("div", {}, SYSTEMS[r.system] || r.system), el("div", { class: "meta" }, Object.entries(r.data).map(([k, v]) => `${k}: ${v}`).join(" · "))),
-          el("span", { class: "mono" }, r.approval_id))))
+          el("div", {}, el("div", {}, SYSTEMS[r.system] || r.system), el("div", { class: "meta" }, Object.entries(r.data).map(([k, v]) => `${k}: ${v}`).join(" · ")),
+            el("div", { class: "meta" }, `Created ${new Date(r.at).toLocaleString()} · approval ${r.approval_id}`)),
+          el("span", { class: "mono record-ref", title: "Reference to follow this record up" }, r.reference))))
       : el("p", { class: "empty" }, "Nothing yet. Records appear only after the current package version is approved.")));
 
   root.append(el("section", { class: "card" }, el("h2", {}, "Audit log"),
