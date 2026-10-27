@@ -70,6 +70,16 @@ def build(orch: "Orchestrator", *, role: str, today: date | None = None) -> list
     ]
 
 
+def steps(orch: "Orchestrator", case_id: str) -> tuple[list[str], list[str]]:
+    """What is pending on a case, each naming the team that acts, and what is done
+    (US-019, US-030). Pending items name fields and documents, never values."""
+    view = orch.cases.case_view(case_id, role="onboarding")
+    if view is None:
+        return [], []
+    state = CaseState(view["case"]["state"])
+    return _pending(orch, view, state), _done(view)
+
+
 def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     case = view["case"]
     pending = []
@@ -85,7 +95,7 @@ def _pending(orch: "Orchestrator", view: dict, state: CaseState) -> list[str]:
     if state in (CaseState.READY_FOR_REVIEW, CaseState.APPROVAL_GATE):
         pending.append(f"Approver to decide on package v{case['package_version']}")
     if case.get("recommended_owner") and not case.get("assigned_owner"):
-        pending.append("Supervisor to assign the follow-up owner")
+        pending.append("Approver to assign the follow-up owner")
     lines = view["package"]["lines"] if view["package"] else []
     has_request = any(
         line["field"] == "equipment_request" and line["label"] != "exception"
