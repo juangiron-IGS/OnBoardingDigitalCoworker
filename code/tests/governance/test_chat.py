@@ -164,3 +164,15 @@ def test_a_placeholder_answer_keeps_the_question_open(coworker) -> None:
     assert reply.asking == "client"
     assert "is not a value" in reply.reply
     assert "client" not in coworker.cases.case_data(case_id)
+
+
+def test_status_lists_each_pending_item_with_its_team(coworker) -> None:
+    # US-019 AC-001: what is pending and which team must act on it
+    coworker.chat(START + "\nBill rate: 61.00 USD/h\nTimesheet approver: Lee Example")
+
+    answer = coworker.chat("status SYN-0050")
+
+    assert "Onboarding Team to review the onboarding path and paperwork" in (
+        answer.reply
+    )
+    assert "Approver to decide on package v1" in answer.reply

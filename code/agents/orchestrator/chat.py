@@ -119,12 +119,18 @@ def status(orch: "Orchestrator", ref: str) -> ChatReply:
         action="answer_status",
         data_refs={"state": "case record"},
     )
-    return ChatReply(
-        reply=f"{orch.label(case_id)} is {STATE_LABELS.get(state, state.value)}: "
-        f"{_who_acts(orch, case_id, state)}.",
-        case_id=case_id,
-        state=state.value,
-    )
+    from .dashboard import steps
+
+    pending, done = steps(orch, case_id)
+    reply = f"{orch.label(case_id)} is {STATE_LABELS.get(state, state.value)}"
+    if pending:
+        # Every pending item names the team that must act (US-019 AC-001).
+        reply += ". Pending: " + "; ".join(pending) + "."
+    else:
+        reply += f": {_who_acts(orch, case_id, state)}."
+    if done:
+        reply += " Done: " + "; ".join(done) + "."
+    return ChatReply(reply=reply, case_id=case_id, state=state.value)
 
 
 def _continue(
