@@ -63,7 +63,7 @@ The tray is an MCP client too. It starts `onboarding-coworker` over stdio with t
 ./scripts/tray.sh                                   # after ./scripts/start.sh
 ```
 
-`COWORKER_TRAY_ROLE` sets the first role (default `recruiter`).
+`COWORKER_TRAY_ROLE` sets the first role (default `recruiter`). `./scripts/tray.sh` closes a tray that is already running before it starts, so after updating the code it always loads the current app; `./scripts/stop_tray.sh` (also run by `./scripts/stop.sh`) closes it.
 
 ## Microsoft Teams (pilot)
 
