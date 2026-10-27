@@ -52,9 +52,9 @@ jobs:
       - name: Database (application and test databases)
         run: |
           export PGPASSWORD="$DB_ADMIN_PASSWORD"
-          ./scripts/apply_db.sh
+          bash scripts/apply_db.sh
           createdb -h 127.0.0.1 -U postgres "${DB_NAME}_test"
-          DB_NAME="${DB_NAME}_test" ./scripts/apply_db.sh
+          DB_NAME="${DB_NAME}_test" bash scripts/apply_db.sh
 
       - name: Lint
         run: |
