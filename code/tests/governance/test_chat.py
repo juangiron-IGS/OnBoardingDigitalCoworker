@@ -128,3 +128,39 @@ def test_duplicate_start_in_chat_is_blocked(coworker) -> None:
 def test_empty_message_is_refused(coworker) -> None:
     with pytest.raises(ValueError, match="message"):
         coworker.chat("   ")
+
+
+def test_a_placeholder_client_is_asked_of_the_recruiter(app_conn, coworker) -> None:
+    # The client line says N/A: the case waits for it and the recruiter is alerted
+    start = (
+        START.replace("SYN-0050", "SYN-0051").replace(
+            "Client: Acme Synthetic", "Client: N/A"
+        )
+        + "\nBill rate: 61.00 USD/h\nTimesheet approver: Lee Example"
+    )
+
+    reply = coworker.chat(start)
+    alert = app_conn.execute(
+        "SELECT text FROM mocks.alerts WHERE case_id = %s AND recipient = 'Recruiter'",
+        (reply.case_id,),
+    ).fetchone()[0]
+
+    assert reply.state == "needs_clarification"
+    assert reply.asking == "client"
+    assert "Missing: Client" in alert
+
+
+def test_a_placeholder_answer_keeps_the_question_open(coworker) -> None:
+    start = (
+        START.replace("SYN-0050", "SYN-0052").replace(
+            "Client: Acme Synthetic", "Client: -"
+        )
+        + "\nBill rate: 61.00 USD/h\nTimesheet approver: Lee Example"
+    )
+    case_id = coworker.chat(start).case_id
+
+    reply = coworker.chat("N/A", case_id=case_id)
+
+    assert reply.asking == "client"
+    assert "is not a value" in reply.reply
+    assert "client" not in coworker.cases.case_data(case_id)
