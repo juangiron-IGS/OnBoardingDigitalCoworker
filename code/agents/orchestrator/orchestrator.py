@@ -118,7 +118,11 @@ class Orchestrator:
         if self._knowledge is None:
             raise ValueError("the knowledge base is not available")
         return knowledge_agent.answer(
-            question, self._knowledge, asked_by=asked_by, channel=channel
+            question,
+            self._knowledge,
+            asked_by=asked_by,
+            channel=channel,
+            model=self._model,
         )
 
     def read_labelled(self, text: str) -> dict[str, str]:

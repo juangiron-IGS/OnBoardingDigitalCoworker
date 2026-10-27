@@ -101,9 +101,17 @@ class McpKnowledge:
             },
         )
 
-    def log_answer(self, record_id: str, status: str, *, channel: str) -> None:
+    def log_answer(
+        self, record_id: str, status: str, *, channel: str, matched_by: str = "words"
+    ) -> None:
         self._client.call(
-            "log_answer", {"record_id": record_id, "status": status, "channel": channel}
+            "log_answer",
+            {
+                "record_id": record_id,
+                "status": status,
+                "channel": channel,
+                "matched_by": matched_by,
+            },
         )
 
     def pending(self) -> list[dict]:

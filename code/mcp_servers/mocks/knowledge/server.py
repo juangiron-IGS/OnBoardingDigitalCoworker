@@ -43,10 +43,14 @@ def register_unresolved(question: str, asked_by: str, channel: str, reason: str)
 
 
 @server.tool()
-def log_answer(record_id: str, status: str, channel: str) -> dict:
-    """Audit an answer given from a record."""
+def log_answer(
+    record_id: str, status: str, channel: str, matched_by: str = "words"
+) -> dict:
+    """Audit an answer given from a record, and how the record was chosen."""
     with connect() as conn:
-        KnowledgeService(conn).log_answer(record_id, status, channel=channel)
+        KnowledgeService(conn).log_answer(
+            record_id, status, channel=channel, matched_by=matched_by[:20]
+        )
     return {"logged": record_id}
 
 

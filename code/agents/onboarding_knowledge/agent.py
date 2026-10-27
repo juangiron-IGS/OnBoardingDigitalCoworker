@@ -5,9 +5,10 @@ never used; a question no record answers stays pending for the team (FR-KB-004).
 never answers FLSA, classification, compensation or legal questions (BR-001)."""
 
 import re
+import uuid
 from dataclasses import dataclass
 
-from agents.common.model_client import RESTRICTED_TERMS
+from agents.common.model_client import RESTRICTED_TERMS, ModelClient
 from contracts.mcp_tools import KnowledgeBase
 
 AGENT = "onboarding_knowledge"
@@ -24,6 +25,7 @@ STOP = frozenset(
     "needs new hire hires of on or should the their there this to what when where "
     "which who why will with you your".split()
 )
+MODEL, WORDS = "model", "words"  # how the record was chosen, for the audit
 MATCH_SHARE = 0.5  # more than half of the question's words must match a record
 
 
@@ -36,7 +38,12 @@ class KnowledgeAnswer:
 
 
 def answer(
-    question: str, kb: KnowledgeBase, *, asked_by: str, channel: str
+    question: str,
+    kb: KnowledgeBase,
+    *,
+    asked_by: str,
+    channel: str,
+    model: ModelClient | None = None,
 ) -> KnowledgeAnswer:
     text = question.strip()
     if not text:
@@ -52,7 +59,8 @@ def answer(
             status="hr_decision",
             pending_id=pending_id,
         )
-    record = best_match(text, [r for r in kb.records() if r["status"] != "rejected"])
+    usable = [r for r in kb.records() if r["status"] != "rejected"]
+    record, matched_by = _choose(text, usable, model)
     if record is None:
         pending_id = kb.register_unresolved(
             text, asked_by=asked_by, channel=channel, reason="no_answer"
@@ -63,7 +71,9 @@ def answer(
             status="no_answer",
             pending_id=pending_id,
         )
-    kb.log_answer(record["id"], record["status"], channel=channel)
+    kb.log_answer(
+        record["id"], record["status"], channel=channel, matched_by=matched_by
+    )
     return KnowledgeAnswer(
         reply=compose(record), status=record["status"], record_id=record["id"]
     )
@@ -102,6 +112,19 @@ def _applies(record: dict, data: dict) -> bool:
         str(data.get(field, "")).strip().casefold() == value.strip().casefold()
         for field, value in (record.get("applies_to") or {}).items()
     )
+
+
+def _choose(
+    question: str, records: list[dict], model: ModelClient | None
+) -> tuple[dict | None, str]:
+    """The model chooses the record when the engine can (MODEL_PROVIDER=claude);
+    otherwise, or if it fails, the words of the question are matched."""
+    if model is not None:
+        chosen = model.pick_record(question, records, run_id=uuid.uuid4().hex)
+        if chosen is not None:
+            by_id = {r["id"]: r for r in records}
+            return by_id.get(chosen), MODEL
+    return best_match(question, records), WORDS
 
 
 def best_match(question: str, records: list[dict]) -> dict | None:

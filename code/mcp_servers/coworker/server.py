@@ -180,6 +180,7 @@ def ask_onboarding_knowledge(question: str) -> dict:
             systems(os.environ, conn).knowledge,
             asked_by=load_role(),
             channel="mcp",
+            model=get_model_client(),
         )
         return asdict(result)
 
