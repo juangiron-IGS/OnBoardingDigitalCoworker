@@ -1,0 +1,15 @@
+# Items every candidate delivers, on top of the forms in the approved package
+# (FR-CHK-001). Example content (status: draft) until the Onboarding Team confirms it.
+domain: checklist
+rules:
+  - id: R-CK-01
+    owner: Onboarding
+    version: 1
+    status: draft
+    result: {item: "Emergency contact form"}
+  - id: R-CK-02
+    owner: Onboarding
+    version: 1
+    status: draft
+    when: {employment_type: W-2}
+    result: {item: "Direct deposit form"}

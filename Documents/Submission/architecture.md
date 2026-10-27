@@ -15,6 +15,7 @@ flowchart LR
             WF["JobDiva and Workflow"]
             Access["Access and Equipment (Should)<br/>FEATURE_ACCESS_EQUIPMENT"]
             Know["Onboarding Knowledge (Should)<br/>cites the record · drafts labelled"]
+            Follow["Candidate Follow-up (Should)<br/>checklist · reminders · countersign<br/>FEATURE_CANDIDATE_FOLLOWUP"]
             Model["Model client<br/>engine: rules (no model)<br/>usage meter"]
         end
         Case["Case service<br/>states · approval gate · audit · privacy"]
@@ -23,11 +24,11 @@ flowchart LR
         Client["MCP client<br/>refusals keep their reason"]
     end
 
-    DB[("PostgreSQL 16 (Docker)<br/>cases · package versions · approvals<br/>audit_log (insert-only) · action_ledger<br/>mocks: jobdiva_cases · task_lists · alerts ·<br/>knowledge_validations · knowledge_questions")]
+    DB[("PostgreSQL 16 (Docker)<br/>cases · package versions · approvals<br/>audit_log (insert-only) · action_ledger<br/>document_checklist · payroll_handoffs · payroll_returns<br/>mocks: jobdiva_cases · task_lists · alerts · payroll_packages ·<br/>knowledge_validations · knowledge_questions")]
 
     subgraph MCP["MCP servers (one process each, streamable HTTP on 127.0.0.1)"]
         S1["jobdiva-read :8101<br/>mock or read-only sandbox<br/>no write tools"]
-        S2["jobdiva-workflow :8106<br/>single writer: re-verifies<br/>approval + version"]
+        S2["jobdiva-workflow :8106<br/>single writer: re-verifies<br/>approval + version (+ IT and<br/>payroll handoff approvals)"]
         S3["teams-mock :8108<br/>alerts"]
         S4["knowledge-mock :8109<br/>records · validations ·<br/>pending questions"]
     end
@@ -37,6 +38,7 @@ flowchart LR
     Orch --> Policy --> Rules
     Orch --> Access --> Rules
     Orch --> Know
+    Orch --> Follow --> Rules
     Know --> Client
     Orch --> Case
     WF --> Client

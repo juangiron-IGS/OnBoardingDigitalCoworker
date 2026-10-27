@@ -51,6 +51,33 @@ def it_request_text(case_id: str, package_version: int) -> str:
     )
 
 
+def checklist_text(case_id: str, items: list[str]) -> str:
+    return (
+        f"Welcome! For your onboarding ({case_id}), please send these documents: "
+        + "; ".join(items)
+        + "."
+    )
+
+
+def reminder_text(case_id: str, items: list[str], number: int) -> str:
+    return (
+        f"Reminder {number} for {case_id}: we are still waiting for "
+        + "; ".join(items)
+        + "."
+    )
+
+
+def followup_escalation_text(case_id: str, items: list[str], hours: int) -> str:
+    return (
+        f"Case {case_id}: after {hours} hours and the reminders, the candidate has "
+        "not delivered " + "; ".join(items) + ". Please follow up."
+    )
+
+
+def payroll_return_text(case_id: str) -> str:
+    return f"Case {case_id}: Payroll returned an issue. A task was added to the case."
+
+
 def duplicate_text(existing_ref: str) -> str:
     return (
         "This start was not processed: a case for the same person and start date "

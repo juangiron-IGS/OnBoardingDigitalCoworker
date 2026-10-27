@@ -5,7 +5,8 @@ import psycopg
 from .adapters.postgres import queries
 from .adapters.postgres.audit_log import PostgresAuditLog
 from .adapters.postgres.case_repository import PostgresCaseRepository
-from .application import decisions
+from .adapters.postgres.followup_repository import PostgresFollowupRepository
+from .application import decisions, followup
 from .application.assign_owner import assign_owner
 from .application.build_package import build_package
 from .application.case_data import log_action, record_answers
@@ -28,6 +29,7 @@ class LocalCaseService:
         self._conn = conn
         self._repo = PostgresCaseRepository(conn)
         self._audit = PostgresAuditLog(conn)
+        self._followup = PostgresFollowupRepository(conn)
         self._jobdiva_read = jobdiva_read
 
     def create_case(self, intake: CaseIntake, *, agent: str) -> str:
@@ -168,6 +170,75 @@ class LocalCaseService:
             data_refs=data_refs,
         )
 
+    def package_lines(self, case_id: str, package_version: int) -> list[dict]:
+        package = queries.package(self._conn, case_id, package_version)
+        return package["lines"] if package else []
+
+    # After approval: checklist, reminders, document check, payroll (US-022..024)
+    def send_checklist(
+        self, case_id: str, items: list[tuple[str, str]], *, agent: str
+    ) -> None:
+        followup.send_checklist(
+            self._repo, self._followup, self._audit, case_id, items, agent=agent
+        )
+
+    def checklist(self, case_id: str) -> list[dict[str, Any]]:
+        return self._followup.checklist(case_id)
+
+    def reminders(self, case_id: str) -> list[dict[str, Any]]:
+        return self._followup.reminders(case_id)
+
+    def record_reminder(
+        self, case_id: str, *, kind: str, at_hours: int, rule_id: str, agent: str
+    ) -> None:
+        followup.record_reminder(
+            self._repo,
+            self._followup,
+            self._audit,
+            case_id,
+            kind=kind,
+            at_hours=at_hours,
+            rule_id=rule_id,
+            agent=agent,
+        )
+
+    def record_delivery(
+        self, case_id: str, items: list[str], *, recorded_by: str
+    ) -> list[str]:
+        return followup.record_delivery(
+            self._repo,
+            self._followup,
+            self._audit,
+            case_id,
+            items,
+            recorded_by=recorded_by,
+        )
+
+    def countersign(self, case_id: str, item: str, *, signed_by: str) -> None:
+        followup.countersign(
+            self._repo, self._followup, self._audit, case_id, item, signed_by=signed_by
+        )
+
+    def approve_payroll_handoff(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> None:
+        followup.approve_payroll_handoff(
+            self._repo,
+            self._followup,
+            self._audit,
+            case_id,
+            package_version=package_version,
+            approved_by=approved_by,
+        )
+
+    def record_payroll_return(self, case_id: str, issue: str, *, agent: str) -> int:
+        return followup.record_payroll_return(
+            self._repo, self._followup, self._audit, case_id, issue, agent=agent
+        )
+
+    def payroll_returns(self, case_id: str) -> list[dict[str, Any]]:
+        return self._followup.payroll_returns(case_id)
+
     def find_case(self, ref: str) -> str | None:
         return queries.find_case(self._conn, ref)
 
@@ -184,4 +255,9 @@ class LocalCaseService:
             for line in view["package"]["lines"]:
                 if line["field"] in RESTRICTED_FIELDS:
                     line["value"] = HIDDEN
+        for record in view["records"]:  # the payroll package carries FLSA
+            record["data"] = redact(record["data"], role)
+        view["checklist"] = self._followup.checklist(case_id)
+        view["reminders"] = self._followup.reminders(case_id)
+        view["payroll_returns"] = self._followup.payroll_returns(case_id)
         return view

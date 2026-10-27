@@ -8,7 +8,12 @@ from typing import Protocol, runtime_checkable
 
 # The only actions the JobDiva and Workflow server may apply, all on mock stores.
 SIMULATED_ACTIONS = frozenset(
-    {"create_jobdiva_case", "create_task_list", "create_it_request"}
+    {
+        "create_jobdiva_case",
+        "create_task_list",
+        "create_it_request",
+        "send_payroll_package",
+    }
 )
 
 

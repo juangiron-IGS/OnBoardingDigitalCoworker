@@ -36,6 +36,9 @@ STATE_LABELS = {
     CaseState.APPROVED: "Approved",
     CaseState.REJECTED: "Rejected",
     CaseState.ACTIONS_EXECUTED: "Actions executed",
+    CaseState.DOCUMENTS_PENDING: "Documents pending",
+    CaseState.IN_VERIFICATION: "In verification",
+    CaseState.SENT_TO_PAYROLL: "Sent to payroll",
     CaseState.CLOSED: "Closed",
 }
 
@@ -175,6 +178,12 @@ def _who_acts(orch: "Orchestrator", case_id: str, state: CaseState) -> str:
         )
     if state is CaseState.ACTIONS_EXECUTED:
         return "approved, and the simulated JobDiva case and task list were created"
+    if state is CaseState.DOCUMENTS_PENDING:
+        return "approved; waiting for the candidate to deliver the checklist documents"
+    if state is CaseState.IN_VERIFICATION:
+        return "documents delivered; the Onboarding Team verifies them"
+    if state is CaseState.SENT_TO_PAYROLL:
+        return "documents verified and the payroll package sent to Payroll (simulated)"
     if state is CaseState.APPROVED:
         return "approved, and the simulated actions are running"
     if state is CaseState.REJECTED:

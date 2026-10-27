@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from agents.access_equipment import agent as access
+from agents.candidate_followup import agent as followup_agent
 from agents.common import notifications
 from agents.common.model_client import ModelClient, load_labels, load_required
 from agents.intake_validation import agent as intake
@@ -29,6 +30,14 @@ AGENT = "orchestrator"
 RECRUITER = "Recruiter"
 SUPERVISOR = "Onboarding Supervisor"
 IT = "IT"
+CANDIDATE = "Candidate"
+ONBOARDING = "Onboarding Team"
+
+
+def _flag(name: str, value: bool | None) -> bool:
+    if value is not None:
+        return value
+    return os.environ.get(name, "false").lower() == "true"
 
 
 @dataclass(frozen=True)
@@ -52,6 +61,8 @@ class Orchestrator:
         jobdiva: JobDivaRead | None = None,
         access_equipment: bool | None = None,
         knowledge: KnowledgeBase | None = None,
+        followup: bool | None = None,
+        payroll: bool | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
@@ -66,6 +77,9 @@ class Orchestrator:
             if access_equipment is None
             else access_equipment
         )
+        # Should agents S2 and S4 (US-022..024), behind their feature flags
+        self._followup = _flag("FEATURE_CANDIDATE_FOLLOWUP", followup)
+        self._payroll = _flag("FEATURE_PAYROLL_PACKAGE", payroll)
         self._labels = load_labels()
         self._required = load_required()
 
@@ -204,6 +218,8 @@ class Orchestrator:
             sent = self._send_it_request(case_id, package_version, approval_id)
             if sent:
                 results.append(sent)
+            if self._followup:
+                self._send_checklist(case_id, package_version)
             return {
                 "state": self._cases.case_state(case_id).value,
                 "approval_id": approval_id,
@@ -258,6 +274,106 @@ class Orchestrator:
             package_version=package_version,
             payload=access.it_request(self._cases.case_data(case_id), self._catalog),
         )
+
+    # --- After approval: candidate follow-up, documents, payroll (US-022..024) ---
+
+    def _send_checklist(self, case_id: str, package_version: int) -> None:
+        items = followup_agent.checklist(
+            self._cases.package_lines(case_id, package_version),
+            self._cases.case_data(case_id),
+            self._catalog,
+        )
+        self._cases.send_checklist(case_id, items, agent=followup_agent.AGENT)
+        notifications.notify(
+            self._alerts,
+            case_id,
+            CANDIDATE,
+            notifications.checklist_text(case_id, [item for item, _ in items]),
+        )
+
+    def run_followup(self, case_id: str, *, at_hours: int) -> list[dict]:
+        """The reminder run at a (simulated) hour since the checklist was sent. The
+        cadence rule is read again on every run (FR-CHK-003)."""
+        if at_hours < 0:
+            raise ValueError("at_hours must be zero or more")
+        if self._cases.case_state(case_id) is not CaseState.DOCUMENTS_PENDING:
+            return []
+        rule = followup_agent.cadence(RulesCatalog.load())
+        outstanding = [
+            c["item"]
+            for c in self._cases.checklist(case_id)
+            if c["status"] == "outstanding"
+        ]
+        sent = self._cases.reminders(case_id)
+        due = followup_agent.due(len(outstanding), sent, rule, at_hours)
+        reminders = sum(1 for s in sent if s["kind"] == "reminder")
+        for kind, hour in due:
+            self._cases.record_reminder(
+                case_id,
+                kind=kind,
+                at_hours=hour,
+                rule_id=rule.rule_id,
+                agent=followup_agent.AGENT,
+            )
+            if kind == "reminder":
+                reminders += 1
+                text = notifications.reminder_text(case_id, outstanding, reminders)
+                notifications.notify(self._alerts, case_id, CANDIDATE, text)
+            else:
+                text = notifications.followup_escalation_text(
+                    case_id, outstanding, hour
+                )
+                notifications.notify(self._alerts, case_id, ONBOARDING, text)
+        return [{"kind": kind, "at_hours": hour} for kind, hour in due]
+
+    def record_delivery(
+        self, case_id: str, items: list[str], *, recorded_by: str
+    ) -> dict:
+        """US-023 AC-001: compare the delivery with the checklist; list what is
+        missing."""
+        missing = self._cases.record_delivery(case_id, items, recorded_by=recorded_by)
+        return {"state": self._cases.case_state(case_id).value, "missing": missing}
+
+    def countersign(self, case_id: str, item: str, *, signed_by: str) -> dict:
+        self._cases.countersign(case_id, item, signed_by=signed_by)
+        return {"item": item, "status": "verified"}
+
+    def approve_payroll_handoff(
+        self, case_id: str, *, package_version: int, approved_by: str
+    ) -> dict:
+        """US-024: the Onboarding Team approves the handoff; the single writer sends
+        the package of validated data to Payroll (simulated)."""
+        if not self._payroll:
+            raise GovernanceError("payroll_package_disabled")
+        self._cases.approve_payroll_handoff(
+            case_id, package_version=package_version, approved_by=approved_by
+        )
+        approval_id = self._cases.approval_id_for(case_id, package_version)
+        if approval_id is None:
+            raise GovernanceError("no_approval")
+        payload = workflow_agent.payroll_package(
+            self._cases.package_lines(case_id, package_version),
+            self._cases.checklist(case_id),
+        )
+        result = workflow_agent.send_payroll_package(
+            self._workflow,
+            approval_id=approval_id,
+            package_version=package_version,
+            payload=payload,
+        )
+        self._cases.move_case(case_id, CaseState.SENT_TO_PAYROLL, agent=AGENT)
+        return {"state": self._cases.case_state(case_id).value, "sent": result}
+
+    def record_payroll_return(self, case_id: str, issue: str) -> dict:
+        """US-024 AC-003: an issue Payroll returns becomes a task on the case."""
+        task_id = self._cases.record_payroll_return(case_id, issue, agent="payroll")
+        notifications.notify(
+            self._alerts,
+            case_id,
+            ONBOARDING,
+            notifications.payroll_return_text(case_id),
+        )
+        return {"task_id": task_id}
 
     def _equipment_lines(self, data: dict) -> list:
         """S1 lines; a failing Should agent adds an exception and never stops J1."""

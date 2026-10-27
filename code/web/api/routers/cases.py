@@ -179,6 +179,100 @@ def decide(
         raise _refused(refusal, cases, case_id) from None
 
 
+# --- After approval: candidate follow-up, documents, payroll (US-022..024) ---
+
+
+def _onboarding_only(role: str) -> None:
+    if role != "onboarding":
+        raise HTTPException(403, detail="Only the Onboarding Team does this")
+
+
+class FollowupRun(BaseModel):
+    at_hours: int = Field(ge=0, le=720)
+
+
+@router.post("/{case_id}/followup/run")
+def run_followup(
+    case_id: str, body: FollowupRun, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Simulates the reminder scheduler at an hour since the checklist (US-022)."""
+    _onboarding_only(role)
+    try:
+        return {"sent": coworker.run_followup(case_id, at_hours=body.at_hours)}
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+class Delivery(BaseModel):
+    items: list[Annotated[str, Field(min_length=1, max_length=200)]] = Field(
+        min_length=1, max_length=30
+    )
+
+
+@router.post("/{case_id}/documents")
+def record_delivery(
+    case_id: str, body: Delivery, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Documents the candidate delivered, compared with the checklist (US-023)."""
+    _onboarding_only(role)
+    try:
+        return coworker.record_delivery(case_id, body.items, recorded_by=role)
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc)) from None
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+class Countersign(BaseModel):
+    item: str = Field(min_length=1, max_length=200)
+
+
+@router.post("/{case_id}/documents/countersign")
+def countersign(
+    case_id: str, body: Countersign, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """The Onboarding Team countersigns a delivered document (US-023 AC-002)."""
+    _onboarding_only(role)
+    try:
+        return coworker.countersign(case_id, body.item, signed_by=role)
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+class PayrollHandoff(BaseModel):
+    package_version: int = Field(ge=1)
+
+
+@router.post("/{case_id}/payroll-handoff")
+def payroll_handoff(
+    case_id: str, body: PayrollHandoff, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """The Onboarding Team approves the payroll handoff (US-024 AC-002)."""
+    _onboarding_only(role)
+    try:
+        return coworker.approve_payroll_handoff(
+            case_id, package_version=body.package_version, approved_by=role
+        )
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
+class PayrollReturn(BaseModel):
+    issue: str = Field(min_length=1, max_length=500)
+
+
+@router.post("/{case_id}/payroll-returns")
+def payroll_return(
+    case_id: str, body: PayrollReturn, coworker: Coworker, cases: Cases, role: Role
+) -> dict:
+    """Simulates Paychex returning an issue; it becomes a task (US-024 AC-003)."""
+    _onboarding_only(role)
+    try:
+        return coworker.record_payroll_return(case_id, body.issue.strip())
+    except GovernanceError as refusal:
+        raise _refused(refusal, cases, case_id) from None
+
+
 chat_router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 
