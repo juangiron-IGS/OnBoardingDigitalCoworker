@@ -778,3 +778,46 @@ def test_case_lists_show_the_candidate_name_and_role(client) -> None:
     item = next(c for c in cases if c["person_ref"] == "SYN-0043")
 
     assert (item["candidate_name"], item["role"]) == ("Casey Demo", "QA Engineer")
+
+
+def test_the_welcome_kit_waits_for_the_verified_documents(client, monkeypatch) -> None:
+    # US-028: LDC approves the kit only after the candidate's documents are
+    # verified and the payroll handoff approved; earlier it is refused (409)
+    for flag in ("CANDIDATE_FOLLOWUP", "PAYROLL_PACKAGE", "IGS_HANDOFF"):
+        monkeypatch.setenv(f"FEATURE_{flag}", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    kit = {"json": {"package_version": 1}, "headers": _as("ldc")}
+    early = client.post(f"/api/cases/{case_id}/welcome-kit", **kit)
+    items = [
+        c["item"]
+        for c in client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()[
+            "checklist"
+        ]
+    ]
+    client.post(
+        f"/api/cases/{case_id}/documents",
+        json={"items": items},
+        headers=_as("onboarding"),
+    )
+    for item in items:
+        client.post(
+            f"/api/cases/{case_id}/documents/countersign",
+            json={"item": item},
+            headers=_as("onboarding"),
+        )
+    client.post(
+        f"/api/cases/{case_id}/payroll-handoff",
+        json={"package_version": 1},
+        headers=_as("onboarding"),
+    )
+    later = client.post(f"/api/cases/{case_id}/welcome-kit", **kit)
+
+    assert early.status_code == 409
+    assert early.json()["detail"]["refused"] == "documents_not_verified"
+    assert later.status_code == 200
+    assert later.json()["sent"]

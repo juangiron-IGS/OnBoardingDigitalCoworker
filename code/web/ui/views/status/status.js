@@ -166,6 +166,8 @@ export function igsCard(view, caseId, show) {
   const entry = view.records.find((r) => r.system === "ldc_tracker");
   if (!entry) return null;
   const shipped = view.records.some((r) => r.system === "welcome_kits");
+  // The kit waits until the documents are verified and the payroll handoff approved.
+  const documentsOpen = ["documents_pending", "in_verification"].includes(view.case.state);
   const isLdc = getRole() === "ldc";
   const feedback = el("div");
   const act = (work, message) => async () => {
@@ -183,8 +185,9 @@ export function igsCard(view, caseId, show) {
     el("h2", {}, "Culture and Belonging (IGS)"),
     el("p", {}, `In the LDC tracker. Welcome kit: ${entry.data.welcome_kit}, to ship by ${entry.data.kit_ship_by}. Leader feedback due ${entry.data.feedback_due}.`),
     el("div", { class: "actions" },
-      el("span", { class: `pill ${shipped ? "ok" : "warn"}` }, shipped ? "Kit approved by LDC and shipped" : "Kit waiting for LDC approval"),
-      isLdc && !shipped ? el("button", { class: "btn primary", type: "button",
+      el("span", { class: `pill ${shipped ? "ok" : documentsOpen ? "neutral" : "warn"}` }, shipped ? "Kit approved by LDC and shipped"
+        : documentsOpen ? "Kit waits for the candidate's documents to be verified" : "Kit waiting for LDC approval"),
+      isLdc && !shipped && !documentsOpen ? el("button", { class: "btn primary", type: "button",
         onclick: act(() => api.approveKit(caseId, view.case.package_version), () => "Kit approved. The shipment was sent (simulated).") }, "Approve welcome kit") : null,
       isLdc && !messages.length ? el("button", { class: "btn", type: "button",
         onclick: act(() => api.runIgs(caseId, 60), (r) => r.drafted.length ? "Two months reached: the leader messages are drafted for your approval." : "Nothing to draft yet.") },
