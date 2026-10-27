@@ -80,7 +80,29 @@ class SandboxJobDiva:
 
     def _get_token(self) -> str:
         if self._token is None:
-            response = self._client.get(AUTHENTICATE, params=self._credentials)
-            response.raise_for_status()
+            try:
+                response = self._client.get(AUTHENTICATE, params=self._credentials)
+                response.raise_for_status()
+            except httpx.HTTPError as error:
+                raise _without_credentials(error) from None
             self._token = response.text.strip()
         return self._token
+
+
+def _without_credentials(error: httpx.HTTPError) -> httpx.HTTPError:
+    """The sign-in call carries the API password in its query string, so httpx's
+    error (its message and its request) would carry it too (NFR-SEC-005, DEF-002).
+    Return the same kind of error naming only the path and the status; the
+    original is dropped (``from None``) so no traceback shows it either."""
+    original = error.request
+    safe = httpx.Request(original.method, original.url.copy_with(query=None))
+    if isinstance(error, httpx.HTTPStatusError):
+        status = error.response.status_code
+        return httpx.HTTPStatusError(
+            f"JobDiva sign-in failed: HTTP {status} from {safe.url}",
+            request=safe,
+            response=httpx.Response(status, request=safe),
+        )
+    return type(error)(
+        f"JobDiva sign-in failed: {type(error).__name__} for {safe.url}", request=safe
+    )
