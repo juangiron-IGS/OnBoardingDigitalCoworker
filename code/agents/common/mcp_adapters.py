@@ -68,3 +68,43 @@ class McpAlerts:
         return self._client.call(
             "post_alert", {"case_id": case_id, "recipient": recipient, "text": text}
         )
+
+
+class McpKnowledge:
+    def __init__(self, client: McpToolClient) -> None:
+        self._client = client
+
+    def records(self) -> list[dict]:
+        return self._client.call("list_records", {})
+
+    def validate(self, record_id: str, decision: str, *, decided_by: str) -> str:
+        result = self._client.call(
+            "validate_record",
+            {"record_id": record_id, "decision": decision, "decided_by": decided_by},
+        )
+        if result.get("status") == "refused":
+            if result.get("reason") == "unknown_record":
+                raise KeyError(record_id)
+            raise ValueError(result.get("reason"))
+        return result["status"]
+
+    def register_unresolved(
+        self, question: str, *, asked_by: str, channel: str, reason: str
+    ) -> str:
+        return self._client.call(
+            "register_unresolved",
+            {
+                "question": question,
+                "asked_by": asked_by,
+                "channel": channel,
+                "reason": reason,
+            },
+        )
+
+    def log_answer(self, record_id: str, status: str, *, channel: str) -> None:
+        self._client.call(
+            "log_answer", {"record_id": record_id, "status": status, "channel": channel}
+        )
+
+    def pending(self) -> list[dict]:
+        return self._client.call("pending_questions", {})

@@ -58,3 +58,21 @@ class Alerts(Protocol):
     """The Teams mock: posts to the simulated alerts view."""
 
     def post_alert(self, case_id: str, recipient: str, text: str) -> dict: ...
+
+
+@runtime_checkable
+class KnowledgeBase(Protocol):
+    """The knowledge base mock (US-025): records, the Onboarding Team's validation
+    decisions and the questions no record answers."""
+
+    def records(self) -> list[dict]: ...
+
+    def validate(self, record_id: str, decision: str, *, decided_by: str) -> str: ...
+
+    def register_unresolved(
+        self, question: str, *, asked_by: str, channel: str, reason: str
+    ) -> str: ...
+
+    def log_answer(self, record_id: str, status: str, *, channel: str) -> None: ...
+
+    def pending(self) -> list[dict]: ...

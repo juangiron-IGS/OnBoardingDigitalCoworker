@@ -11,7 +11,7 @@ From `code/` in Git Bash:
 ./scripts/start.sh     # starts the MCP servers and the web app, then runs the health check
 ```
 
-Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp`, `JOBDIVA_MODE=mock` and `FEATURE_ACCESS_EQUIPMENT=true`.
+Open http://127.0.0.1:3000. The health line should read `web app: ok · database: ok · transport: mcp · JobDiva: mock · model: rules · MCP: jobdiva-read ok, jobdiva-workflow ok, teams-mock ok, knowledge-mock ok, onboarding-coworker ok`. Check that `code/.env` has `AGENT_TRANSPORT=mcp`, `JOBDIVA_MODE=mock` and `FEATURE_ACCESS_EQUIPMENT=true`.
 
 ## 1. The problem in one sentence (20 s)
 

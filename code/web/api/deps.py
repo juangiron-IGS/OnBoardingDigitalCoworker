@@ -7,8 +7,8 @@ from fastapi import Depends, Header, HTTPException
 
 from agents.common.model_client import get_model_client
 from agents.orchestrator.orchestrator import Orchestrator
+from contracts.mcp_tools import KnowledgeBase
 from mcp_servers.common.db import connect
-from mcp_servers.mocks.knowledge.service import KnowledgeService
 from mcp_servers.mocks.outlook.service import MailboxService
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.privacy import ROLES
@@ -50,7 +50,7 @@ def get_orchestrator(conn: Conn) -> Orchestrator:
         alerts=wired.alerts,
         workflow=wired.workflow,
         jobdiva=wired.jobdiva,
-        knowledge=KnowledgeService(conn),
+        knowledge=wired.knowledge,
     )
 
 
@@ -63,8 +63,8 @@ Coworker = Annotated[Orchestrator, Depends(get_orchestrator)]
 Mailbox = Annotated[MailboxService, Depends(get_mailbox)]
 
 
-def get_knowledge(conn: Conn) -> KnowledgeService:
-    return KnowledgeService(conn)
+def get_knowledge(conn: Conn) -> KnowledgeBase:
+    return systems(os.environ, conn).knowledge
 
 
-Knowledge = Annotated[KnowledgeService, Depends(get_knowledge)]
+Knowledge = Annotated[KnowledgeBase, Depends(get_knowledge)]

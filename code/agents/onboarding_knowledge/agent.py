@@ -6,7 +6,8 @@ never answers FLSA, classification, compensation or legal questions (BR-001)."""
 
 import re
 from dataclasses import dataclass
-from typing import Protocol
+
+from contracts.mcp_tools import KnowledgeBase
 
 AGENT = "onboarding_knowledge"
 
@@ -23,14 +24,6 @@ STOP = frozenset(
     "which who why will with you your".split()
 )
 MATCH_SHARE = 0.5  # more than half of the question's words must match a record
-
-
-class KnowledgeBase(Protocol):
-    def records(self) -> list[dict]: ...
-    def register_unresolved(
-        self, question: str, *, asked_by: str, channel: str, reason: str
-    ) -> str: ...
-    def log_answer(self, record_id: str, status: str, *, channel: str) -> None: ...
 
 
 @dataclass(frozen=True)

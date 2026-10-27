@@ -22,7 +22,6 @@ from agents.onboarding_knowledge import agent as knowledge_agent
 from agents.orchestrator.chat import status
 from agents.orchestrator.orchestrator import Orchestrator
 from mcp_servers.common.db import connect
-from mcp_servers.mocks.knowledge.service import KnowledgeService
 from mcp_servers.mocks.teams.service import AlertsService
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import GovernanceError
@@ -77,6 +76,7 @@ def _run(work):  # noqa: ANN001, ANN202 - a small wrapper for each tool
                 alerts=wired.alerts,
                 workflow=wired.workflow,
                 jobdiva=wired.jobdiva,
+                knowledge=wired.knowledge,
             )
             return work(coworker, conn)
     except GovernanceError as refusal:
@@ -175,7 +175,10 @@ def ask_onboarding_knowledge(question: str) -> dict:
 
     def work(_coworker, conn) -> dict:  # noqa: ANN001
         result = knowledge_agent.answer(
-            question, KnowledgeService(conn), asked_by=load_role(), channel="mcp"
+            question,
+            systems(os.environ, conn).knowledge,
+            asked_by=load_role(),
+            channel="mcp",
         )
         return asdict(result)
 

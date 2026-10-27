@@ -14,7 +14,7 @@ from agents.jobdiva_workflow import agent as workflow_agent
 from agents.onboarding_knowledge import agent as knowledge_agent
 from agents.policy_case_setup import agent as policy
 from contracts.case_service_api import CaseIntake, CaseServiceClient, CaseState
-from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow
+from contracts.mcp_tools import Alerts, JobDivaRead, JobDivaWorkflow, KnowledgeBase
 from services.case_service.adapters.rules_files.catalog import RulesCatalog
 from services.case_service.domain.errors import DuplicateCase, GovernanceError
 from services.case_service.domain.package import PackageLine
@@ -47,7 +47,7 @@ class Orchestrator:
         workflow: JobDivaWorkflow,
         jobdiva: JobDivaRead | None = None,
         access_equipment: bool | None = None,
-        knowledge: knowledge_agent.KnowledgeBase | None = None,
+        knowledge: KnowledgeBase | None = None,
     ) -> None:
         self._cases = cases
         self._model = model
