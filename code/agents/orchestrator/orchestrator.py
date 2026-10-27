@@ -383,6 +383,13 @@ class Orchestrator:
                 notifications.notify(self._alerts, case_id, ONBOARDING, text)
         return [{"kind": kind, "at_hours": hour} for kind, hour in due]
 
+    def candidate_email(self, case_id: str) -> dict | None:
+        """The checklist email the candidate received, or None before it is sent."""
+        items = [c["item"] for c in self._cases.checklist(case_id)]
+        if not items:
+            return None
+        return notifications.checklist_email(self.label(case_id), items)
+
     def record_delivery(
         self, case_id: str, items: list[str], *, recorded_by: str
     ) -> dict:

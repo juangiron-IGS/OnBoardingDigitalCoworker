@@ -724,3 +724,23 @@ def test_a_reviewed_recommendation_leaves_the_pending_list(client) -> None:
     )
     assert not any(p.startswith("Onboarding Team to review") for p in after["pending"])
     assert "Onboarding Team confirmed the paperwork" in after["done"]
+
+
+def test_the_candidate_email_lists_the_checklist(client, monkeypatch) -> None:
+    # US-022: the email the candidate received, with every checklist item and
+    # no FLSA status in a form name (BR-011)
+    monkeypatch.setenv("FEATURE_CANDIDATE_FOLLOWUP", "true")
+    case_id = _process(client, "01_complete_and_consistent")["case_id"]
+    before = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()
+    client.post(
+        f"/api/cases/{case_id}/decision",
+        json={"package_version": 1, "decision": "approve"},
+        headers=_as("approver"),
+    )
+    view = client.get(f"/api/cases/{case_id}", headers=_as("onboarding")).json()
+    mail = view["candidate_email"]
+    text = " ".join([mail["subject"], *mail["body"]])
+
+    assert before["candidate_email"] is None
+    assert all(f"- {c['item']}" in mail["body"] for c in view["checklist"])
+    assert "exempt" not in text.lower()
