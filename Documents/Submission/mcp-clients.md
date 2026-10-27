@@ -54,6 +54,17 @@ PostgreSQL must be running (`./scripts/start.sh` or `docker compose up -d postgr
 
 Then open the web app (http://127.0.0.1:3000) as the Approver to review and approve the package.
 
+## Coworker Tray (Windows notifications)
+
+The tray is an MCP client too. It starts `onboarding-coworker` over stdio with the role picked in its menu (`COWORKER_MCP_ROLE`) and calls only `my_alerts`, every 5 seconds. A new alert shows a Windows notification and a red dot on the icon; **Open latest alert** (or a click on the icon) opens the web app as that role on the alert's case.
+
+```bash
+.venv/Scripts/python -m pip install -e ".[tray]"   # once
+./scripts/tray.sh                                   # after ./scripts/start.sh
+```
+
+`COWORKER_TRAY_ROLE` sets the first role (default `recruiter`).
+
 ## Microsoft Teams (pilot)
 
 Teams does not use MCP directly. In the pilot, a Copilot Studio agent in Teams can connect to this MCP server. That needs the server published over HTTPS with Entra ID authentication, which the hackathon rules exclude (everything on `127.0.0.1`, no Teams bot, TC-005).

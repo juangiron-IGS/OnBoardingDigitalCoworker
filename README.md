@@ -53,7 +53,7 @@ The Coworker never decides worker classification, compensation or legal employme
 - Culture and Belonging (Could): the LDC tracker handoff with accelerated timing, the welcome kit shipped only after LDC approves it (US-028), and the two-month leader feedback request and congratulation, sent only after LDC approves them and never with restricted data (US-029);
 - a simulated mailbox where new start emails arrive, and a Teams-like chat panel;
 - an optional Claude engine that reads start details written as free text;
-- the Coworker as an MCP server for other chat apps.
+- the Coworker as an MCP server for other chat apps, and the Coworker Tray: Windows notifications for your role's alerts, read over MCP.
 
 ## Agent architecture and orchestration
 
@@ -132,6 +132,8 @@ From `code/` (in Git Bash or WSL on Windows):
 
 The Coworker can also be used from another chat app (Claude Code, Claude Desktop, VS Code) through its MCP server `onboarding-coworker` on `127.0.0.1:8110`: start a case, answer its questions, ask for status and ask onboarding process questions. Approvals stay in the web app. See [Documents/Submission/mcp-clients.md](Documents/Submission/mcp-clients.md).
 
+**Coworker Tray (Windows):** a small icon next to the clock that shows a Windows notification when an alert arrives for your role, and opens the web app on that case. It reads alerts over MCP only (the `my_alerts` tool of `onboarding-coworker`, started over stdio with the chosen role). Install once with `.venv/Scripts/python -m pip install -e ".[tray]"`, then run `./scripts/tray.sh` after `./scripts/start.sh`. The icon's menu changes the role, pauses notifications and lists the latest alerts.
+
 Quality gates, also run from `code/`:
 
 ```bash
@@ -200,6 +202,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 │   │                            Culture and Belonging
 │   ├── services/case_service/   Case states, approval gate, audit, privacy, rules catalog
 │   ├── mcp_servers/             jobdiva_read, jobdiva_workflow (single writer), coworker, mocks (outlook, teams, knowledge)
+│   ├── desktop/                 Coworker Tray (Windows notification area, reads alerts over MCP)
 │   ├── contracts/               Interfaces shared by both lanes
 │   ├── web/                     FastAPI app, six views and the chat panel
 │   ├── rules/                   Business rules, intake labels and knowledge records (YAML)

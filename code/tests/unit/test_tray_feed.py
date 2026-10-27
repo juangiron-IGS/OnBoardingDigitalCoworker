@@ -1,0 +1,63 @@
+"""Coworker Tray: only alerts not shown yet are notified, and each opens its case."""
+
+from desktop.feed import AlertFeed, case_url
+
+
+def _alerts(*ids: int) -> list[dict]:
+    return [{"id": i, "case_id": f"case-{i}", "text": f"alert {i}"} for i in ids]
+
+
+def test_first_poll_shows_nothing_old() -> None:
+    feed = AlertFeed()
+
+    assert feed.new(_alerts(3, 2, 1)) == []
+    assert feed.last_id == 3
+    assert [a["id"] for a in feed.recent] == [3, 2, 1]
+
+
+def test_only_new_alerts_are_returned_oldest_first() -> None:
+    feed = AlertFeed()
+    feed.new(_alerts(1, 2))
+
+    fresh = feed.new(_alerts(4, 3, 2, 1))
+
+    assert [a["id"] for a in fresh] == [3, 4]
+    assert feed.unseen == 2
+    assert feed.new(_alerts(4, 3, 2, 1)) == []
+
+
+def test_recent_keeps_the_five_latest() -> None:
+    feed = AlertFeed()
+
+    feed.new(_alerts(*range(1, 9)))
+
+    assert [a["id"] for a in feed.recent] == [8, 7, 6, 5, 4]
+
+
+def test_a_new_role_starts_fresh() -> None:
+    feed = AlertFeed()
+    feed.new(_alerts(1))
+    feed.new(_alerts(1, 2))
+
+    feed.reset()
+
+    assert (feed.last_id, feed.unseen, feed.recent) == (None, 0, [])
+    assert feed.new(_alerts(1, 2)) == []
+
+
+def test_link_opens_the_case_as_the_tray_role() -> None:
+    assert (
+        case_url("http://127.0.0.1:3000/", "case-abc", "ldc")
+        == "http://127.0.0.1:3000/?role=ldc#status/case-abc"
+    )
+    assert case_url("http://127.0.0.1:3000", None, "it").endswith("?role=it#dashboard")
+
+
+def test_icon_shows_a_red_dot_for_new_alerts() -> None:
+    from desktop.tray import ALERT, icon_image
+
+    quiet = icon_image(0, connected=True)
+    busy = icon_image(2, connected=True)
+
+    assert quiet.getpixel((52, 12))[:3] != ALERT
+    assert busy.getpixel((52, 12))[:3] == ALERT

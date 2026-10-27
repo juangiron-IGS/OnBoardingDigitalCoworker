@@ -22,7 +22,8 @@ Open http://127.0.0.1:3000. The health line should read `web app: ok · database
 1. Select **Recruiter** at the top right.
 2. In **Simulated inbox**, press **New email**. The compose window is filled with a sample start (note its candidate ID, for example *SYN-0873*); press **Send**.
 3. The email lands in the onboarding mailbox and the Coworker processes it at once. Point out the yellow banner: *Needs clarification*. Two fields are missing.
-4. The chat button at the bottom right shows a red badge: the alert to the Recruiter names the exact fields (*Bill rate*, *Timesheet approver*), not a generic "data incomplete".
+4. If the Coworker Tray is running (`./scripts/tray.sh`, role Recruiter), a Windows notification names the missing fields at once, and the tray icon gets a red dot. Click the icon: the app opens on the case.
+5. The chat button at the bottom right shows a red badge: the alert to the Recruiter names the exact fields (*Bill rate*, *Timesheet approver*), not a generic "data incomplete".
 
    *Backup:* press **Simulate arrival** on *New start - SYN-0043 - QA Engineer* instead, and use SYN-0043 below.
 

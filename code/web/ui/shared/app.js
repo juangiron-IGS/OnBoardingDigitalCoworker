@@ -1,4 +1,4 @@
-import { getRole, setRole } from "./api-client.js";
+import { getRole, setCase, setRole } from "./api-client.js";
 import { initChatPanel, openChat, resetAlerts } from "./chat-panel.js";
 import { render as inbox } from "../views/inbox/inbox.js";
 import { render as approval } from "../views/approval/approval.js";
@@ -18,6 +18,10 @@ export async function show(name) {
     openChat();
     name = "inbox";
   }
+  // #status/<case id> opens a case directly, as the desktop tray's links do.
+  const [viewName, caseId] = name.split("/");
+  if (caseId) setCase(decodeURIComponent(caseId));
+  name = viewName;
   const view = VIEWS[name] ? name : "inbox";
   tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.view === view)));
   if (location.hash !== `#${view}`) history.replaceState(null, "", `#${view}`);
@@ -26,6 +30,9 @@ export async function show(name) {
 }
 
 tabs.forEach((tab) => tab.addEventListener("click", () => show(tab.dataset.view)));
+// ?role=… comes from the desktop tray, so the app opens as the tray's role.
+const linkedRole = new URLSearchParams(location.search).get("role");
+if (linkedRole && [...roleSelect.options].some((o) => o.value === linkedRole)) setRole(linkedRole);
 roleSelect.value = getRole();
 roleSelect.addEventListener("change", () => {
   setRole(roleSelect.value);
