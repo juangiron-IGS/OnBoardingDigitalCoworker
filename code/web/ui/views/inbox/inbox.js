@@ -9,6 +9,14 @@ const OUTCOME = {
 };
 const MAILBOX_ADDRESS = "onboarding@inspyr.example";
 
+// Invented names only: the demo never uses real candidate data.
+function sampleName() {
+  const first = ["Alex", "Casey", "Jamie", "Morgan", "Riley", "Taylor"];
+  const last = ["Example", "Sample", "Synthetic", "Demo"];
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  return `${pick(first)} ${pick(last)}`;
+}
+
 // A new start with two fields missing, so the chat has something to ask.
 function sampleStart() {
   const id = `SYN-${String(100 + Math.floor(Math.random() * 900)).padStart(4, "0")}`;
@@ -17,6 +25,7 @@ function sampleStart() {
     body: `Hi team, new start below. Synthetic data for the demo.
 
 Candidate ID: ${id}
+Candidate name: ${sampleName()}
 Position: QA Engineer
 Hiring manager: Lee Example
 Start date: 2026-12-14

@@ -56,6 +56,8 @@ def build(orch: "Orchestrator", *, role: str, today: date | None = None) -> list
             {
                 "id": item["id"],
                 "person_ref": item["person_ref"],
+                "candidate_name": item.get("candidate_name"),
+                "role": item.get("role"),
                 "start_date": item["start_date"],
                 "package_version": item["package_version"],
                 "pending": _pending(orch, view, state),

@@ -1,4 +1,4 @@
-import { api, el, errorNotice, getCase, getRole, setCase, statePill, STATE_LABELS } from "../../shared/api-client.js";
+import { api, caseName, el, errorNotice, getCase, getRole, setCase, statePill, STATE_LABELS } from "../../shared/api-client.js";
 
 const PATH = ["received", "validated", "case_set_up", "ready_for_review", "approval_gate", "approved", "actions_executed",
   "documents_pending", "in_verification", "sent_to_payroll"];
@@ -32,7 +32,8 @@ export async function render(root, show) {
       tabindex: "0",
       onclick: () => { setCase(item.id); show("status"); },
       onkeydown: (e) => { if (e.key === "Enter") { setCase(item.id); show("status"); } },
-    }, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)), statePill(item.state)));
+    }, el("div", {}, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)),
+      el("div", { class: "meta" }, caseName(item))), statePill(item.state)));
   }
   if (getCase()) await drawCase(detail, getCase(), show);
 }

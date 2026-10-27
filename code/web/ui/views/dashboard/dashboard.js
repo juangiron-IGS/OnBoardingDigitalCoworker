@@ -1,4 +1,4 @@
-import { api, el, errorNotice, setCase } from "../../shared/api-client.js";
+import { api, caseName, el, errorNotice, setCase } from "../../shared/api-client.js";
 
 // US-030: every case under its current state, with who acts next and its risks.
 export async function render(root, show) {
@@ -25,6 +25,7 @@ export async function render(root, show) {
           onkeydown: (e) => { if (e.key === "Enter") open(); } },
           el("div", {},
             el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)),
+            el("div", { class: "meta" }, caseName(item)),
             item.pending.map((p) => el("div", { class: "meta" }, `• ${p}`)),
             (item.done || []).map((d) => el("div", { class: "meta done" }, `✓ ${d}`)),
             el("div", { class: "actions" }, item.risks.map((r) => el("span", { class: "pill bad" }, r)))));
