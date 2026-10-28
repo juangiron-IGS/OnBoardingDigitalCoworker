@@ -233,7 +233,7 @@ Follow [Documents/Submission/demo-script.md](Documents/Submission/demo-script.md
 
 ## Team
 
-Juan Giron, Laura Hernandez, David Valdez, Carlos Puerta, Viviana Gomez and Michael Erskin (US).
+Juan Giron, Laura Hernandez, Carlos Puerta and Viviana Gomez.
 
 ## License
 
