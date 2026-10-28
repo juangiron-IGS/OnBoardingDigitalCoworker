@@ -232,3 +232,31 @@ body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 /* A case opens like an accordion under its row in Approval and Status */
 .row .chevron { color: var(--muted); }
 .row.selected + section.card, .row.selected + .list { margin: 4px 0 12px 16px; border-left: 3px solid var(--accent); padding-left: 12px; }
+/* Folded sections (open by default in the browser, folded in the desktop window) */
+details.fold > summary { cursor: pointer; font-weight: 600; padding: 2px 0; }
+details.fold[open] > summary { margin-bottom: 8px; }
+
+/* Desktop window, compact (option A): one-line header, no page titles, denser cards and rows */
+body.desktop .top { flex-wrap: nowrap; gap: 8px; padding: 6px 10px; }
+body.desktop .brand { flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; }
+body.desktop .brand strong { font-size: 15px; white-space: nowrap; }
+body.desktop .brand .byline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.desktop .role { font-size: 0; gap: 0; }
+body.desktop .role select { font-size: 13px; padding: 3px 6px; max-width: 170px; }
+body.desktop main { padding: 10px 10px 24px; gap: 10px; }
+body.desktop main > h1, body.desktop main > .lead { display: none; }
+body.desktop .card { padding: 10px 12px; }
+body.desktop h2 { font-size: 15px; margin-bottom: 6px; }
+body.desktop .list { gap: 6px; }
+body.desktop .row { padding: 6px 10px; gap: 4px 10px; }
+body.desktop .row.clickable:not(.board-case) { flex-wrap: nowrap; }
+body.desktop .row.clickable:not(.board-case) > div:first-child { display: flex; gap: 6px; align-items: baseline; min-width: 0; white-space: nowrap; overflow: hidden; }
+body.desktop .row.clickable:not(.board-case) > div:first-child > div { overflow: hidden; text-overflow: ellipsis; }
+body.desktop .row.clickable:not(.board-case) > div:first-child > div.meta:not(:empty)::before { content: "· "; }
+body.desktop .steps { gap: 4px; }
+body.desktop .step { font-size: 11px; padding: 1px 6px; }
+body.desktop .board { gap: 10px; }
+body.desktop .notice { padding: 8px 10px; }
+.step-count { display: none; }
+body.desktop .step-count { display: inline; font-size: 12px; color: var(--muted); align-self: center; }
+body.desktop .step:not(.now) { display: none; }
