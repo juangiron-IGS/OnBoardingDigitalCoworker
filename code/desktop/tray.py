@@ -186,7 +186,7 @@ class CoworkerTray:
             pystray.MenuItem("Role", roles),
             pystray.MenuItem("Theme", themes),
             pystray.MenuItem(
-                "Fixed window width (20%)",
+                "Fixed window width (25%)",
                 self._toggle_fixed,
                 checked=lambda item: self.window is None or self.window.fixed,
             ),
