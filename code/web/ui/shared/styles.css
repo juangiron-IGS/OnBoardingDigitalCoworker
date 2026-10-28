@@ -260,3 +260,17 @@ body.desktop .notice { padding: 8px 10px; }
 .step-count { display: none; }
 body.desktop .step-count { display: inline; font-size: 12px; color: var(--muted); align-self: center; }
 body.desktop .step:not(.now) { display: none; }
+/* Desktop window: smaller text and buttons */
+body.desktop { font-size: 13px; }
+body.desktop h2 { font-size: 14px; }
+body.desktop h3 { font-size: 13px; margin: 4px 0; }
+body.desktop .btn { padding: 4px 10px; font-size: 12px; }
+body.desktop .pill { font-size: 11px; padding: 0 7px; }
+body.desktop .tabs button { font-size: 13px; padding: 7px 8px; }
+body.desktop .row .meta, body.desktop .meta { font-size: 12px; }
+body.desktop table { font-size: 12px; }
+body.desktop th, body.desktop td { padding: 5px 6px; }
+body.desktop input, body.desktop select, body.desktop textarea { font-size: 12px; }
+body.desktop .msg-text { font-size: 13px; }
+body.desktop .msg-body .btn { font-size: 12px; padding: 3px 8px; }
+body.desktop details.fold > summary { font-size: 13px; }
