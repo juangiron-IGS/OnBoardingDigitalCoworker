@@ -7,8 +7,8 @@ import ctypes
 import sys
 from pathlib import Path
 
-# The window takes 25% of the screen's width and 90% of its height.
-WIDTH_SHARE, HEIGHT_SHARE = 0.25, 0.90
+# The window takes 28% of the screen's width and 90% of its height.
+WIDTH_SHARE, HEIGHT_SHARE = 0.28, 0.90
 MIN_WIDTH, MIN_HEIGHT = 300, 480
 MARGIN, TASKBAR = 12, 48
 # Window styles: a fixed window has no minimize or maximize box and no resize edge.
@@ -77,7 +77,7 @@ class CoworkerWindow:
         self._window.events.shown += self._apply_frame
 
     def set_fixed(self, fixed: bool) -> None:
-        """Fixed width (25% of the screen) or a width the person drags."""
+        """Fixed width (28% of the screen) or a width the person drags."""
         self.fixed = fixed
         self._apply_frame()
         if fixed:
