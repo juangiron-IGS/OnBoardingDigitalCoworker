@@ -1,4 +1,4 @@
-import { api, caseName, el, errorNotice, getCase, getRole, setCase, statePill, STATE_LABELS } from "../../shared/api-client.js";
+import { api, caseName, el, errorNotice, fold, getCase, getRole, isDesktop, setCase, statePill, STATE_LABELS } from "../../shared/api-client.js";
 
 const PATH = ["received", "validated", "case_set_up", "ready_for_review", "approval_gate", "approved", "actions_executed",
   "documents_pending", "in_verification", "sent_to_payroll"];
@@ -132,7 +132,7 @@ function followupCard(view, caseId, show) {
   const mail = view.candidate_email;
   return el("section", { class: "card" },
     el("h2", {}, "Candidate documents"),
-    mail ? el("details", { class: "email-preview", open: state === "documents_pending" },
+    mail ? el("details", { class: "email-preview", open: state === "documents_pending" && !isDesktop() },
       el("summary", {}, "Email sent to the candidate (simulated)"),
       el("div", { class: "meta" }, `To: ${mail.to}`),
       el("div", {}, el("strong", {}, mail.subject)),
@@ -255,8 +255,10 @@ async function drawCase(root, caseId, show) {
   const reached = PATH.indexOf(now);
   root.append(el("section", { class: "card" },
     el("h2", {}, [view.case.person_ref, view.case.data.role].filter(Boolean).join(" · ")),
-    el("div", { class: "steps", "aria-label": "Case states" }, PATH.map((s, i) =>
-      el("span", { class: `step${s === now ? " now" : reached > i ? " done" : ""}` }, STATE_LABELS[s]))),
+    el("div", { class: "steps", "aria-label": "Case states" },
+      // The desktop window shows only the current step and how far along the case is.
+      reached >= 0 ? el("span", { class: "step-count" }, `Step ${reached + 1} of ${PATH.length}`) : null,
+      PATH.map((s, i) => el("span", { class: `step${s === now ? " now" : reached > i ? " done" : ""}` }, STATE_LABELS[s]))),
     PATH.includes(now) ? null : el("p", {}, "Current state: ", statePill(now)),
     timingLine(view.case.package_timing)));
 
@@ -269,15 +271,15 @@ async function drawCase(root, caseId, show) {
   const igs = igsCard(view, caseId, refresh);
   if (igs) root.append(igs);
 
-  root.append(el("section", { class: "card" }, el("h2", {}, "Records created after approval"),
+  root.append(el("section", { class: "card" }, fold(`Records created after approval (${view.records.length})`,
     view.records.length
       ? el("div", { class: "list" }, view.records.map((r) => el("div", { class: "row" },
           el("div", {}, el("div", {}, SYSTEMS[r.system] || r.system), el("div", { class: "meta" }, Object.entries(r.data).map(([k, v]) => `${k}: ${v}`).join(" · ")),
             el("div", { class: "meta" }, `Created ${new Date(r.at).toLocaleString()} · approval ${r.approval_id}`)),
           el("span", { class: "mono record-ref", title: "Reference to follow this record up" }, r.reference))))
-      : el("p", { class: "empty" }, "Nothing yet. Records appear only after the current package version is approved.")));
+      : el("p", { class: "empty" }, "Nothing yet. Records appear only after the current package version is approved."))));
 
-  root.append(el("section", { class: "card" }, el("h2", {}, "Audit log"),
+  root.append(el("section", { class: "card" }, fold(`Audit log (${view.audit.length})`,
     el("div", { class: "table-wrap" }, el("table", {},
       el("thead", {}, el("tr", {}, ["Time", "Agent", "Action", "Outcome", "Version", "Rules used"].map((h) => el("th", {}, h)))),
       el("tbody", {}, view.audit.map((a) => el("tr", {},
@@ -286,5 +288,5 @@ async function drawCase(root, caseId, show) {
         el("td", {}, a.action.replaceAll("_", " ")),
         el("td", {}, el("span", { class: `pill ${a.outcome === "completed" ? "ok" : "bad"}` }, a.outcome)),
         el("td", {}, a.package_version ? `v${a.package_version}` : "—"),
-        el("td", { class: "mono" }, rulesCell(a.rule_ids)))))))));
+        el("td", { class: "mono" }, rulesCell(a.rule_ids))))))))));
 }

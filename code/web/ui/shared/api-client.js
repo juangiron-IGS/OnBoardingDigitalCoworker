@@ -88,6 +88,16 @@ export const STATE_LABELS = {
   in_verification: "In verification", sent_to_payroll: "Sent to payroll", closed: "Closed",
 };
 
+// The Coworker window the tray opens is compact: details start folded there.
+export function isDesktop() {
+  return document.body.classList.contains("desktop");
+}
+
+// A section that opens with a click; open by default outside the desktop window.
+export function fold(title, content, open = !isDesktop()) {
+  return el("details", { class: "fold", open }, el("summary", {}, title), content);
+}
+
 // Who the case is about: the candidate's name and role, under the candidate ID.
 export function caseName(item) {
   return [item.candidate_name, item.role].filter(Boolean).join(" · ");

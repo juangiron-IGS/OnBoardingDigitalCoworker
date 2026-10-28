@@ -1,4 +1,4 @@
-import { api, caseName, el, errorNotice, getCase, getRole, setCase, statePill } from "../../shared/api-client.js";
+import { api, caseName, el, errorNotice, fold, getCase, getRole, isDesktop, setCase, statePill } from "../../shared/api-client.js";
 import { openChat } from "../../shared/chat-panel.js";
 import { igsCard } from "../status/status.js";
 
@@ -293,6 +293,10 @@ async function drawPackage(root, caseId, show) {
   const fields = ROLE_FIELDS[role];
   const lines = [...pkg.lines].filter((l) => !fields || fields.includes(l.field) || (role === "onboarding" && l.label === "exception")).sort((a, b) => (a.label === "exception" ? -1 : 0) - (b.label === "exception" ? -1 : 0));
   const exceptions = lines.filter((l) => l.label === "exception");
+  // In the desktop window your action comes first; the lines fold below it.
+  const linesBlock = lines.length
+    ? (isDesktop() ? fold(`Package lines (${lines.length})`, linesTable(lines)) : linesTable(lines))
+    : el("p", { class: "empty" }, "Nothing in this package for your role.");
 
   root.replaceChildren(...[
     el("div", { class: "actions" }, el("h2", {}, `${view.case.person_ref} · package v${pkg.version}`), el("span", { class: "meta" }, caseName(view.case.data)), statePill(view.case.state),
@@ -300,7 +304,7 @@ async function drawPackage(root, caseId, show) {
     exceptions.length
       ? el("div", { class: "notice warn" }, `${exceptions.length} open exception${exceptions.length > 1 ? "s" : ""} to review before deciding.`)
       : null,
-    lines.length ? linesTable(lines) : el("p", { class: "empty" }, "Nothing in this package for your role."),
+    isDesktop() ? null : linesBlock,
   ].filter(Boolean));
 
   const escalated = exceptions.filter((l) => HR_FIELDS[l.field] && l.source_or_rule_id.includes("JobDiva"));
@@ -311,6 +315,7 @@ async function drawPackage(root, caseId, show) {
   // the package approval is all that is left.
   if ((role === "it" || (role === "approver" && !view.case.it_approved)) && lines.some((l) => l.field === "equipment_request" && l.label !== "exception")) root.append(itCard(view, pkg, caseId, refresh));
   if (role === "ldc" && view.records.some((r) => r.system === "ldc_tracker")) root.append(igsCard(view, caseId, refresh));
+  if (isDesktop()) root.append(linesBlock);
   if (role !== "approver") return;
 
   const feedback = el("div");
