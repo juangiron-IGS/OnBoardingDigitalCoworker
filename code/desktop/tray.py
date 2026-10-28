@@ -16,7 +16,7 @@ import threading
 import webbrowser
 
 import pystray
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 from .feed import (
     ABOUT,
@@ -34,23 +34,37 @@ from .poller import poll, server_params
 from .window import CoworkerWindow
 
 ACCENT = (0, 128, 128)  # teal, as the notification header (BRAND)
+GRADIENT = ((45, 212, 191, 255), (79, 70, 229, 255))  # teal to indigo
+GREYS = ((160, 160, 160, 255), (110, 110, 110, 255))  # disconnected
 ALERT = (214, 48, 49)
 
 
 def icon_image(unseen: int, connected: bool, size: int = 64) -> Image.Image:
-    """A new hire with a plus on a teal disc; grey when disconnected; a red dot for
-    new alerts. Drawn on a 64-unit grid and scaled, so the logo stays sharp."""
-    k = size / 64
-    fill = ACCENT if connected else (128, 128, 128)
-    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    """Two coworkers, one solid and one outlined, on a rounded square with a
+    teal-to-indigo gradient; grey when disconnected; a red dot for new alerts.
+    Drawn four times larger on a 64-unit grid and scaled down, so it stays sharp."""
+    big = size * 4
+    k = big / 64
+    start, end = GRADIENT if connected else GREYS
+    down = Image.linear_gradient("L").resize((big, big))  # top to bottom
+    ramp = ImageChops.add(down, down.rotate(90), scale=2.0)  # top-left to bottom-right
+    fill = Image.composite(
+        Image.new("RGBA", (big, big), end), Image.new("RGBA", (big, big), start), ramp
+    )
+    mask = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (2 * k, 2 * k, 62 * k, 62 * k), radius=16 * k, fill=255
+    )
+    image = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+    image.paste(fill, (0, 0), mask)
     draw = ImageDraw.Draw(image)
-    draw.ellipse((2 * k, 2 * k, 62 * k, 62 * k), fill=fill)
-    draw.ellipse((22 * k, 13 * k, 38 * k, 29 * k), fill="white")  # head
-    draw.pieslice((13 * k, 31 * k, 47 * k, 65 * k), 180, 360, fill="white")  # body
-    draw.ellipse((40 * k, 34 * k, 60 * k, 54 * k), fill="white")  # plus badge
-    bar = round(4 * k)
-    draw.line((50 * k, 38 * k, 50 * k, 50 * k), fill=fill, width=bar)
-    draw.line((44 * k, 44 * k, 56 * k, 44 * k), fill=fill, width=bar)
+    draw.ellipse((17 * k, 18 * k, 31 * k, 32 * k), fill="white")  # solid head
+    draw.pieslice((11 * k, 35.5 * k, 37 * k, 58.5 * k), 180, 360, fill="white")
+    line = round(3.5 * k)
+    draw.ellipse((35 * k, 16 * k, 47 * k, 28 * k), outline="white", width=line)
+    draw.arc(
+        (33.5 * k, 34.5 * k, 54.5 * k, 55.5 * k), 180, 360, fill="white", width=line
+    )
     if unseen:
         draw.ellipse(
             (40 * k, 0, 64 * k, 24 * k),
@@ -58,7 +72,7 @@ def icon_image(unseen: int, connected: bool, size: int = 64) -> Image.Image:
             outline="white",
             width=max(2, round(2 * k)),
         )
-    return image
+    return image.resize((size, size), Image.LANCZOS)
 
 
 class CoworkerTray:
