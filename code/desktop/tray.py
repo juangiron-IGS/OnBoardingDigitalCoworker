@@ -186,6 +186,11 @@ class CoworkerTray:
             pystray.MenuItem("Role", roles),
             pystray.MenuItem("Theme", themes),
             pystray.MenuItem(
+                "Fixed window width (20%)",
+                self._toggle_fixed,
+                checked=lambda item: self.window is None or self.window.fixed,
+            ),
+            pystray.MenuItem(
                 "Pause notifications",
                 self._toggle_pause,
                 checked=lambda item: self.paused,
@@ -247,6 +252,10 @@ class CoworkerTray:
             args=(0, ABOUT, "About the Onboarding Coworker", 0x40 | 0x40000),
             daemon=True,
         ).start()
+
+    def _toggle_fixed(self, icon, item) -> None:  # noqa: ANN001
+        if self.window:
+            self.window.set_fixed(not self.window.fixed)
 
     def _theme_setter(self, theme: str):  # noqa: ANN202
         def set_theme(icon, item) -> None:  # noqa: ANN001

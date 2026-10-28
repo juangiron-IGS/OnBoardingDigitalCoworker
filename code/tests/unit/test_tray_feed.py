@@ -63,13 +63,22 @@ def test_icon_shows_a_red_dot_for_new_alerts() -> None:
     assert busy.getpixel((52, 12))[:3] == ALERT
 
 
-def test_the_window_docks_above_the_clock() -> None:
-    from desktop.window import HEIGHT, WIDTH, docked
+def test_the_window_is_a_fifth_wide_and_nine_tenths_high_above_the_clock() -> None:
+    from desktop.window import docked, primary, window_size
 
-    x, y = docked(1920, 1080)
+    width, height = window_size(1920, 1080)
+    x, y = docked(1920, 1080, width, height)
 
-    assert (x + WIDTH, y + HEIGHT) == (1920 - 12, 1080 - 48 - 12)
-    assert docked(400, 300) == (0, 0)  # a small screen keeps it on screen
+    assert (width, height) == (384, 972)
+    assert (x + width, y + height) == (1920 - 12, 1080 - 48 - 12)
+    assert window_size(800, 500) == (300, 480)  # never smaller than usable
+    assert docked(400, 300, 300, 480) == (88, 0)  # a small screen keeps it on screen
+
+    class Screen:
+        def __init__(self, x: int) -> None:
+            self.x, self.y = x, 0
+
+    assert primary([Screen(1536), Screen(0)]).x == 0
 
 
 def test_the_window_opens_the_chat_on_the_case() -> None:
