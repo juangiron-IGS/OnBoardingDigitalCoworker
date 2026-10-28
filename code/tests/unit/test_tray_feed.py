@@ -63,13 +63,13 @@ def test_icon_shows_a_red_dot_for_new_alerts() -> None:
     assert busy.getpixel((52, 12))[:3] == ALERT
 
 
-def test_the_window_is_a_fifth_wide_and_nine_tenths_high_above_the_clock() -> None:
+def test_the_window_is_a_quarter_wide_and_nine_tenths_high_above_the_clock() -> None:
     from desktop.window import docked, primary, window_size
 
     width, height = window_size(1920, 1080)
     x, y = docked(1920, 1080, width, height)
 
-    assert (width, height) == (384, 972)
+    assert (width, height) == (480, 972)
     assert (x + width, y + height) == (1920 - 12, 1080 - 48 - 12)
     assert window_size(800, 500) == (300, 480)  # never smaller than usable
     assert docked(400, 300, 300, 480) == (88, 0)  # a small screen keeps it on screen
