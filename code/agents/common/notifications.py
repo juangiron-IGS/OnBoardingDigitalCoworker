@@ -43,6 +43,13 @@ def owner_text(case: str, owner: str, rule_id: str) -> str:
     )
 
 
+def review_text(case: str) -> str:
+    return (
+        f"Package v1 for {case} is ready. Please confirm or change the recommended "
+        "onboarding path and paperwork before the approver decides."
+    )
+
+
 def it_request_text(case: str, package_version: int) -> str:
     return (
         f"{case}: package v{package_version} is approved. The laptop and "

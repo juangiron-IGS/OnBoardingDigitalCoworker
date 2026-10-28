@@ -115,7 +115,8 @@ def test_reminders_at_24_and_48_hours_then_escalation(
     assert at_72 == [{"kind": "escalation", "at_hours": 72}]
     assert at_96 == []  # the send limit holds
     assert len(_alerts(app_conn, case_id, "Candidate")) == 3  # checklist + 2
-    assert len(_alerts(app_conn, case_id, "Onboarding Team")) == 1
+    team = _alerts(app_conn, case_id, "Onboarding Team")
+    assert len([t for t in team if "Please follow up" in t]) == 1  # the escalation
 
 
 def test_no_reminder_once_everything_is_delivered(coworker, case_id) -> None:

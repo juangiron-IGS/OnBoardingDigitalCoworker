@@ -83,10 +83,15 @@ def test_the_window_opens_the_chat_on_the_case() -> None:
 def test_notification_names_the_case_and_counts_the_rest() -> None:
     from desktop.notifier import headline
 
-    title, body = headline({"case_id": "case-abc", "text": "Missing: Bill rate."}, 2)
+    alert = {
+        "case_id": "case-abc",
+        "recipient": "Recruiter",
+        "text": "Missing: Bill rate.",
+    }
+    title, body = headline(alert, 2)
 
-    assert title == "New onboarding alert"
-    assert body == "Missing: Bill rate.  (+2 more)"
+    assert title == "Message for: Recruiter"
+    assert body == "Intake · complete the start data\nMissing: Bill rate.  (+2 more)"
 
 
 def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) -> None:
@@ -96,13 +101,14 @@ def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) ->
     shown = []
     notifier = module.Notifier(
         tmp_path / "logo.png",
-        lambda case: None,
+        lambda case, view: None,
         lambda body, title: shown.append((title, body)),
     )
 
-    notifier.show({"case_id": "case-1", "text": "Hi"}, 0, "Recruiter")
+    notifier.show({"case_id": "case-1", "recipient": "IT", "text": "Hi"}, 0, "IT")
 
-    assert shown == [("New onboarding alert", "Hi")]
+    step = "Equipment · approve the laptop and access request"
+    assert shown == [("Message for: IT", f"{step}\nHi")]
 
 
 def test_the_logo_is_drawn_large_and_sharp() -> None:
@@ -123,3 +129,17 @@ def test_the_window_opens_in_the_chosen_theme() -> None:
 
     assert "&theme=dark" in window_url(base, None, "it", "dark")
     assert "theme=" not in window_url(base, None, "it", "system")
+
+
+def test_each_step_opens_the_view_it_needs() -> None:
+    from desktop.feed import action, window_url
+
+    review = action(
+        {"recipient": "Onboarding Team", "text": "Package v1 for X is ready."}
+    )
+    approver = action({"recipient": "Onboarding Supervisor", "text": "New hire X."})
+
+    assert review[0] == "Onboarding Team" and review[3] == "approval"
+    assert approver[2] == "Open the package"
+    url = window_url("http://127.0.0.1:3000", "case-1", "it", view="approval")
+    assert url.endswith("#approval/case-1")

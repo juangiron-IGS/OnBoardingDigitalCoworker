@@ -709,7 +709,13 @@ class Orchestrator:
         )
         if conflicts:
             self._escalate(case_id, list(conflicts))
-        if version == 1:  # the supervisor hears of each new hire once
+        if version == 1:  # the team and the supervisor hear of each new hire once
+            notifications.notify(
+                self._alerts,
+                case_id,
+                ONBOARDING,
+                notifications.review_text(self.label(case_id)),
+            )
             self._notify_supervisor(case_id, lines)
         return version
 

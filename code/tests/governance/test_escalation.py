@@ -76,8 +76,11 @@ def test_escalation_alerts_onboarding_and_hr_without_values(app_conn, coworker) 
         " WHERE case_id = %s AND action = 'escalate_conflict'",
         (result.case_id,),
     ).fetchone()
-    # The supervisor also hears of the new hire (US-032); that alert is not about FLSA
-    escalations = [a for a in alerts if a[0] != "Onboarding Supervisor"]
+    # The supervisor and the team also hear of the new package (US-032); those
+    # alerts are not about FLSA
+    escalations = [
+        a for a in alerts if a[0] != "Onboarding Supervisor" and "ready" not in a[1]
+    ]
     assert {recipient for recipient, _ in escalations} == {"Onboarding Team", "HR"}
     assert all("FLSA" in text for _, text in escalations)
     assert not any("exempt" in text.lower() for _, text in alerts)
