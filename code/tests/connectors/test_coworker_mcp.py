@@ -83,6 +83,26 @@ def test_recruiter_alerts_reach_the_mcp_client(coworker) -> None:
     assert {a["recipient"] for a in alerts} <= {"Recruiter"}
 
 
+def test_all_teams_alerts_reach_the_tray(coworker) -> None:
+    # The tray's "All teams" choice reads every team's alerts, still read only
+    person = f"SYN-9{uuid.uuid4().int % 10**6:06d}"
+    coworker.call("start_onboarding", {"text": _start(person)})
+
+    mine = coworker.call("my_alerts", {"limit": 100})
+    every = coworker.call("my_alerts", {"limit": 100, "all_teams": True})
+
+    assert {a["recipient"] for a in mine} <= {"Recruiter"}
+    assert len(every) >= len(mine)
+    assert {a["recipient"] for a in every} <= {
+        "Recruiter",
+        "Onboarding Team",
+        "HR",
+        "Onboarding Supervisor",
+        "IT",
+        "LDC",
+    }
+
+
 def test_unknown_case_is_answered_from_the_record_only(coworker) -> None:
     status = coworker.call("case_status", {"ref": "SYN-NOPE"})
 

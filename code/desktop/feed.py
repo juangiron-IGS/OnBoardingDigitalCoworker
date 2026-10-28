@@ -9,6 +9,17 @@ ROLES = {
     "approver": "Approver",
     "it": "IT",
     "ldc": "LDC (Culture and Belonging)",
+    "all": "All teams",
+}
+ALL = "all"
+# The role whose view each team's alert opens, so "All teams" opens the right one.
+RECIPIENT_ROLE = {
+    "Recruiter": "recruiter",
+    "Onboarding Team": "onboarding",
+    "HR": "onboarding",
+    "Onboarding Supervisor": "approver",
+    "IT": "it",
+    "LDC": "ldc",
 }
 # Each team's alert in a notification: who it is for, the step of the flow, the
 # button and the view it opens on the case.

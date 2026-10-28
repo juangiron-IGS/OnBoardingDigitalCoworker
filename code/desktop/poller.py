@@ -30,9 +30,13 @@ def server_params(role: str) -> StdioServerParameters:
     )
 
 
-async def fetch_alerts(client: Client, limit: int = 20) -> list[dict]:
+async def fetch_alerts(
+    client: Client, limit: int = 20, all_teams: bool = False
+) -> list[dict]:
     """One call to my_alerts; a refusal or a bad reply reads as no alerts."""
-    result = await client.call_tool("my_alerts", {"limit": limit})
+    result = await client.call_tool(
+        "my_alerts", {"limit": limit, "all_teams": all_teams}
+    )
     if result.is_error:
         return []
     data: Any = result.structured_content
@@ -49,6 +53,7 @@ async def poll(
     on_status: Callable[[str], None],
     stop: asyncio.Event,
     interval: float = POLL_SECONDS,
+    all_teams: bool = False,
 ) -> None:
     """Keep one MCP session open and pass every poll's alerts to on_alerts."""
     while not stop.is_set():
@@ -56,7 +61,7 @@ async def poll(
             async with Client(target, read_timeout_seconds=20) as client:
                 on_status("connected")
                 while not stop.is_set():
-                    on_alerts(await fetch_alerts(client))
+                    on_alerts(await fetch_alerts(client, all_teams=all_teams))
                     try:
                         await asyncio.wait_for(stop.wait(), timeout=interval)
                     except TimeoutError:

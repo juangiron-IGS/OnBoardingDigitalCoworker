@@ -18,7 +18,17 @@ import webbrowser
 import pystray
 from PIL import Image, ImageDraw
 
-from .feed import ABOUT, ROLES, THEMES, AlertFeed, case_url, window_url
+from .feed import (
+    ABOUT,
+    ALL,
+    RECIPIENT_ROLE,
+    ROLES,
+    THEMES,
+    AlertFeed,
+    action,
+    case_url,
+    window_url,
+)
 from .notifier import Notifier, logo_path, use_app_identity
 from .poller import poll, server_params
 from .window import CoworkerWindow
@@ -68,7 +78,9 @@ class CoworkerTray:
             menu=self._menu(),
         )
         self.window = (
-            CoworkerWindow(window_url(app_url, None, role)) if window else None
+            CoworkerWindow(window_url(app_url, None, self._view_role()))
+            if window
+            else None
         )
         logo = logo_path()
         icon_image(0, True, size=256).save(logo)
@@ -87,10 +99,12 @@ class CoworkerTray:
             self._stop = asyncio.Event()
             self._loop.run_until_complete(
                 poll(
-                    server_params(self.role),
+                    # "All teams" reads every team's alerts through any valid role
+                    server_params("onboarding" if self.role == ALL else self.role),
                     self._on_alerts,
                     self._on_status,
                     self._stop,
+                    all_teams=self.role == ALL,
                 )
             )
 
@@ -107,7 +121,11 @@ class CoworkerTray:
     def _on_alerts(self, alerts: list[dict]) -> None:
         fresh = self.feed.new(alerts)
         if fresh and not self.paused:
-            self.notifier.show(fresh[-1], len(fresh) - 1, ROLES[self.role])
+            # One notification per alert (the latest three), so each team sees its own
+            shown = fresh[-3:]
+            for i, alert in enumerate(shown):
+                more = len(fresh) - len(shown) if i == len(shown) - 1 else 0
+                self.notifier.show(alert, more, ROLES[self.role])
         self._refresh()
 
     # --- icon and menu ---
@@ -135,7 +153,7 @@ class CoworkerTray:
                     if len(alert["text"]) <= 70
                     else alert["text"][:67] + "..."
                 )
-                yield pystray.MenuItem(text, self._opener(alert.get("case_id")))
+                yield pystray.MenuItem(text, self._opener(alert.get("case_id"), alert))
 
         roles = pystray.Menu(
             *(
@@ -177,26 +195,37 @@ class CoworkerTray:
             pystray.MenuItem("Quit", self._quit),
         )
 
-    def _open_case(self, case_id: str | None, view: str = "chat") -> None:
+    def _view_role(self, recipient: str | None = None) -> str:
+        """The role the window opens as: the alert's team with "All teams"."""
+        if self.role != ALL:
+            return self.role
+        return RECIPIENT_ROLE.get(recipient or "", "onboarding")
+
+    def _open_case(
+        self, case_id: str | None, view: str = "chat", recipient: str | None = None
+    ) -> None:
         """From the menu, the icon or a click on a notification (on its view)."""
         self.feed.mark_seen()
+        role = self._view_role(recipient)
         if self.window:
-            self.window.open(
-                window_url(self.app_url, case_id, self.role, self.theme, view)
-            )
+            self.window.open(window_url(self.app_url, case_id, role, self.theme, view))
         else:
-            webbrowser.open(case_url(self.app_url, case_id, self.role))
+            webbrowser.open(case_url(self.app_url, case_id, role))
         self._refresh()
 
-    def _opener(self, case_id: str | None):  # noqa: ANN202
-        return lambda icon, item: self._open_case(case_id)
+    def _opener(self, case_id: str | None, alert: dict | None = None):  # noqa: ANN202
+        """Open the case; for an alert, as its team and on the view its step needs."""
+        if alert is None:
+            return lambda icon, item: self._open_case(case_id)
+        view = action(alert)[3]
+        return lambda icon, item: self._open_case(case_id, view, alert.get("recipient"))
 
     def _browser(self, icon, item) -> None:  # noqa: ANN001
-        webbrowser.open(case_url(self.app_url, None, self.role))
+        webbrowser.open(case_url(self.app_url, None, self._view_role()))
 
     def _open_latest(self, icon, item) -> None:  # noqa: ANN001
         latest = self.feed.recent[0] if self.feed.recent else None
-        self._opener(latest.get("case_id") if latest else None)(icon, item)
+        self._opener(latest.get("case_id") if latest else None, latest)(icon, item)
 
     def _role_setter(self, role: str):  # noqa: ANN202
         def set_role(icon, item) -> None:  # noqa: ANN001

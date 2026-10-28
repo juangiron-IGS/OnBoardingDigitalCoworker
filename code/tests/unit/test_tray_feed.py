@@ -101,7 +101,7 @@ def test_without_toasts_the_plain_notification_is_used(tmp_path, monkeypatch) ->
     shown = []
     notifier = module.Notifier(
         tmp_path / "logo.png",
-        lambda case, view: None,
+        lambda case, view, recipient: None,
         lambda body, title: shown.append((title, body)),
     )
 
@@ -143,3 +143,11 @@ def test_each_step_opens_the_view_it_needs() -> None:
     assert approver[2] == "Open the package"
     url = window_url("http://127.0.0.1:3000", "case-1", "it", view="approval")
     assert url.endswith("#approval/case-1")
+
+
+def test_all_teams_opens_each_alert_as_its_team() -> None:
+    from desktop.feed import RECIPIENT_ROLE, ROLES
+
+    assert ROLES["all"] == "All teams"
+    assert RECIPIENT_ROLE["Onboarding Supervisor"] == "approver"
+    assert RECIPIENT_ROLE["IT"] == "it"

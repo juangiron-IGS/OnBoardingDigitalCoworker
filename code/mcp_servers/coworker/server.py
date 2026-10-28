@@ -151,10 +151,12 @@ def open_questions(case_id: str) -> list[dict] | dict:
 
 
 @server.tool()
-def my_alerts(limit: int = 20) -> list[dict] | dict:
-    """The latest simulated alerts for this server's role. They name fields, never
-    FLSA, visa or sponsorship values."""
-    recipients = set(RECIPIENTS[load_role()])
+def my_alerts(limit: int = 20, all_teams: bool = False) -> list[dict] | dict:
+    """The latest simulated alerts for this server's role, or for every team with
+    all_teams (the tray's "All teams" choice). They name fields, never FLSA, visa or
+    sponsorship values."""
+    roles = RECIPIENTS if all_teams else {load_role(): RECIPIENTS[load_role()]}
+    recipients = {r for names in roles.values() for r in names}
 
     def work(_coworker, conn) -> list[dict]:  # noqa: ANN001
         alerts = AlertsService(conn).list_alerts()
