@@ -62,7 +62,7 @@ class Notifier:
     def __init__(
         self,
         logo: Path,
-        on_open: Callable[[str | None, str], None],
+        on_open: Callable[[str | None, str, str | None], None],
         fallback: Callable[[str, str], None],
     ) -> None:
         self._logo = logo
@@ -101,7 +101,8 @@ class Notifier:
             )
         )
         toast.AddAction(ToastButton(button, arguments=f"open:{case_id or ''}"))
-        toast.on_activated = lambda _event: self._on_open(case_id, view)
+        recipient = alert.get("recipient")
+        toast.on_activated = lambda _event: self._on_open(case_id, view, recipient)
         try:
             self._toaster.show_toast(toast)
         except Exception:  # noqa: BLE001 - never lose an alert to a toast error
