@@ -177,11 +177,13 @@ class CoworkerTray:
             pystray.MenuItem("Quit", self._quit),
         )
 
-    def _open_case(self, case_id: str | None) -> None:
-        """From the menu, the icon or a click on a notification."""
+    def _open_case(self, case_id: str | None, view: str = "chat") -> None:
+        """From the menu, the icon or a click on a notification (on its view)."""
         self.feed.mark_seen()
         if self.window:
-            self.window.open(window_url(self.app_url, case_id, self.role, self.theme))
+            self.window.open(
+                window_url(self.app_url, case_id, self.role, self.theme, view)
+            )
         else:
             webbrowser.open(case_url(self.app_url, case_id, self.role))
         self._refresh()

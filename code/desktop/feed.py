@@ -10,6 +10,72 @@ ROLES = {
     "it": "IT",
     "ldc": "LDC (Culture and Belonging)",
 }
+# Each team's alert in a notification: who it is for, the step of the flow, the
+# button and the view it opens on the case.
+ACTIONS = {
+    "Recruiter": (
+        "Recruiter",
+        "Intake · complete the start data",
+        "Answer in the chat",
+        "chat",
+    ),
+    "Onboarding Team": (
+        "Onboarding Team",
+        "Follow-up · documents or payroll",
+        "Open in Status",
+        "status",
+    ),
+    "HR": (
+        "HR (through the Onboarding Team)",
+        "HR decision · FLSA or classification",
+        "Record HR's answer",
+        "approval",
+    ),
+    "Onboarding Supervisor": (
+        "Approver",
+        "Approval gate · assign the owner and decide",
+        "Open the package",
+        "approval",
+    ),
+    "IT": (
+        "IT",
+        "Equipment · approve the laptop and access request",
+        "Review the request",
+        "approval",
+    ),
+    "LDC": (
+        "LDC (Culture and Belonging)",
+        "Culture and Belonging · welcome kit and leader messages",
+        "Open in Approval",
+        "approval",
+    ),
+}
+
+
+def action(alert: dict) -> tuple[str, str, str, str]:
+    """(team, step, button, view) for an alert; review and FLSA alerts open Approval."""
+    team, step, button, view = ACTIONS.get(
+        alert.get("recipient", ""),
+        ("your team", "Onboarding alert", "Open case", "chat"),
+    )
+    text = alert.get("text", "")
+    if team == "Onboarding Team" and "ready" in text:
+        return (
+            team,
+            "Review · confirm or change the path and paperwork",
+            "Review the package",
+            "approval",
+        )
+    if team == "Onboarding Team" and "differs" in text:
+        return (
+            team,
+            "HR decision · FLSA or classification",
+            "Record HR's answer",
+            "approval",
+        )
+    return team, step, button, view
+
+
 THEMES = {"system": "Same as Windows", "light": "Light", "dark": "Dark"}
 
 BYLINE = "By INSPYR Velocity - All rights reserved"
@@ -67,9 +133,15 @@ def case_url(base: str, case_id: str | None, role: str) -> str:
     return f"{base}#status/{case_id}" if case_id else f"{base}#dashboard"
 
 
-def window_url(base: str, case_id: str | None, role: str, theme: str = "system") -> str:
-    """The Coworker window: the chat as its main view, on the alert's case."""
+def window_url(
+    base: str,
+    case_id: str | None,
+    role: str,
+    theme: str = "system",
+    view: str = "chat",
+) -> str:
+    """The Coworker window on the alert's case: the chat, or the view it asks for."""
     base = f"{base.rstrip('/')}/?role={role}&mode=desktop"
     if theme in ("light", "dark"):
         base += f"&theme={theme}"
-    return f"{base}#chat/{case_id}" if case_id else f"{base}#chat"
+    return f"{base}#{view}/{case_id}" if case_id else f"{base}#{view}"

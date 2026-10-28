@@ -3,8 +3,9 @@
 Windows shows a notification under the app that sends it. The tray registers
 itself once for the current user (HKCU, no admin rights) as "Onboarding
 Coworker" with its logo, so the notification says that instead of "Python".
-A click on the notification, or on its "Open case" button, opens the Coworker
-window on the alert's case. Without windows-toasts (or outside Windows) the
+Each notification says who it is for, the step of the flow and what is needed;
+a click on it, or on its button, opens the Coworker window on the alert's case in
+the view that step needs. Without windows-toasts (or outside Windows) the
 tray falls back to the plain notification of its icon.
 """
 
@@ -12,6 +13,8 @@ import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
+
+from .feed import action
 
 AUMID = "INSPYR.OnboardingCoworker"
 APP_NAME = "Onboarding Coworker"
@@ -46,10 +49,11 @@ def register_app(logo: Path) -> None:
 
 
 def headline(alert: dict, more: int) -> tuple[str, str]:
-    """(title, body) of the notification; the title names the case."""
+    """(title, body): who the message is for, then the step and what it asks."""
     # The text names the case by candidate and role; the internal ID stays out.
+    team, step, _, _ = action(alert)
     extra = f"  (+{more} more)" if more else ""
-    return "New onboarding alert", alert["text"] + extra
+    return f"Message for: {team}", f"{step}\n{alert['text']}{extra}"
 
 
 class Notifier:
@@ -58,7 +62,7 @@ class Notifier:
     def __init__(
         self,
         logo: Path,
-        on_open: Callable[[str | None], None],
+        on_open: Callable[[str | None, str], None],
         fallback: Callable[[str, str], None],
     ) -> None:
         self._logo = logo
@@ -88,6 +92,7 @@ class Notifier:
         )
 
         case_id = alert.get("case_id")
+        _, _, button, view = action(alert)
         toast = Toast([title, body])
         toast.attribution_text = f"For {role_label}"
         toast.AddImage(
@@ -95,8 +100,8 @@ class Notifier:
                 str(self._logo), position=ToastImagePosition.AppLogo
             )
         )
-        toast.AddAction(ToastButton("Open case", arguments=f"open:{case_id or ''}"))
-        toast.on_activated = lambda _event: self._on_open(case_id)
+        toast.AddAction(ToastButton(button, arguments=f"open:{case_id or ''}"))
+        toast.on_activated = lambda _event: self._on_open(case_id, view)
         try:
             self._toaster.show_toast(toast)
         except Exception:  # noqa: BLE001 - never lose an alert to a toast error
