@@ -25,6 +25,9 @@ const LEADS = {
   approver: "Every line shows its label and its source or rule. Nothing runs on any system until the current version is approved.",
 };
 
+// Whether the open case was closed with a second click.
+let collapsed = false;
+
 export async function render(root, show) {
   const recruiter = getRole() === "recruiter";
   root.append(
@@ -50,18 +53,27 @@ export async function render(root, show) {
   if (!cases.length) picker.append(el("p", { class: "empty" }, recruiter
     ? "No package yet. Simulate a complete start email in the inbox."
     : "Nothing pending for your role. Completed steps are on the Dashboard."));
-  if (!cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
+  if (!collapsed && !cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
+  // A click opens a case under its row; a second click on it closes it.
+  const toggle = (id) => { collapsed = id === getCase() && !collapsed; setCase(id); show("approval"); };
   for (const item of cases) {
+    const isOpen = !collapsed && item.id === getCase();
     picker.append(el("div", {
-      class: `row clickable${item.id === getCase() ? " selected" : ""}`,
+      class: `row clickable${isOpen ? " selected" : ""}`,
       tabindex: "0",
-      onclick: () => { setCase(item.id); show("approval"); },
-      onkeydown: (e) => { if (e.key === "Enter") { setCase(item.id); show("approval"); } },
-    }, el("div", {}, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, item.package_version ? ` · v${item.package_version}` : " · waiting for your answers")),
+      "aria-expanded": String(isOpen),
+      onclick: () => toggle(item.id),
+      onkeydown: (e) => { if (e.key === "Enter") toggle(item.id); },
+    }, el("div", {}, el("div", {}, el("span", { class: "chevron", "aria-hidden": "true" }, isOpen ? "▾ " : "▸ "), el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, item.package_version ? ` · v${item.package_version}` : " · waiting for your answers")),
       el("div", { class: "meta" }, caseName(item))), statePill(item.state)));
   }
-  if (getCase() && cases.some((c) => c.id === getCase())) await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
-  else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
+  // The selected case opens like an accordion, right under its row.
+  const open = picker.querySelector(".row.selected");
+  if (open) {
+    open.after(detail);
+    await (recruiter ? drawRecruiter : drawPackage)(detail, getCase(), show);
+    open.scrollIntoView({ block: "start" });
+  } else detail.append(el("p", { class: "empty" }, "Pick a package to review it."));
 }
 
 // Whether this role still has to approve or adjust something on the case.

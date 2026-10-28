@@ -8,6 +8,9 @@ const SYSTEMS = { jobdiva_cases: "JobDiva case (mock)", task_lists: "Onboarding 
 const MESSAGE_KIND = { feedback_request: "Leader feedback request", congratulation: "Congratulation" };
 const DOC_STATUS = { outstanding: ["warn", "Outstanding"], pending_countersign: ["neutral", "Pending countersign"], verified: ["ok", "Verified"] };
 
+// Whether the open case was closed with a second click.
+let collapsed = false;
+
 export async function render(root, show) {
   root.append(
     el("h1", {}, "Status"),
@@ -25,17 +28,27 @@ export async function render(root, show) {
     return;
   }
   if (!cases.length) picker.append(el("p", { class: "empty" }, "No cases yet. Start one from the simulated inbox."));
-  if (!cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
+  if (!collapsed && !cases.some((c) => c.id === getCase()) && cases.length) setCase(cases[0].id);
+  // A click opens a case under its row; a second click on it closes it.
+  const toggle = (id) => { collapsed = id === getCase() && !collapsed; setCase(id); show("status"); };
   for (const item of cases) {
+    const isOpen = !collapsed && item.id === getCase();
     picker.append(el("div", {
-      class: `row clickable${item.id === getCase() ? " selected" : ""}`,
+      class: `row clickable${isOpen ? " selected" : ""}`,
       tabindex: "0",
-      onclick: () => { setCase(item.id); show("status"); },
-      onkeydown: (e) => { if (e.key === "Enter") { setCase(item.id); show("status"); } },
-    }, el("div", {}, el("div", {}, el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)),
+      "aria-expanded": String(isOpen),
+      onclick: () => toggle(item.id),
+      onkeydown: (e) => { if (e.key === "Enter") toggle(item.id); },
+    }, el("div", {}, el("div", {}, el("span", { class: "chevron", "aria-hidden": "true" }, isOpen ? "▾ " : "▸ "), el("span", { class: "mono" }, item.person_ref), el("span", { class: "meta" }, ` · starts ${item.start_date}`)),
       el("div", { class: "meta" }, caseName(item))), statePill(item.state)));
   }
-  if (getCase()) await drawCase(detail, getCase(), show);
+  // The selected case opens like an accordion, right under its row.
+  const open = picker.querySelector(".row.selected");
+  if (open) {
+    open.after(detail);
+    await drawCase(detail, getCase(), show);
+    open.scrollIntoView({ block: "start" });
+  }
 }
 
 // A long list of rules becomes an icon; hovering or focusing it shows the list.
