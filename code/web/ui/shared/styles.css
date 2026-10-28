@@ -229,3 +229,10 @@ body.desktop main.chat-main { padding: 0; max-width: none; overflow: hidden; }
 .doc-preview dt { color: var(--muted); }
 .doc-preview dd { margin: 0; }
 .record-ref { font-weight: 600; white-space: nowrap; }
+/* Popup for an action a team must take (approval or answer) */
+dialog.action-popup { width: min(520px, calc(100vw - 32px)); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: var(--radius); padding: 20px 22px; background: var(--panel); color: var(--fg); }
+dialog.action-popup::backdrop { background: rgba(10, 14, 22, .45); }
+.action-popup-for { margin: 0; color: var(--muted); font-size: 14px; }
+.action-popup-for strong { color: var(--fg); font-size: 17px; }
+.action-popup-step { margin: 6px 0 0; font-weight: 600; color: var(--accent); }
+.action-popup-text { margin: 10px 0 16px; }

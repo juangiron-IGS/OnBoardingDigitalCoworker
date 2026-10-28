@@ -2,6 +2,7 @@
 // One conversation for the page. Alerts for the current role arrive in it too,
 // with an unread badge on the launcher. Text only: never innerHTML.
 import { api, caseName, el, errorNotice, getRole, setCase, STATE_LABELS } from "./api-client.js";
+import { popupsFor } from "./action-popup.js";
 
 // Which simulated alerts each role receives in its chat.
 const RECIPIENTS = {
@@ -244,7 +245,9 @@ export async function pollAlerts() {
     return;
   }
   const mine = new Set(RECIPIENTS[getRole()] || []);
-  const fresh = alerts.filter((a) => a.id > state.lastAlertId && mine.has(a.recipient)).sort((a, b) => a.id - b.id);
+  const newer = alerts.filter((a) => a.id > state.lastAlertId).sort((a, b) => a.id - b.id);
+  const fresh = newer.filter((a) => mine.has(a.recipient));
+  popupsFor(newer, getRole());
   state.lastAlertId = Math.max(state.lastAlertId, newest);
   for (const alert of fresh) {
     state.messages.push({ who: "bot", text: alert.text, at: new Date(alert.at), alert: alert.recipient, caseId: alert.case_id });
